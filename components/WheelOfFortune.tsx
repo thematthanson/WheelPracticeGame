@@ -363,7 +363,7 @@ function WheelOfFortune() {
   }, [usedPuzzles]);
 
   // Generate puzzle function with guaranteed no duplicates
-  const generatePuzzle = () => {
+  const generatePuzzle = (): Puzzle => {
     try {
       // If we've used most puzzles, offer to reset
       if (availablePuzzles.length < 10) {
