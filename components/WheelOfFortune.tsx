@@ -403,14 +403,14 @@ function WheelOfFortune() {
         
         if (found) {
           category = cat;
-          if (cat === "BEFORE & AFTER") {
+          if (cat === "BEFORE & AFTER" && typeof found === 'object' && 'before' in found) {
             specialFormat = {
               type: 'BEFORE_AFTER',
               before: found.before,
               shared: found.shared,
               after: found.after
             };
-          } else if (cat === "THEN AND NOW") {
+          } else if (cat === "THEN AND NOW" && typeof found === 'object' && 'then' in found) {
             specialFormat = {
               type: 'THEN_AND_NOW',
               then: found.then,
