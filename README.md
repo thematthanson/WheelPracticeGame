@@ -1,110 +1,80 @@
-# 🎯 JensWheelPractice
+# JensWheelPractice
 
-A realistic Wheel of Fortune practice game designed to help your friend prepare for appearing on the actual show! This game features authentic gameplay mechanics, realistic wheel segments, and diverse puzzle categories.
+A Wheel of Fortune training game designed specifically for practice before appearing on the TV show. This application provides an authentic Wheel of Fortune experience with realistic game mechanics, multiple puzzle categories, and mobile optimization.
 
-## 🎮 Game Features
+## 🎯 Features
 
-- **Authentic Wheel**: Realistic wheel segments including money values, BANKRUPT, LOSE A TURN, and special prizes
-- **Diverse Puzzles**: Multiple categories including:
-  - Phrase
-  - Before & After
-  - Rhyme Time
-  - Same Letter
-  - Then and Now
-  - What Are You Doing?
-  - Thing, Person, Place
-- **Prize System**: Win cars, trips, and special cards like Wild Card and Million Dollar Wedge
-- **Realistic Gameplay**: Proper vowel costs ($250), consonant earnings, and turn mechanics
-- **Mobile Optimized**: Works great on phones and tablets for practice anywhere
-- **No Repeats**: Tracks completed puzzles to avoid repetition
+- **Authentic Wheel Mechanics**: Realistic wheel segments with proper probability distribution
+- **Multiple Puzzle Categories**: 
+  - "BEFORE & AFTER"
+  - "ON THE MAP" 
+  - "FOOD & DRINK"
+  - "PHRASE"
+  - "THING"
+  - "PERSON"
+  - "PLACE"
+  - "TITLE"
+- **Progress Tracking**: localStorage persistence to track completed puzzles
+- **Smart Reset System**: Auto-reset when puzzles run low, manual reset option
+- **Mobile Optimized**: Responsive design for all devices
+- **Fresh Content**: 500+ unique puzzles with no duplicates
 
-## 🚀 Deploy to Vercel
+## 🚀 Quick Start
 
-### Quick Deploy (Recommended)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/jenswheelpractice)
+### Prerequisites
+- Node.js 18.x or higher
+- npm or yarn
 
-### Manual Deploy
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Run locally to test:
-   ```bash
-   npm run dev
-   ```
-
-3. Build for production:
-   ```bash
-   npm run build
-   ```
-
-4. Deploy to Vercel:
-   - Install Vercel CLI: `npm i -g vercel`
-   - Run: `vercel`
-   - Follow the prompts
-
-## 🎲 How to Play
-
-1. **Spin the Wheel**: Click "SPIN WHEEL" to start your turn
-2. **Call Letters**: 
-   - Consonants are free (if you spun a dollar amount)
-   - Vowels cost $250
-3. **Solve Puzzles**: Try to solve when you think you know the answer
-4. **Special Segments**:
-   - **BANKRUPT**: Lose all round money and prizes
-   - **LOSE A TURN**: Turn passes to next player
-   - **Prizes**: Win trips, cars, and other valuable prizes
-   - **Wild Card**: Use for bonus consonants
-   - **Million Dollar Wedge**: Keep for bonus round
-
-## 🛠 Technical Details
-
-- **Framework**: Next.js 14 with TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Deployment**: Optimized for Vercel
-
-## 📱 Mobile Support
-
-The game is fully responsive and works great on:
-- iPhone and Android phones
-- Tablets
-- Desktop computers
-
-## 🎯 Training Tips
-
-This game helps practice:
-- Letter frequency recognition
-- Puzzle-solving strategies
-- Wheel segment awareness
-- Money management decisions
-- Category-specific thinking patterns
-
-## 🔧 Development
-
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/thematthanson/WheelPracticeGame.git
+cd WheelPracticeGame
+
 # Install dependencies
 npm install
 
 # Run development server
 npm run dev
+```
 
-# Build for production
+### Build for Production
+```bash
 npm run build
-
-# Start production server
 npm start
 ```
 
-## 📄 License
+## 🎮 How to Play
 
-This project is for educational and entertainment purposes. Wheel of Fortune is a trademark of Sony Pictures Television.
+1. **Spin the Wheel**: Click the wheel to spin and land on a segment
+2. **Guess Letters**: Click on letter buttons to guess consonants or vowels
+3. **Solve the Puzzle**: When ready, click "SOLVE" to attempt the solution
+4. **Track Progress**: Your completed puzzles are saved locally
+5. **Fresh Content**: New puzzles automatically load when you run low
+
+## 📱 Deployment
+
+This application is optimized for Vercel deployment with:
+- Modern Next.js 14 configuration
+- Optimized TypeScript setup
+- Clean dependency management
+- Performance optimizations
+
+## 🛠️ Technical Stack
+
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Deployment**: Vercel
+
+## 📊 Puzzle Statistics
+
+- **Total Puzzles**: 500+ unique puzzles
+- **Categories**: 8 different puzzle types
+- **Progress Tracking**: Persistent localStorage
+- **Auto-Reset**: Smart content management
 
 ---
 
-**Good luck to your friend on the show!** 🍀
-
----
-
-*Built with ❤️ for Wheel of Fortune fans* # Updated Sat Jul 12 13:24:06 PDT 2025
+**Built for Jens's Wheel of Fortune practice - Good luck on the show! 🎯**
