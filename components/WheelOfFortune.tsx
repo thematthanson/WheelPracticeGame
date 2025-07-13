@@ -404,17 +404,19 @@ function WheelOfFortune() {
         if (found) {
           category = cat;
           if (cat === "BEFORE & AFTER" && typeof found === 'object' && 'before' in found) {
+            const beforeAfterFound = found as BeforeAfterTemplate;
             specialFormat = {
               type: 'BEFORE_AFTER',
-              before: found.before,
-              shared: found.shared,
-              after: found.after
+              before: beforeAfterFound.before,
+              shared: beforeAfterFound.shared,
+              after: beforeAfterFound.after
             };
           } else if (cat === "THEN AND NOW" && typeof found === 'object' && 'then' in found) {
+            const thenNowFound = found as ThenNowTemplate;
             specialFormat = {
               type: 'THEN_AND_NOW',
-              then: found.then,
-              now: found.now
+              then: thenNowFound.then,
+              now: thenNowFound.now
             };
           } else if (cat === "RHYME TIME") {
             specialFormat = { type: 'RHYME_TIME' };
@@ -543,7 +545,9 @@ function WheelOfFortune() {
                         ? 'BANK'
                         : segment === 'LOSE A TURN'
                           ? 'LOSE'
-                          : segment.displayValue?.split(' ')[0] || segment}
+                          : typeof segment === 'object' && 'displayValue' in segment
+                            ? (segment as WheelSegment).displayValue?.split(' ')[0] || String(segment)
+                            : String(segment)}
                   </text>
                 </g>
               );
@@ -588,9 +592,11 @@ function WheelOfFortune() {
                 ? '💥 BANKRUPT'
                 : gameState.lastSpinResult === 'LOSE A TURN'
                   ? '❌ LOSE TURN'
-                  : gameState.lastSpinResult.type === 'PRIZE'
-                    ? `🏆 ${gameState.lastSpinResult.displayValue}`
-                    : `⭐ ${gameState.lastSpinResult.displayValue}`}
+                  : typeof gameState.lastSpinResult === 'object' && gameState.lastSpinResult && 'type' in gameState.lastSpinResult
+                    ? gameState.lastSpinResult.type === 'PRIZE'
+                      ? `🏆 ${(gameState.lastSpinResult as WheelSegment).displayValue}`
+                      : `⭐ ${(gameState.lastSpinResult as WheelSegment).displayValue}`
+                    : String(gameState.lastSpinResult)}
           </div>
         )}
       </div>
@@ -632,14 +638,16 @@ function WheelOfFortune() {
         newMessage = 'LOSE A TURN! ';
         nextPlayer = 1;
         newMessage += `${gameState.players[1].name}'s turn!`;
-      } else if (segment.type === 'PRIZE') {
-        newMessage = `You landed on ${segment.displayValue}! Call a consonant to claim it.`;
-      } else if (segment.type === 'WILD_CARD') {
-        newMessage = `You got the WILD CARD! Call a consonant.`;
-      } else if (segment.type === 'GIFT_TAG') {
-        newMessage = `You got the $1000 GIFT TAG! Call a consonant.`;
-      } else if (segment.type === 'MILLION') {
-        newMessage = `You got the MILLION DOLLAR WEDGE! Call a consonant and keep this for the bonus round!`;
+      } else if (typeof segment === 'object' && segment && 'type' in segment) {
+        if (segment.type === 'PRIZE') {
+          newMessage = `You landed on ${(segment as WheelSegment).displayValue}! Call a consonant to claim it.`;
+        } else if (segment.type === 'WILD_CARD') {
+          newMessage = `You got the WILD CARD! Call a consonant.`;
+        } else if (segment.type === 'GIFT_TAG') {
+          newMessage = `You got the $1000 GIFT TAG! Call a consonant.`;
+        } else if (segment.type === 'MILLION') {
+          newMessage = `You got the MILLION DOLLAR WEDGE! Call a consonant and keep this for the bonus round!`;
+        }
       }
       
       setGameState(prev => ({
@@ -701,32 +709,35 @@ function WheelOfFortune() {
             const earned = wheelValue * letterCount;
             newPlayers[0].roundMoney += earned;
             message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}.`;
-          } else if (wheelValue.type === 'PRIZE') {
-            newPlayers[0].roundMoney += 500 * letterCount; // Base value for consonants
-            newPlayers[0].prizes.push({
-              name: wheelValue.name,
-              value: wheelValue.value,
-              round: prev.currentRound,
-              description: PRIZE_DESCRIPTIONS[wheelValue.name]
-            });
-            message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelValue.name}!`;
-          } else if (wheelValue.type === 'WILD_CARD') {
-            newPlayers[0].roundMoney += 500 * letterCount;
-            newPlayers[0].specialCards.push('WILD_CARD');
-            message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD!`;
-          } else if (wheelValue.type === 'GIFT_TAG') {
-            newPlayers[0].roundMoney += 500 * letterCount;
-            newPlayers[0].prizes.push({
-              name: '$1000 GIFT TAG',
-              value: 1000,
-              round: prev.currentRound,
-              description: PRIZE_DESCRIPTIONS['$1000 GIFT TAG']
-            });
-            message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG!`;
-          } else if (wheelValue.type === 'MILLION') {
-            newPlayers[0].roundMoney += 900 * letterCount;
-            newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
-            message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE!`;
+          } else if (typeof wheelValue === 'object' && wheelValue && 'type' in wheelValue) {
+            const wheelSegment = wheelValue as WheelSegment;
+            if (wheelSegment.type === 'PRIZE') {
+              newPlayers[0].roundMoney += 500 * letterCount; // Base value for consonants
+              newPlayers[0].prizes.push({
+                name: wheelSegment.name || 'Unknown Prize',
+                value: wheelSegment.value,
+                round: prev.currentRound,
+                description: PRIZE_DESCRIPTIONS[wheelSegment.name || 'Unknown Prize'] || 'A fabulous prize!'
+              });
+              message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}!`;
+            } else if (wheelSegment.type === 'WILD_CARD') {
+              newPlayers[0].roundMoney += 500 * letterCount;
+              newPlayers[0].specialCards.push('WILD_CARD');
+              message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD!`;
+            } else if (wheelSegment.type === 'GIFT_TAG') {
+              newPlayers[0].roundMoney += 500 * letterCount;
+              newPlayers[0].prizes.push({
+                name: '$1000 GIFT TAG',
+                value: 1000,
+                round: prev.currentRound,
+                description: PRIZE_DESCRIPTIONS['$1000 GIFT TAG']
+              });
+              message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG!`;
+            } else if (wheelSegment.type === 'MILLION') {
+              newPlayers[0].roundMoney += 900 * letterCount;
+              newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
+              message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE!`;
+            }
           }
         }
         // Player continues turn
