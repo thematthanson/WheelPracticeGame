@@ -589,7 +589,7 @@ function WheelOfFortune() {
             style={{ 
               transform: `rotate(${gameState.wheelRotation}deg)`, 
               transition: gameState.isSpinning ? 'transform 3s ease-out' : 'none',
-              transformOrigin: '100px 100px'
+              transformOrigin: 'center'
             }}
           >
             {WHEEL_SEGMENTS.map((segment, index) => {
@@ -666,7 +666,7 @@ function WheelOfFortune() {
           </svg>
           
           {/* Center hub */}
-          <div className="absolute inset-12 sm:inset-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 border-4 border-yellow-500 flex items-center justify-center z-20">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 border-4 border-yellow-500 flex items-center justify-center z-20">
             <div className="text-white text-xs sm:text-lg font-bold text-center">
               {gameState.isSpinning ? (
                 <RotateCcw className="w-4 h-4 sm:w-8 sm:h-8 animate-spin" />
@@ -687,9 +687,9 @@ function WheelOfFortune() {
           style={{
             width: 0,
             height: 0,
-            borderLeft: '12px solid transparent',
-            borderRight: '12px solid transparent',
-            borderBottom: '20px solid #DC143C',
+            borderLeft: '8px solid transparent',
+            borderRight: '8px solid transparent',
+            borderBottom: '16px solid #DC143C',
             filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))'
           }}
         />
