@@ -453,7 +453,7 @@ function WheelOfFortune() {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -798,8 +798,11 @@ function WheelOfFortune() {
     }
     
     // Prevent multiple simultaneous computer turns
-    if (gameState.turnInProgress || gameState.isSpinning || computerTurnInProgress) {
+    if (gameState.turnInProgress || gameState.isSpinning) {
       console.log('🔄 Computer turn already in progress, skipping...');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
       return;
     }
     
@@ -865,16 +868,13 @@ function WheelOfFortune() {
         
         // Start next player's turn if it's a computer
         setTimeout(() => {
+          setComputerTurnInProgress(false);
+          computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
+          
           const nextPlayerObj = gameState.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
             computerTurn();
-          } else {
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
           }
         }, 2000);
       } else if (segment === 'LOSE A TURN') {
@@ -897,16 +897,13 @@ function WheelOfFortune() {
         
         // Start next player's turn if it's a computer
         setTimeout(() => {
+          setComputerTurnInProgress(false);
+          computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
+          
           const nextPlayerObj = gameState.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
             computerTurn();
-          } else {
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
           }
         }, 2000);
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
@@ -1058,22 +1055,22 @@ function WheelOfFortune() {
       if (nextPlayer === gameState.currentPlayer) {
         // Computer got a correct letter and continues
         setTimeout(() => {
+          setComputerTurnInProgress(false);
+          computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
           computerTurn();
         }, 2000);
       } else {
         // Computer got an incorrect letter, next player's turn
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        
         const nextPlayerObj = gameState.players[nextPlayer];
         if (nextPlayerObj && !nextPlayerObj.isHuman) {
           setTimeout(() => {
-            setComputerTurnInProgress(false); // Reset flag before next computer turn
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
             computerTurn();
           }, 2000);
-        } else {
-          setComputerTurnInProgress(false); // Reset flag when turn passes to human
-          computerTurnRef.current = false;
-          computerTurnScheduledRef.current = false;
         }
       }
     }, 1000);
