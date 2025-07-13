@@ -711,10 +711,10 @@ function WheelOfFortune() {
   // Authentic wheel spinner with realistic physics
   // Computer player logic
   const computerTurn = () => {
-    if (gameState.currentPlayer !== 1) return;
+    if (gameState.currentPlayer !== 1 && gameState.currentPlayer !== 2) return;
     
     // Computer spins the wheel
-    setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[1].name} is spinning...`, turnInProgress: true }));
+    setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
     
     // Generate realistic spin
     const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
@@ -727,33 +727,50 @@ function WheelOfFortune() {
     setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
     
     setTimeout(() => {
-      const segment = WHEEL_SEGMENTS[randomSegmentIndex];
+      const landedIndex = getLandedSegmentIndex(newRotation);
+      const segment = WHEEL_SEGMENTS[landedIndex];
       let newMessage = '';
       let newPlayers = [...gameState.players];
       let nextPlayer = 0; // Switch back to player
       
       if (typeof segment === 'number') {
-        newMessage = `${gameState.players[1].name} spun $${segment}!`;
+        newMessage = `${gameState.players[gameState.currentPlayer].name} spun $${segment}!`;
         // Computer makes a guess
         setTimeout(() => {
           computerGuess(segment);
         }, 1000);
       } else if (segment === 'BANKRUPT') {
-        newMessage = `${gameState.players[1].name} went BANKRUPT! Your turn!`;
-        newPlayers[1].roundMoney = 0;
-        nextPlayer = 0;
+        newMessage = `${gameState.players[gameState.currentPlayer].name} went BANKRUPT! `;
+        newPlayers[gameState.currentPlayer].roundMoney = 0;
+        // Determine next player (cycle through all 3 players)
+        if (gameState.currentPlayer === 1) {
+          nextPlayer = 2; // Sarah -> Mike
+        } else if (gameState.currentPlayer === 2) {
+          nextPlayer = 0; // Mike -> You
+        } else {
+          nextPlayer = 1; // You -> Sarah
+        }
+        newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
       } else if (segment === 'LOSE A TURN') {
-        newMessage = `${gameState.players[1].name} lost their turn! Your turn!`;
-        nextPlayer = 0;
+        newMessage = `${gameState.players[gameState.currentPlayer].name} lost their turn! `;
+        // Determine next player (cycle through all 3 players)
+        if (gameState.currentPlayer === 1) {
+          nextPlayer = 2; // Sarah -> Mike
+        } else if (gameState.currentPlayer === 2) {
+          nextPlayer = 0; // Mike -> You
+        } else {
+          nextPlayer = 1; // You -> Sarah
+        }
+        newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
-          newMessage = `${gameState.players[1].name} landed on ${(segment as WheelSegment).displayValue}!`;
+          newMessage = `${gameState.players[gameState.currentPlayer].name} landed on ${(segment as WheelSegment).displayValue}!`;
         } else if (segment.type === 'WILD_CARD') {
-          newMessage = `${gameState.players[1].name} got the WILD CARD!`;
+          newMessage = `${gameState.players[gameState.currentPlayer].name} got the WILD CARD!`;
         } else if (segment.type === 'GIFT_TAG') {
-          newMessage = `${gameState.players[1].name} got the $1000 GIFT TAG!`;
+          newMessage = `${gameState.players[gameState.currentPlayer].name} got the $1000 GIFT TAG!`;
         } else if (segment.type === 'MILLION') {
-          newMessage = `${gameState.players[1].name} got the MILLION DOLLAR WEDGE!`;
+          newMessage = `${gameState.players[gameState.currentPlayer].name} got the MILLION DOLLAR WEDGE!`;
         }
         // Computer makes a guess
         setTimeout(() => {
@@ -766,7 +783,7 @@ function WheelOfFortune() {
         isSpinning: false,
         wheelValue: segment,
         lastSpinResult: segment,
-        landedSegmentIndex: randomSegmentIndex,
+        landedSegmentIndex: landedIndex,
         message: newMessage,
         players: newPlayers,
         currentPlayer: nextPlayer,
@@ -794,7 +811,7 @@ function WheelOfFortune() {
     const randomIndex = Math.floor(Math.random() * Math.min(unusedLetters.length, 5)); // Pick from top 5 unused
     const letter = unusedLetters[randomIndex];
     
-    setGameState(prev => ({ ...prev, message: `${prev.players[1].name} calls ${letter}!` }));
+    setGameState(prev => ({ ...prev, message: `${prev.players[prev.currentPlayer].name} calls ${letter}!` }));
     
     setTimeout(() => {
       const letterInPuzzle = gameState.puzzle.text.includes(letter);
@@ -810,18 +827,26 @@ function WheelOfFortune() {
         
         if (typeof wheelValue === 'number') {
           const earned = wheelValue * letterCount;
-          newPlayers[1].roundMoney += earned;
-          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[1].name} earned $${earned}.`;
+          newPlayers[gameState.currentPlayer].roundMoney += earned;
+          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[gameState.currentPlayer].name} earned $${earned}.`;
         } else {
-          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[1].name} continues!`;
+          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[gameState.currentPlayer].name} continues!`;
         }
-        nextPlayer = 1; // Computer continues
+        nextPlayer = gameState.currentPlayer; // Computer continues
       } else {
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
         
-        message = `No ${letter}'s. Your turn!`;
-        nextPlayer = 0;
+        // Determine next player (cycle through all 3 players)
+        if (gameState.currentPlayer === 1) {
+          nextPlayer = 2; // Sarah -> Mike
+        } else if (gameState.currentPlayer === 2) {
+          nextPlayer = 0; // Mike -> You
+        } else {
+          nextPlayer = 1; // You -> Sarah
+        }
+        
+        message = `No ${letter}'s. ${gameState.players[nextPlayer].name}'s turn!`;
       }
       
       setGameState(prev => ({
@@ -835,7 +860,7 @@ function WheelOfFortune() {
       }));
       
       // If computer continues, they spin again after 2 seconds
-      if (nextPlayer === 1) {
+      if (nextPlayer === 1 || nextPlayer === 2) {
         setTimeout(() => {
           computerTurn();
         }, 2000);
@@ -852,71 +877,106 @@ function WheelOfFortune() {
     const revealedPercentage = (gameState.puzzle.revealed.size / puzzleText.replace(/[^A-Z]/g, '').length) * 100;
     const willSolve = Math.random() < 0.3 && revealedPercentage > 50;
     
-    setGameState(prev => ({ ...prev, message: `${prev.players[1].name} is thinking...` }));
+    console.log('🤖 Computer solve attempt:', {
+      player: gameState.players[gameState.currentPlayer].name,
+      willSolve: willSolve,
+      revealedPercentage: revealedPercentage,
+      revealedLetters: Array.from(gameState.puzzle.revealed),
+      puzzleText: puzzleText,
+      timestamp: new Date().toISOString()
+    });
+    
+    setGameState(prev => ({ ...prev, message: `${prev.players[gameState.currentPlayer].name} is thinking...` }));
     
     setTimeout(() => {
       if (willSolve) {
         // Computer solves correctly
+        console.log('✅ Computer solved correctly:', {
+          player: gameState.players[gameState.currentPlayer].name,
+          puzzleText: puzzleText,
+          timestamp: new Date().toISOString()
+        });
+        
         const newPlayers = [...gameState.players];
-        newPlayers[1].totalMoney += newPlayers[1].roundMoney;
+        newPlayers[gameState.currentPlayer].totalMoney += newPlayers[gameState.currentPlayer].roundMoney;
         
         setGameState(prev => ({
           ...prev,
           players: newPlayers,
           puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
-          message: `${prev.players[1].name} solved "${prev.puzzle.text}" and earned $${newPlayers[1].roundMoney}!`
+          message: `${prev.players[gameState.currentPlayer].name} solved "${prev.puzzle.text}" and earned $${newPlayers[gameState.currentPlayer].roundMoney}!`
         }));
         
         setTimeout(() => {
           setGameState(prev => ({
             ...prev,
-            message: `${prev.players[1].name} wins the round! Click "NEW PUZZLE" to continue.`
+            message: `${prev.players[gameState.currentPlayer].name} wins the round! Click "NEW PUZZLE" to continue.`
           }));
         }, 2000);
       } else {
         // Computer fails to solve
+        console.log('❌ Computer solve attempt failed:', {
+          player: gameState.players[gameState.currentPlayer].name,
+          puzzleText: puzzleText,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Determine next player (cycle through all 3 players)
+        let nextPlayer = 1;
+        if (gameState.currentPlayer === 0) {
+          nextPlayer = 1; // You -> Sarah
+        } else if (gameState.currentPlayer === 1) {
+          nextPlayer = 2; // Sarah -> Mike
+        } else {
+          nextPlayer = 0; // Mike -> You
+        }
+        
         setGameState(prev => ({
           ...prev,
-          currentPlayer: 0,
-          message: `${prev.players[1].name} was wrong! Your turn.`
+          currentPlayer: nextPlayer,
+          message: `${prev.players[gameState.currentPlayer].name} was wrong! ${prev.players[nextPlayer].name}'s turn.`
         }));
       }
     }, 1000);
   };
 
+  const getLandedSegmentIndex = (rotation: number) => {
+    // The pointer is at -90 degrees (top center)
+    const pointerAngle = -90;
+    const normalizedRotation = ((rotation % 360) + 360) % 360;
+    const pointerRelative = (pointerAngle - normalizedRotation + 360) % 360;
+    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    let index = Math.floor(pointerRelative / segmentAngle);
+    if (index < 0) index += WHEEL_SEGMENTS.length;
+    return index;
+  };
+
   const spinWheel = () => {
     if (gameState.isSpinning || gameState.currentPlayer !== 0) return;
-    
     setGameState(prev => ({ ...prev, isSpinning: true, message: 'Spinning...', turnInProgress: true }));
-    
-    // Generate realistic spin with multiple full rotations plus final position
-    const baseRotations = 3 + Math.random() * 4; // 3-7 full rotations
+    const baseRotations = 3 + Math.random() * 4;
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-    const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
-    const totalRotation = (baseRotations * 360) + finalAngle;
-    
-    // Update wheel rotation with CSS animation
+    const randomOffset = Math.random() * segmentAngle;
+    const totalRotation = (baseRotations * 360) + randomOffset;
     const newRotation = gameState.wheelRotation + totalRotation;
     setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
-    
     setTimeout(() => {
-      const segment = WHEEL_SEGMENTS[randomSegmentIndex];
+      const landedIndex = getLandedSegmentIndex(newRotation);
+      const segment = WHEEL_SEGMENTS[landedIndex];
       let newMessage = '';
       let newPlayers = [...gameState.players];
       let nextPlayer = gameState.currentPlayer;
-      
       if (typeof segment === 'number') {
         newMessage = `You spun $${segment}! Call a consonant.`;
       } else if (segment === 'BANKRUPT') {
         newMessage = 'BANKRUPT! You lose your round money and any prizes from this round. ';
         newPlayers[0].roundMoney = 0;
         newPlayers[0].prizes = newPlayers[0].prizes.filter(p => p.round !== gameState.currentRound);
-        nextPlayer = 1;
+        nextPlayer = 1; // You -> Sarah
         newMessage += `${gameState.players[1].name}'s turn!`;
       } else if (segment === 'LOSE A TURN') {
         newMessage = 'LOSE A TURN! ';
-        nextPlayer = 1;
+        nextPlayer = 1; // You -> Sarah
         newMessage += `${gameState.players[1].name}'s turn!`;
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
@@ -929,19 +989,18 @@ function WheelOfFortune() {
           newMessage = `You got the MILLION DOLLAR WEDGE! Call a consonant and keep this for the bonus round!`;
         }
       }
-      
       setGameState(prev => ({
         ...prev,
         isSpinning: false,
         wheelValue: segment,
         lastSpinResult: segment,
-        landedSegmentIndex: randomSegmentIndex,
+        landedSegmentIndex: landedIndex,
         message: newMessage,
         players: newPlayers,
         currentPlayer: nextPlayer,
         turnInProgress: false
       }));
-    }, 1000); // Faster spin time for computer turns
+    }, 1000);
   };
 
   const callLetter = () => {
@@ -1032,8 +1091,15 @@ function WheelOfFortune() {
           newPlayers[0].roundMoney -= 250;
         }
         message = `Sorry, no ${letter}'s. `;
-        nextPlayer = 1;
-        message += `${prev.players[1].name}'s turn!`;
+        // Determine next player (cycle through all 3 players)
+        if (gameState.currentPlayer === 0) {
+          nextPlayer = 1; // You -> Sarah
+        } else if (gameState.currentPlayer === 1) {
+          nextPlayer = 2; // Sarah -> Mike
+        } else {
+          nextPlayer = 0; // Mike -> You
+        }
+        message += `${prev.players[nextPlayer].name}'s turn!`;
       }
       
       return {
@@ -1057,6 +1123,13 @@ function WheelOfFortune() {
     const attempt = solveAttempt.toUpperCase().trim();
     const correct = attempt === gameState.puzzle.text;
     
+    console.log('Solve attempt:', {
+      attempt: attempt,
+      puzzleText: gameState.puzzle.text,
+      correct: correct,
+      currentPlayer: gameState.currentPlayer
+    });
+    
     if (correct) {
       // Update statistics for solved puzzle
       updateStats('', false, true);
@@ -1078,8 +1151,26 @@ function WheelOfFortune() {
         }));
       }, 3000);
     } else {
+      // Log wrong solve attempt
+      console.log('❌ Wrong solve attempt:', {
+        player: gameState.players[gameState.currentPlayer].name,
+        attempt: attempt,
+        correctAnswer: gameState.puzzle.text,
+        puzzleCategory: gameState.puzzle.category,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Determine next player (cycle through all 3 players)
+      let nextPlayer = 1;
+      if (gameState.currentPlayer === 0) {
+        nextPlayer = 1; // You -> Sarah
+      } else if (gameState.currentPlayer === 1) {
+        nextPlayer = 2; // Sarah -> Mike
+      } else {
+        nextPlayer = 0; // Mike -> You
+      }
+      
       setGameState(prev => {
-        const nextPlayer = 1;
         return {
           ...prev,
           currentPlayer: nextPlayer,
@@ -1262,13 +1353,13 @@ function WheelOfFortune() {
               if (gameState.currentPlayer === 0) {
                 if (gameState.message && gameState.message.includes('spun')) {
                   const [pre, spinMsg] = gameState.message.split(/(You spun.*Call a consonant\.?)/);
-                  return <span>🎯 Your Turn! Spin the Wheel (Round {gameState.currentRound}) — <span className="text-blue-900 font-bold">{spinMsg || gameState.message}</span></span>;
+                  return <span>🎯 Your Turn! Spin the Wheel (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg || gameState.message}</span></span>;
                 }
                 return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound})`;
               } else {
                 if (gameState.message && gameState.message.includes('spun')) {
                   const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
-                  return <span>{gameState.players[gameState.currentPlayer].name}'s Turn (Round {gameState.currentRound}) — <span className="text-blue-900 font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
+                  return <span>{gameState.players[gameState.currentPlayer].name}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
                 }
                 if (gameState.message) {
                   return `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
