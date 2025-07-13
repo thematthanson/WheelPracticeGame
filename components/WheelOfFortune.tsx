@@ -1261,10 +1261,15 @@ function WheelOfFortune() {
               }
               if (gameState.currentPlayer === 0) {
                 if (gameState.message && gameState.message.includes('spun')) {
-                  return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound}) — ${gameState.message}`;
+                  const [pre, spinMsg] = gameState.message.split(/(You spun.*Call a consonant\.?)/);
+                  return <span>🎯 Your Turn! Spin the Wheel (Round {gameState.currentRound}) — <span className="text-blue-900 font-bold">{spinMsg || gameState.message}</span></span>;
                 }
                 return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound})`;
               } else {
+                if (gameState.message && gameState.message.includes('spun')) {
+                  const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
+                  return <span>{gameState.players[gameState.currentPlayer].name}'s Turn (Round {gameState.currentRound}) — <span className="text-blue-900 font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
+                }
                 if (gameState.message) {
                   return `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
                 }
