@@ -340,6 +340,7 @@ function WheelOfFortune() {
   const [usedPuzzles, setUsedPuzzles] = useState<Set<string>>(new Set());
   const [availablePuzzles, setAvailablePuzzles] = useState<string[]>([]);
   const [showResetPanel, setShowResetPanel] = useState(false);
+  const [wildCardActive, setWildCardActive] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats>({
     totalPuzzles: 0,
     solvedPuzzles: 0,
@@ -392,6 +393,8 @@ function WheelOfFortune() {
     
     if ((gameState.currentPlayer === 1 || gameState.currentPlayer === 2) && !gameState.isSpinning && !gameState.turnInProgress) {
       console.log('🤖 Triggering computer turn for:', gameState.players[gameState.currentPlayer].name);
+      // Set turnInProgress immediately to prevent multiple triggers
+      setGameState(prev => ({ ...prev, turnInProgress: true }));
       setTimeout(() => {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
@@ -1043,7 +1046,8 @@ function WheelOfFortune() {
       return;
     }
 
-    if (isConsonant && !gameState.wheelValue) {
+    // Allow consonants with Wild Card even without wheel value
+    if (isConsonant && !gameState.wheelValue && !wildCardActive) {
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
     }
@@ -1103,6 +1107,13 @@ function WheelOfFortune() {
               newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
               message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE!`;
             }
+          } else if (wildCardActive) {
+            // Wild Card usage - give base value for consonant
+            const earned = 500 * letterCount;
+            newPlayers[0].roundMoney += earned;
+            message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}.`;
+            // Deactivate Wild Card after use
+            setWildCardActive(false);
           }
         }
         // Player continues turn
@@ -1123,6 +1134,11 @@ function WheelOfFortune() {
           nextPlayer = 0; // Mike -> You
         }
         message += `${prev.players[nextPlayer].name}'s turn!`;
+        
+        // Deactivate Wild Card if used and letter was wrong
+        if (wildCardActive) {
+          setWildCardActive(false);
+        }
       }
       
       return {
@@ -1481,17 +1497,22 @@ function WheelOfFortune() {
 
           {/* Game Controls Section */}
           <div className="space-y-3 sm:space-y-4">
-            {/* Call a Letter */}
+            {/* Call Letter */}
             <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
-              <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3">Call a Letter</h3>
+              <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3">Call Letter</h3>
+              {wildCardActive && (
+                <div className="mb-2 p-2 bg-purple-600 bg-opacity-30 rounded border border-purple-400">
+                  <span className="text-purple-200 text-xs">🃏 Wild Card Active - You can call a consonant!</span>
+                </div>
+              )}
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={inputLetter}
-                  onChange={(e) => setInputLetter(e.target.value.slice(0, 1))}
+                  onChange={(e) => setInputLetter(e.target.value)}
                   disabled={gameState.currentPlayer !== 0}
                   className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
-                  placeholder={gameState.currentPlayer === 0 ? "Letter..." : "Wait..."}
+                  placeholder={gameState.currentPlayer === 0 ? "Enter letter..." : "Wait..."}
                   maxLength={1}
                 />
                 <button
@@ -1535,6 +1556,42 @@ function WheelOfFortune() {
                 NEW PUZZLE
               </button>
             </div>
+
+            {/* Special Cards */}
+            {gameState.players[0].specialCards.length > 0 && (
+              <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
+                <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3 text-purple-300">⭐ Special Cards</h3>
+                <div className="space-y-2">
+                  {gameState.players[0].specialCards.map((card, index) => (
+                    <div key={index} className="flex items-center justify-between bg-purple-700 bg-opacity-30 rounded p-2">
+                      <span className="text-purple-200 text-sm">
+                        {card === 'WILD_CARD' ? '🃏 Wild Card' : 
+                         card === 'MILLION_DOLLAR_WEDGE' ? '💎 Million Dollar Wedge' : card}
+                      </span>
+                      {card === 'WILD_CARD' && (
+                        <button
+                          onClick={() => {
+                            // Activate Wild Card for extra consonant call
+                            setWildCardActive(true);
+                            setGameState(prev => ({
+                              ...prev,
+                              message: 'Wild Card activated! You can call an extra consonant.',
+                              players: prev.players.map((p, i) => 
+                                i === 0 ? { ...p, specialCards: p.specialCards.filter(c => c !== 'WILD_CARD') } : p
+                              )
+                            }));
+                          }}
+                          disabled={gameState.currentPlayer !== 0 || wildCardActive}
+                          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-2 py-1 rounded text-xs font-semibold transition-colors"
+                        >
+                          Use
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
