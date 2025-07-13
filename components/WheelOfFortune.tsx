@@ -383,16 +383,20 @@ function WheelOfFortune() {
 
   // Trigger computer turn when it's their turn
   useEffect(() => {
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress;
+    
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
-      playerName: gameState.players[gameState.currentPlayer]?.name,
+      playerName: currentPlayer?.name,
+      isHuman: currentPlayer?.isHuman,
       isSpinning: gameState.isSpinning,
       turnInProgress: gameState.turnInProgress,
-      shouldTrigger: (gameState.currentPlayer === 1 || gameState.currentPlayer === 2) && !gameState.isSpinning && !gameState.turnInProgress
+      shouldTrigger: isComputerTurn
     });
     
-    if ((gameState.currentPlayer === 1 || gameState.currentPlayer === 2) && !gameState.isSpinning && !gameState.turnInProgress) {
-      console.log('🤖 Triggering computer turn for:', gameState.players[gameState.currentPlayer].name);
+    if (isComputerTurn) {
+      console.log('🤖 Triggering computer turn for:', currentPlayer.name);
       // Set turnInProgress immediately to prevent multiple triggers
       setGameState(prev => ({ ...prev, turnInProgress: true }));
       setTimeout(() => {
@@ -727,7 +731,8 @@ function WheelOfFortune() {
   // Authentic wheel spinner with realistic physics
   // Computer player logic
   const computerTurn = () => {
-    if (gameState.currentPlayer !== 1 && gameState.currentPlayer !== 2) return;
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    if (!currentPlayer || currentPlayer.isHuman) return;
     
     // Computer spins the wheel
     setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
@@ -809,16 +814,34 @@ function WheelOfFortune() {
   };
 
   const computerGuess = (wheelValue: number | string | WheelSegment) => {
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    if (!currentPlayer || currentPlayer.isHuman) return;
+    
     // Common letters in English (E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z)
     const commonLetters = ['E', 'T', 'A', 'O', 'I', 'N', 'S', 'H', 'R', 'D', 'L', 'C', 'U', 'M', 'W', 'F', 'G', 'Y', 'P', 'B', 'V', 'K', 'J', 'X', 'Q', 'Z'];
     
     // Find unused letters
     const unusedLetters = commonLetters.filter(letter => !gameState.usedLetters.has(letter));
     
+    // --- New: Randomly try to solve puzzle if enough letters are revealed ---
+    const puzzleText = gameState.puzzle.text;
+    const revealedLetters = Array.from(gameState.puzzle.revealed);
+    const revealedCount = revealedLetters.length;
+    const totalLetters = puzzleText.replace(/[^A-Z]/g, '').length;
+    const revealedPercentage = (revealedCount / totalLetters) * 100;
+    // If at least 30% of the letters are revealed, 30% chance to try to solve
+    if (revealedPercentage > 30 && Math.random() < 0.3) {
+      setTimeout(() => {
+        computerSolve(0.7); // 70% success rate
+      }, 1000);
+      return;
+    }
+    // --- End new logic ---
+    
     if (unusedLetters.length === 0) {
       // No letters left, computer tries to solve
       setTimeout(() => {
-        computerSolve();
+        computerSolve(0.7); // 70% success rate
       }, 1000);
       return;
     }
@@ -854,14 +877,7 @@ function WheelOfFortune() {
         updateStats(letter, false);
         
         // Determine next player (cycle through all 3 players)
-        if (gameState.currentPlayer === 1) {
-          nextPlayer = 2; // Sarah -> Mike
-        } else if (gameState.currentPlayer === 2) {
-          nextPlayer = 0; // Mike -> You
-        } else {
-          nextPlayer = 1; // You -> Sarah
-        }
-        
+        nextPlayer = getNextPlayer(gameState.currentPlayer);
         message = `No ${letter}'s. ${gameState.players[nextPlayer].name}'s turn!`;
       }
       
@@ -876,7 +892,8 @@ function WheelOfFortune() {
       }));
       
       // If computer continues, they spin again after 2 seconds
-      if (nextPlayer === 1 || nextPlayer === 2) {
+      const nextPlayerObj = gameState.players[nextPlayer];
+      if (nextPlayerObj && !nextPlayerObj.isHuman) {
         setTimeout(() => {
           computerTurn();
         }, 2000);
@@ -884,25 +901,27 @@ function WheelOfFortune() {
     }, 1000);
   };
 
-  const computerSolve = () => {
+  // Update computerSolve to accept a successRate argument
+  const computerSolve = (successRate = 0.3) => {
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    if (!currentPlayer || currentPlayer.isHuman) return;
+    
     // Computer tries to solve the puzzle (with some randomness)
     const puzzleText = gameState.puzzle.text;
     const revealedText = Array.from(gameState.puzzle.revealed).join('');
     
-    // Simple AI: computer has a 30% chance to solve if enough letters are revealed
-    const revealedPercentage = (gameState.puzzle.revealed.size / puzzleText.replace(/[^A-Z]/g, '').length) * 100;
-    const willSolve = Math.random() < 0.3 && revealedPercentage > 50;
+    // 70% chance to solve if called with 0.7
+    const willSolve = Math.random() < successRate;
     
     console.log('🤖 Computer solve attempt:', {
       player: gameState.players[gameState.currentPlayer].name,
       willSolve: willSolve,
-      revealedPercentage: revealedPercentage,
       revealedLetters: Array.from(gameState.puzzle.revealed),
       puzzleText: puzzleText,
       timestamp: new Date().toISOString()
     });
     
-    setGameState(prev => ({ ...prev, message: `${prev.players[gameState.currentPlayer].name} is thinking...` }));
+    setGameState(prev => ({ ...prev, message: `${prev.players[prev.currentPlayer].name} is thinking...` }));
     
     setTimeout(() => {
       if (willSolve) {
@@ -920,37 +939,30 @@ function WheelOfFortune() {
           ...prev,
           players: newPlayers,
           puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
-          message: `${prev.players[gameState.currentPlayer].name} solved "${prev.puzzle.text}" and earned $${newPlayers[gameState.currentPlayer].roundMoney}!`
+          message: `${prev.players[prev.currentPlayer].name} solved "${prev.puzzle.text}" and earned $${newPlayers[gameState.currentPlayer].roundMoney}!`
         }));
         
         setTimeout(() => {
           setGameState(prev => ({
             ...prev,
-            message: `${prev.players[gameState.currentPlayer].name} wins the round! Click "NEW PUZZLE" to continue.`
+            message: `${prev.players[prev.currentPlayer].name} wins the round! Click "NEW PUZZLE" to continue.`
           }));
-        }, 2000);
+        }, 3000);
       } else {
         // Computer fails to solve
-        console.log('❌ Computer solve attempt failed:', {
+        console.log('❌ Computer failed to solve:', {
           player: gameState.players[gameState.currentPlayer].name,
           puzzleText: puzzleText,
           timestamp: new Date().toISOString()
         });
         
         // Determine next player (cycle through all 3 players)
-        let nextPlayer = 0;
-        if (gameState.currentPlayer === 1) {
-          nextPlayer = 2; // Sarah -> Mike
-        } else if (gameState.currentPlayer === 2) {
-          nextPlayer = 0; // Mike -> You
-        } else {
-          nextPlayer = 1; // You -> Sarah
-        }
+        let nextPlayer = getNextPlayer(gameState.currentPlayer);
         
         setGameState(prev => ({
           ...prev,
           currentPlayer: nextPlayer,
-          message: `${prev.players[gameState.currentPlayer].name} was wrong! ${prev.players[nextPlayer].name}'s turn.`
+          message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
         }));
       }
     }, 1000);
@@ -1126,14 +1138,8 @@ function WheelOfFortune() {
         }
         message = `Sorry, no ${letter}'s. `;
         // Determine next player (cycle through all 3 players)
-        if (gameState.currentPlayer === 0) {
-          nextPlayer = 1; // You -> Sarah
-        } else if (gameState.currentPlayer === 1) {
-          nextPlayer = 2; // Sarah -> Mike
-        } else {
-          nextPlayer = 0; // Mike -> You
-        }
-        message += `${prev.players[nextPlayer].name}'s turn!`;
+        nextPlayer = getNextPlayer(gameState.currentPlayer);
+        message += `${gameState.players[nextPlayer].name}'s turn!`;
         
         // Deactivate Wild Card if used and letter was wrong
         if (wildCardActive) {
@@ -1369,6 +1375,17 @@ function WheelOfFortune() {
       console.error('Error rendering puzzle:', error);
       return <div className="text-red-400">Error loading puzzle</div>;
     }
+  };
+
+  // Helper function to get next player in rotation
+  const getNextPlayer = (currentPlayerIndex: number): number => {
+    return (currentPlayerIndex + 1) % gameState.players.length;
+  };
+
+  // Helper function to check if current player is human
+  const isCurrentPlayerHuman = (): boolean => {
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    return currentPlayer ? currentPlayer.isHuman : false;
   };
 
   return (
