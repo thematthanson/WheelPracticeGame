@@ -1031,74 +1031,79 @@ function WheelOfFortune() {
           </div>
         </div>
 
-        {/* Wheel */}
-        <div className="mb-4 sm:mb-8">
-          {renderWheel()}
-          <div className="text-center">
-            <button
-              onClick={spinWheel}
-              disabled={gameState.isSpinning || gameState.currentPlayer !== 0}
-              className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-500 text-black font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg text-sm sm:text-xl transition-colors"
-            >
-              {gameState.isSpinning ? 'Spinning...' : 
-               gameState.currentPlayer === 0 ? 'SPIN WHEEL' : 'Wait Your Turn'}
-            </button>
-          </div>
-        </div>
-
-        {/* Game Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
-          <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-6">
-            <h3 className="text-sm sm:text-xl font-bold mb-2 sm:mb-4">Call a Letter</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={inputLetter}
-                onChange={(e) => setInputLetter(e.target.value.slice(0, 1))}
-                disabled={gameState.currentPlayer !== 0}
-                className="flex-1 px-2 py-2 sm:px-4 bg-gray-700 border border-gray-600 rounded text-white text-sm sm:text-base disabled:bg-gray-800 disabled:text-gray-500"
-                placeholder={gameState.currentPlayer === 0 ? "Letter..." : "Wait..."}
-                maxLength={1}
-              />
+        {/* Wheel and Controls Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-8">
+          {/* Wheel Section */}
+          <div className="flex flex-col items-center">
+            {renderWheel()}
+            <div className="text-center mt-4">
               <button
-                onClick={callLetter}
-                disabled={gameState.currentPlayer !== 0}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-3 py-2 sm:px-6 rounded font-semibold transition-colors text-sm sm:text-base"
+                onClick={spinWheel}
+                disabled={gameState.isSpinning || gameState.currentPlayer !== 0}
+                className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-500 text-black font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg text-sm sm:text-xl transition-colors"
               >
-                Call
+                {gameState.isSpinning ? 'Spinning...' : 
+                 gameState.currentPlayer === 0 ? 'SPIN WHEEL' : 'Wait Your Turn'}
               </button>
-            </div>
-            <div className="mt-2 sm:mt-4 text-xs sm:text-sm">
-              <div className="mb-1 sm:mb-2">Used: {Array.from(gameState.usedLetters).join(', ')}</div>
-              <div className="text-gray-400">Vowels cost $250</div>
             </div>
           </div>
 
-          <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-6">
-            <h3 className="text-sm sm:text-xl font-bold mb-2 sm:mb-4">Solve Puzzle</h3>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={solveAttempt}
-                onChange={(e) => setSolveAttempt(e.target.value)}
-                disabled={gameState.currentPlayer !== 0}
-                className="flex-1 px-2 py-2 sm:px-4 bg-gray-700 border border-gray-600 rounded text-white text-sm sm:text-base disabled:bg-gray-800 disabled:text-gray-500"
-                placeholder={gameState.currentPlayer === 0 ? "Your answer..." : "Wait..."}
-              />
+          {/* Game Controls Section */}
+          <div className="space-y-4">
+            {/* Call a Letter */}
+            <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
+              <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3">Call a Letter</h3>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={inputLetter}
+                  onChange={(e) => setInputLetter(e.target.value.slice(0, 1))}
+                  disabled={gameState.currentPlayer !== 0}
+                  className="flex-1 px-2 py-2 sm:px-3 bg-gray-700 border border-gray-600 rounded text-white text-sm disabled:bg-gray-800 disabled:text-gray-500"
+                  placeholder={gameState.currentPlayer === 0 ? "Letter..." : "Wait..."}
+                  maxLength={1}
+                />
+                <button
+                  onClick={callLetter}
+                  disabled={gameState.currentPlayer !== 0}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-3 py-2 rounded font-semibold transition-colors text-sm"
+                >
+                  Call
+                </button>
+              </div>
+              <div className="text-xs">
+                <div className="mb-1">Used: {Array.from(gameState.usedLetters).join(', ')}</div>
+                <div className="text-gray-400">Vowels cost $250</div>
+              </div>
+            </div>
+
+            {/* Solve Puzzle */}
+            <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
+              <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3">Solve Puzzle</h3>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={solveAttempt}
+                  onChange={(e) => setSolveAttempt(e.target.value)}
+                  disabled={gameState.currentPlayer !== 0}
+                  className="flex-1 px-2 py-2 sm:px-3 bg-gray-700 border border-gray-600 rounded text-white text-sm disabled:bg-gray-800 disabled:text-gray-500"
+                  placeholder={gameState.currentPlayer === 0 ? "Your answer..." : "Wait..."}
+                />
+                <button
+                  onClick={solvePuzzle}
+                  disabled={gameState.currentPlayer !== 0}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-3 py-2 rounded font-semibold transition-colors text-sm"
+                >
+                  Solve
+                </button>
+              </div>
               <button
-                onClick={solvePuzzle}
-                disabled={gameState.currentPlayer !== 0}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-3 py-2 sm:px-6 rounded font-semibold transition-colors text-sm sm:text-base"
+                onClick={startNewPuzzle}
+                className="w-full bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded font-semibold transition-colors text-sm"
               >
-                Solve
+                NEW PUZZLE
               </button>
             </div>
-            <button
-              onClick={startNewPuzzle}
-              className="w-full bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded font-semibold transition-colors text-sm sm:text-base"
-            >
-              NEW PUZZLE
-            </button>
           </div>
         </div>
 
