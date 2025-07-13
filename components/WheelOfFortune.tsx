@@ -332,7 +332,7 @@ function WheelOfFortune() {
     turnInProgress: false,
     lastSpinResult: null,
     landedSegmentIndex: -1,
-    message: 'Your turn! Spin the wheel to begin!'
+    message: 'Welcome to Wheel of Fortune!'
   });
 
   const [inputLetter, setInputLetter] = useState('');
@@ -942,7 +942,7 @@ function WheelOfFortune() {
       lastSpinResult: null,
       landedSegmentIndex: -1,
       turnInProgress: false,
-      message: 'New round! Your turn - spin the wheel to begin!'
+      message: 'New round!'
     }));
   };
 
