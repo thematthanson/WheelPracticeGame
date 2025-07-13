@@ -692,7 +692,7 @@ function WheelOfFortune() {
         
         {/* Pointer */}
         <div 
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 z-30"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 rotate-180 z-30"
           style={{
             width: 0,
             height: 0,
