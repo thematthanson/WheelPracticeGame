@@ -1097,7 +1097,7 @@ function WheelOfFortune() {
         </div>
 
         {/* Game Status */}
-        <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-4 sm:mb-8 text-xs sm:text-base">
+        <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-2 sm:mb-4 text-xs sm:text-base">
           {gameState.players.map((player, index) => (
             <div key={index} className={`rounded-lg p-2 sm:p-4 ${
               gameState.currentPlayer === index 
@@ -1129,16 +1129,6 @@ function WheelOfFortune() {
               )}
             </div>
           ))}
-        </div>
-
-        {/* Round Info */}
-        <div className="text-center mb-4">
-          <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2 sm:p-3 inline-block">
-            <div className="flex items-center justify-center">
-              <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-              <span className="font-semibold text-sm sm:text-base">Round {gameState.currentRound}</span>
-            </div>
-          </div>
         </div>
 
         {/* Puzzle Board */}
