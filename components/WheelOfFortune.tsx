@@ -964,11 +964,12 @@ function WheelOfFortune() {
     // The wheel rotates clockwise, so we need to find which segment is at the top
     // Since segments start at -90 degrees (top), we need to calculate which segment
     // is now at the top after the rotation
-    let index = Math.floor(normalizedRotation / segmentAngle);
+    // We need to invert the calculation because the wheel rotates clockwise
+    let index = WHEEL_SEGMENTS.length - 1 - Math.floor(normalizedRotation / segmentAngle);
     
-    // The segments are arranged clockwise starting from the top
-    // So we need to adjust the index to get the correct segment at the top
-    index = index % WHEEL_SEGMENTS.length;
+    // Ensure index is within bounds
+    if (index < 0) index += WHEEL_SEGMENTS.length;
+    if (index >= WHEEL_SEGMENTS.length) index -= WHEEL_SEGMENTS.length;
     
     return index;
   };
