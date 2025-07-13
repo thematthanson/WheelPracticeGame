@@ -325,6 +325,7 @@ function WheelOfFortune() {
   const [solveAttempt, setSolveAttempt] = useState('');
   const [usedPuzzles, setUsedPuzzles] = useState<Set<string>>(new Set());
   const [availablePuzzles, setAvailablePuzzles] = useState<string[]>([]);
+  const [showResetPanel, setShowResetPanel] = useState(false);
 
   // Load used puzzles from localStorage
   useEffect(() => {
@@ -365,15 +366,11 @@ function WheelOfFortune() {
   // Generate puzzle function with guaranteed no duplicates
   const generatePuzzle = (): Puzzle => {
     try {
-      // If we've used most puzzles, offer to reset
+      // If we've used most puzzles, show reset panel instead of alert
       if (availablePuzzles.length < 10 && availablePuzzles.length > 0) {
-        const shouldReset = confirm(`You've completed ${usedPuzzles.size} puzzles! Only ${availablePuzzles.length} fresh puzzles remain. Would you like to reset and start over with all puzzles available again?`);
-        if (shouldReset) {
-          setUsedPuzzles(new Set());
-          localStorage.removeItem('jenswheelpractice-used-puzzles');
-          // Recursively call to generate from fresh pool
-          return generatePuzzle();
-        }
+        setShowResetPanel(true);
+        // Return current puzzle while user decides
+        return gameState.puzzle;
       }
 
       // If no available puzzles, reset automatically
@@ -836,6 +833,25 @@ function WheelOfFortune() {
     }));
   };
 
+  const handleResetProgress = () => {
+    setUsedPuzzles(new Set());
+    localStorage.removeItem('jenswheelpractice-used-puzzles');
+    setShowResetPanel(false);
+    // Generate a fresh puzzle after reset
+    const newPuzzle = generatePuzzle();
+    setGameState(prev => ({ 
+      ...prev, 
+      puzzle: newPuzzle,
+      usedLetters: new Set<string>(),
+      wheelValue: 0,
+      message: 'Progress reset! Fresh puzzles available!',
+      currentPlayer: 0,
+      turnInProgress: false,
+      lastSpinResult: null,
+      landedSegmentIndex: -1
+    }));
+  };
+
   const renderPuzzle = () => {
     try {
       const { specialFormat } = gameState.puzzle;
@@ -1140,6 +1156,36 @@ function WheelOfFortune() {
             </button>
           )}
         </div>
+
+        {/* Reset Progress Panel */}
+        {showResetPanel && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-md mx-4">
+              <h3 className="text-xl font-bold text-yellow-400 mb-4">Reset Progress?</h3>
+              <p className="text-white mb-4">
+                You've completed <span className="text-yellow-400 font-bold">{usedPuzzles.size}</span> puzzles! 
+                Only <span className="text-red-400 font-bold">{availablePuzzles.length}</span> fresh puzzles remain.
+              </p>
+              <p className="text-gray-300 mb-6">
+                Would you like to reset and start over with all puzzles available again?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleResetProgress}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Yes, Reset
+                </button>
+                <button
+                  onClick={() => setShowResetPanel(false)}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Continue Playing
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
