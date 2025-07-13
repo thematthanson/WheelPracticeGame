@@ -380,6 +380,15 @@ function WheelOfFortune() {
     localStorage.setItem('jenswheelpractice-stats', JSON.stringify(gameStats));
   }, [gameStats]);
 
+  // Trigger computer turn when it's their turn
+  useEffect(() => {
+    if (gameState.currentPlayer === 1 && !gameState.isSpinning && !gameState.turnInProgress) {
+      setTimeout(() => {
+        computerTurn();
+      }, 1000); // 1 second delay before computer starts
+    }
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress]);
+
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
     setGameStats(prev => {
@@ -700,6 +709,181 @@ function WheelOfFortune() {
   };
 
   // Authentic wheel spinner with realistic physics
+  // Computer player logic
+  const computerTurn = () => {
+    if (gameState.currentPlayer !== 1) return;
+    
+    // Computer spins the wheel
+    setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[1].name} is spinning...`, turnInProgress: true }));
+    
+    // Generate realistic spin
+    const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
+    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
+    const totalRotation = (baseRotations * 360) + finalAngle;
+    
+    const newRotation = gameState.wheelRotation + totalRotation;
+    setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
+    
+    setTimeout(() => {
+      const segment = WHEEL_SEGMENTS[randomSegmentIndex];
+      let newMessage = '';
+      let newPlayers = [...gameState.players];
+      let nextPlayer = 0; // Switch back to player
+      
+      if (typeof segment === 'number') {
+        newMessage = `${gameState.players[1].name} spun $${segment}!`;
+        // Computer makes a guess
+        setTimeout(() => {
+          computerGuess(segment);
+        }, 1000);
+      } else if (segment === 'BANKRUPT') {
+        newMessage = `${gameState.players[1].name} went BANKRUPT! Your turn!`;
+        newPlayers[1].roundMoney = 0;
+        nextPlayer = 0;
+      } else if (segment === 'LOSE A TURN') {
+        newMessage = `${gameState.players[1].name} lost their turn! Your turn!`;
+        nextPlayer = 0;
+      } else if (typeof segment === 'object' && segment && 'type' in segment) {
+        if (segment.type === 'PRIZE') {
+          newMessage = `${gameState.players[1].name} landed on ${(segment as WheelSegment).displayValue}!`;
+        } else if (segment.type === 'WILD_CARD') {
+          newMessage = `${gameState.players[1].name} got the WILD CARD!`;
+        } else if (segment.type === 'GIFT_TAG') {
+          newMessage = `${gameState.players[1].name} got the $1000 GIFT TAG!`;
+        } else if (segment.type === 'MILLION') {
+          newMessage = `${gameState.players[1].name} got the MILLION DOLLAR WEDGE!`;
+        }
+        // Computer makes a guess
+        setTimeout(() => {
+          computerGuess(segment);
+        }, 1000);
+      }
+      
+      setGameState(prev => ({
+        ...prev,
+        isSpinning: false,
+        wheelValue: segment,
+        lastSpinResult: segment,
+        landedSegmentIndex: randomSegmentIndex,
+        message: newMessage,
+        players: newPlayers,
+        currentPlayer: nextPlayer,
+        turnInProgress: false
+      }));
+    }, 1000);
+  };
+
+  const computerGuess = (wheelValue: number | string | WheelSegment) => {
+    // Common letters in English (E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z)
+    const commonLetters = ['E', 'T', 'A', 'O', 'I', 'N', 'S', 'H', 'R', 'D', 'L', 'C', 'U', 'M', 'W', 'F', 'G', 'Y', 'P', 'B', 'V', 'K', 'J', 'X', 'Q', 'Z'];
+    
+    // Find unused letters
+    const unusedLetters = commonLetters.filter(letter => !gameState.usedLetters.has(letter));
+    
+    if (unusedLetters.length === 0) {
+      // No letters left, computer tries to solve
+      setTimeout(() => {
+        computerSolve();
+      }, 1000);
+      return;
+    }
+    
+    // Computer picks a letter (with some randomness)
+    const randomIndex = Math.floor(Math.random() * Math.min(unusedLetters.length, 5)); // Pick from top 5 unused
+    const letter = unusedLetters[randomIndex];
+    
+    setGameState(prev => ({ ...prev, message: `${prev.players[1].name} calls ${letter}!` }));
+    
+    setTimeout(() => {
+      const letterInPuzzle = gameState.puzzle.text.includes(letter);
+      const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
+      
+      let newPlayers = [...gameState.players];
+      let nextPlayer = 0;
+      let message = '';
+      
+      if (letterInPuzzle) {
+        // Update statistics for computer's correct guess
+        updateStats(letter, true);
+        
+        if (typeof wheelValue === 'number') {
+          const earned = wheelValue * letterCount;
+          newPlayers[1].roundMoney += earned;
+          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[1].name} earned $${earned}.`;
+        } else {
+          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[1].name} continues!`;
+        }
+        nextPlayer = 1; // Computer continues
+      } else {
+        // Update statistics for computer's incorrect guess
+        updateStats(letter, false);
+        
+        message = `No ${letter}'s. Your turn!`;
+        nextPlayer = 0;
+      }
+      
+      setGameState(prev => ({
+        ...prev,
+        usedLetters: new Set([...prev.usedLetters, letter]),
+        puzzle: { ...prev.puzzle, revealed: new Set([...prev.puzzle.revealed, letter]) },
+        players: newPlayers,
+        currentPlayer: nextPlayer,
+        message,
+        turnInProgress: false
+      }));
+      
+      // If computer continues, they spin again after 2 seconds
+      if (nextPlayer === 1) {
+        setTimeout(() => {
+          computerTurn();
+        }, 2000);
+      }
+    }, 1000);
+  };
+
+  const computerSolve = () => {
+    // Computer tries to solve the puzzle (with some randomness)
+    const puzzleText = gameState.puzzle.text;
+    const revealedText = Array.from(gameState.puzzle.revealed).join('');
+    
+    // Simple AI: computer has a 30% chance to solve if enough letters are revealed
+    const revealedPercentage = (gameState.puzzle.revealed.size / puzzleText.replace(/[^A-Z]/g, '').length) * 100;
+    const willSolve = Math.random() < 0.3 && revealedPercentage > 50;
+    
+    setGameState(prev => ({ ...prev, message: `${prev.players[1].name} is thinking...` }));
+    
+    setTimeout(() => {
+      if (willSolve) {
+        // Computer solves correctly
+        const newPlayers = [...gameState.players];
+        newPlayers[1].totalMoney += newPlayers[1].roundMoney;
+        
+        setGameState(prev => ({
+          ...prev,
+          players: newPlayers,
+          puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+          message: `${prev.players[1].name} solved "${prev.puzzle.text}" and earned $${newPlayers[1].roundMoney}!`
+        }));
+        
+        setTimeout(() => {
+          setGameState(prev => ({
+            ...prev,
+            message: `${prev.players[1].name} wins the round! Click "NEW PUZZLE" to continue.`
+          }));
+        }, 2000);
+      } else {
+        // Computer fails to solve
+        setGameState(prev => ({
+          ...prev,
+          currentPlayer: 0,
+          message: `${prev.players[1].name} was wrong! Your turn.`
+        }));
+      }
+    }, 1000);
+  };
+
   const spinWheel = () => {
     if (gameState.isSpinning || gameState.currentPlayer !== 0) return;
     
@@ -757,7 +941,7 @@ function WheelOfFortune() {
         currentPlayer: nextPlayer,
         turnInProgress: false
       }));
-    }, 3000); // Longer spin time for realism
+    }, 1000); // Faster spin time for computer turns
   };
 
   const callLetter = () => {
