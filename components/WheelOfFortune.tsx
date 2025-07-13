@@ -379,6 +379,7 @@ function WheelOfFortune() {
     leastSuccessfulLetter: ''
   });
   const [showStats, setShowStats] = useState(false);
+  const [computerTurnInProgress, setComputerTurnInProgress] = useState(false);
 
   // Load used puzzles and stats from localStorage
   useEffect(() => {
@@ -408,7 +409,7 @@ function WheelOfFortune() {
   // Trigger computer turn when it's their turn
   useEffect(() => {
     const currentPlayer = gameState.players[gameState.currentPlayer];
-    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress;
+    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress;
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -416,18 +417,18 @@ function WheelOfFortune() {
       isHuman: currentPlayer?.isHuman,
       isSpinning: gameState.isSpinning,
       turnInProgress: gameState.turnInProgress,
+      computerTurnInProgress,
       shouldTrigger: isComputerTurn
     });
     
     if (isComputerTurn) {
       console.log('🤖 Triggering computer turn for:', currentPlayer.name);
-      // Set turnInProgress immediately to prevent multiple triggers
-      setGameState(prev => ({ ...prev, turnInProgress: true }));
+      setComputerTurnInProgress(true);
       setTimeout(() => {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -769,6 +770,14 @@ function WheelOfFortune() {
       return;
     }
     
+    // Prevent multiple simultaneous computer turns
+    if (gameState.turnInProgress || gameState.isSpinning || computerTurnInProgress) {
+      console.log('🔄 Computer turn already in progress, skipping...');
+      return;
+    }
+    
+    console.log(`🤖 Starting computer turn for: ${currentPlayer.name}`);
+    
     // Computer spins the wheel
     setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
     
@@ -900,6 +909,14 @@ function WheelOfFortune() {
       return;
     }
     
+    // Prevent multiple simultaneous computer guesses
+    if (gameState.turnInProgress) {
+      console.log('🔄 Computer guess already in progress, skipping...');
+      return;
+    }
+    
+    console.log(`🤖 Computer ${currentPlayer.name} making guess...`);
+    
     // Common letters in English (E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z)
     const commonLetters = ['E', 'T', 'A', 'O', 'I', 'N', 'S', 'H', 'R', 'D', 'L', 'C', 'U', 'M', 'W', 'F', 'G', 'Y', 'P', 'B', 'V', 'K', 'J', 'X', 'Q', 'Z'];
     
@@ -914,6 +931,7 @@ function WheelOfFortune() {
     const revealedPercentage = (revealedCount / totalLetters) * 100;
     // If at least 30% of the letters are revealed, 30% chance to try to solve
     if (revealedPercentage > 30 && Math.random() < 0.3) {
+      console.log(`🤖 Computer ${currentPlayer.name} attempting to solve (${revealedPercentage.toFixed(1)}% revealed)`);
       setTimeout(() => {
         computerSolve(0.7); // 70% success rate
       }, 1000);
@@ -923,6 +941,7 @@ function WheelOfFortune() {
     
     if (unusedLetters.length === 0) {
       // No letters left, computer tries to solve
+      console.log(`🤖 Computer ${currentPlayer.name} attempting to solve (no letters left)`);
       setTimeout(() => {
         computerSolve(0.7); // 70% success rate
       }, 1000);
@@ -991,8 +1010,11 @@ function WheelOfFortune() {
         const nextPlayerObj = gameState.players[nextPlayer];
         if (nextPlayerObj && !nextPlayerObj.isHuman) {
           setTimeout(() => {
+            setComputerTurnInProgress(false); // Reset flag before next computer turn
             computerTurn();
           }, 2000);
+        } else {
+          setComputerTurnInProgress(false); // Reset flag when turn passes to human
         }
       }
     }, 1000);
@@ -1008,6 +1030,14 @@ function WheelOfFortune() {
       console.log('❌ Computer cannot play in final round');
       return;
     }
+    
+    // Prevent multiple simultaneous computer solve attempts
+    if (gameState.turnInProgress) {
+      console.log('🔄 Computer solve already in progress, skipping...');
+      return;
+    }
+    
+    console.log(`🤖 Computer ${currentPlayer.name} attempting to solve...`);
     
     // Computer tries to solve the puzzle (with some randomness)
     const puzzleText = gameState.puzzle.text;
@@ -1118,6 +1148,9 @@ function WheelOfFortune() {
       
       // Clear computer solve attempt
       setComputerSolveAttempt('');
+      
+      // Reset computer turn flag
+      setComputerTurnInProgress(false);
     }, 1000);
   };
 
