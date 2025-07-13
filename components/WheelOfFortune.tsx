@@ -360,7 +360,6 @@ function WheelOfFortune() {
   const [solveAttempt, setSolveAttempt] = useState('');
   const [usedPuzzles, setUsedPuzzles] = useState<Set<string>>(new Set());
   const [availablePuzzles, setAvailablePuzzles] = useState<string[]>([]);
-  const [showResetPanel, setShowResetPanel] = useState(false);
   const [wildCardActive, setWildCardActive] = useState(false);
   const [computerAction, setComputerAction] = useState('');
   const [computerSolveAttempt, setComputerSolveAttempt] = useState('');
@@ -522,11 +521,18 @@ function WheelOfFortune() {
   // Generate puzzle function with guaranteed no duplicates
   const generatePuzzle = (): Puzzle => {
     try {
-      // If we've used most puzzles, show reset panel instead of alert
+      // If we've used most puzzles, reset automatically
       if (availablePuzzles.length < 10 && availablePuzzles.length > 0) {
-        setShowResetPanel(true);
-        // Return current puzzle while user decides
-        return gameState.puzzle;
+        // Reset automatically when running low on puzzles
+        setUsedPuzzles(new Set());
+        localStorage.removeItem('jenswheelpractice-used-puzzles');
+        // Return a default puzzle instead of recursive call to avoid infinite loop
+        return {
+          text: 'WHEEL OF FORTUNE',
+          category: 'PHRASE',
+          revealed: new Set<string>(),
+          specialFormat: null
+        };
       }
 
       // If no available puzzles, reset automatically
@@ -1600,7 +1606,6 @@ function WheelOfFortune() {
     });
     localStorage.removeItem('jenswheelpractice-used-puzzles');
     localStorage.removeItem('jenswheelpractice-stats');
-    setShowResetPanel(false);
     // Generate a fresh puzzle after reset
     const newPuzzle = generatePuzzle();
     setGameState(prev => ({ 
@@ -1969,14 +1974,7 @@ function WheelOfFortune() {
             >
               📊 {showStats ? 'Hide' : 'Show'} Statistics
             </button>
-            {usedPuzzles.size > 0 && (
-              <button
-                onClick={() => setShowResetPanel(true)}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
-              >
-                Reset Progress
-              </button>
-            )}
+
           </div>
         </div>
 
@@ -2072,35 +2070,7 @@ function WheelOfFortune() {
           </div>
         )}
 
-        {/* Reset Progress Panel */}
-        {showResetPanel && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 max-w-md mx-4">
-              <h3 className="text-xl font-bold text-yellow-400 mb-4">Reset Progress?</h3>
-              <p className="text-white mb-4">
-                You've completed <span className="text-yellow-400 font-bold">{usedPuzzles.size}</span> puzzles! 
-                Only <span className="text-red-400 font-bold">{availablePuzzles.length}</span> fresh puzzles remain.
-              </p>
-              <p className="text-gray-300 mb-6">
-                Would you like to reset and start over with all puzzles available again?
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleResetProgress}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  Yes, Reset
-                </button>
-                <button
-                  onClick={() => setShowResetPanel(false)}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  Continue Playing
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );
