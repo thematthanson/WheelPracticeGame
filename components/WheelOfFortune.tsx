@@ -430,7 +430,7 @@ function WheelOfFortune() {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -842,7 +842,12 @@ function WheelOfFortune() {
         setTimeout(() => {
           const nextPlayerObj = gameState.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
             computerTurn();
+          } else {
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
           }
         }, 2000);
       } else if (segment === 'LOSE A TURN') {
@@ -867,7 +872,12 @@ function WheelOfFortune() {
         setTimeout(() => {
           const nextPlayerObj = gameState.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
             computerTurn();
+          } else {
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
           }
         }, 2000);
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
@@ -1013,6 +1023,7 @@ function WheelOfFortune() {
         if (nextPlayerObj && !nextPlayerObj.isHuman) {
           setTimeout(() => {
             setComputerTurnInProgress(false); // Reset flag before next computer turn
+            computerTurnRef.current = false;
             computerTurn();
           }, 2000);
         } else {
@@ -1147,6 +1158,19 @@ function WheelOfFortune() {
           currentPlayer: nextPlayer,
           message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
         }));
+        
+        // Start next player's turn if it's a computer
+        setTimeout(() => {
+          const nextPlayerObj = gameState.players[nextPlayer];
+          if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
+            computerTurn();
+          } else {
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
+          }
+        }, 2000);
       }
       
       // Clear computer solve attempt
@@ -1255,7 +1279,7 @@ function WheelOfFortune() {
       }
     }
     
-    if (isVowel && gameState.players[0].roundMoney < 250 && !gameState.isFinalRound) {
+    if (isVowel && (gameState.players[0].roundMoney < 250 || gameState.players[0].roundMoney === 0) && !gameState.isFinalRound) {
       setGameState(prev => ({ ...prev, message: 'Not enough money to buy a vowel! ($250 required)' }));
       return;
     }
