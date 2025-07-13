@@ -315,6 +315,21 @@ const PUZZLE_TEMPLATES: PuzzleTemplates = {
   ]
 };
 
+// Function to shuffle array (Fisher-Yates algorithm)
+const shuffleArray = (array: any[]): any[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// Create randomized wheel segments
+const getRandomizedWheelSegments = () => {
+  return shuffleArray(WHEEL_SEGMENTS);
+};
+
 function WheelOfFortune() {
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
@@ -343,6 +358,7 @@ function WheelOfFortune() {
   const [wildCardActive, setWildCardActive] = useState(false);
   const [computerAction, setComputerAction] = useState('');
   const [computerSolveAttempt, setComputerSolveAttempt] = useState('');
+  const [currentWheelSegments, setCurrentWheelSegments] = useState(getRandomizedWheelSegments());
   const [gameStats, setGameStats] = useState<GameStats>({
     totalPuzzles: 0,
     solvedPuzzles: 0,
@@ -602,7 +618,7 @@ function WheelOfFortune() {
 
   // Authentic wheel renderer with visible segments
   const renderWheel = () => {
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const segmentAngle = 360 / currentWheelSegments.length;
     
     return (
       <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 mx-auto mb-4 sm:mb-8">
@@ -619,7 +635,7 @@ function WheelOfFortune() {
               transformOrigin: 'center'
             }}
           >
-            {WHEEL_SEGMENTS.map((segment, index) => {
+            {currentWheelSegments.map((segment, index) => {
               const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
               const endAngle = ((index + 1) * segmentAngle - 90) * (Math.PI / 180);
               const isLanded = gameState.landedSegmentIndex === index && !gameState.isSpinning;
@@ -741,8 +757,8 @@ function WheelOfFortune() {
     
     // Generate realistic spin
     const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    const segmentAngle = 360 / currentWheelSegments.length;
+    const randomSegmentIndex = Math.floor(Math.random() * currentWheelSegments.length);
     const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
     const totalRotation = (baseRotations * 360) + finalAngle;
     
@@ -751,7 +767,7 @@ function WheelOfFortune() {
     
     setTimeout(() => {
       const landedIndex = getLandedSegmentIndex(newRotation);
-      const segment = WHEEL_SEGMENTS[landedIndex];
+      const segment = currentWheelSegments[landedIndex];
       let newMessage = '';
       let newPlayers = [...gameState.players];
       let nextPlayer = gameState.currentPlayer; // Default to same player
@@ -986,17 +1002,17 @@ function WheelOfFortune() {
     // We need to find which segment is at the top after the wheel rotates
     
     const normalizedRotation = ((rotation % 360) + 360) % 360;
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const segmentAngle = 360 / currentWheelSegments.length;
     
     // The wheel rotates clockwise, so we need to find which segment is at the top
     // Since segments start at -90 degrees (top), we need to calculate which segment
     // is now at the top after the rotation
     // We need to invert the calculation because the wheel rotates clockwise
-    let index = WHEEL_SEGMENTS.length - 1 - Math.floor(normalizedRotation / segmentAngle);
+    let index = currentWheelSegments.length - 1 - Math.floor(normalizedRotation / segmentAngle);
     
     // Ensure index is within bounds
-    if (index < 0) index += WHEEL_SEGMENTS.length;
-    if (index >= WHEEL_SEGMENTS.length) index -= WHEEL_SEGMENTS.length;
+    if (index < 0) index += currentWheelSegments.length;
+    if (index >= currentWheelSegments.length) index -= currentWheelSegments.length;
     
     return index;
   };
@@ -1005,14 +1021,14 @@ function WheelOfFortune() {
     if (gameState.isSpinning || gameState.currentPlayer !== 0) return;
     setGameState(prev => ({ ...prev, isSpinning: true, message: 'Spinning...', turnInProgress: true }));
     const baseRotations = 3 + Math.random() * 4;
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const segmentAngle = 360 / currentWheelSegments.length;
     const randomOffset = Math.random() * segmentAngle;
     const totalRotation = (baseRotations * 360) + randomOffset;
     const newRotation = gameState.wheelRotation + totalRotation;
     setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
     setTimeout(() => {
       const landedIndex = getLandedSegmentIndex(newRotation);
-      const segment = WHEEL_SEGMENTS[landedIndex];
+      const segment = currentWheelSegments[landedIndex];
       let newMessage = '';
       let newPlayers = [...gameState.players];
       let nextPlayer = gameState.currentPlayer;
@@ -1242,6 +1258,8 @@ function WheelOfFortune() {
   // Add new puzzle function for manual control
   const startNewPuzzle = () => {
     const newPuzzle = generatePuzzle();
+    // Randomize wheel segments for the new round
+    setCurrentWheelSegments(getRandomizedWheelSegments());
     setGameState(prev => ({
       ...prev,
       currentRound: prev.currentRound + 1,
