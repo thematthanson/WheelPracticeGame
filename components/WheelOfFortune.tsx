@@ -1464,8 +1464,13 @@ function WheelOfFortune() {
       setTimeout(() => {
         setGameState(prev => ({
           ...prev,
-          message: `You win the round! Click "NEW PUZZLE" to continue.`
+          message: `You win the round! Advancing to next round...`
         }));
+      }, 2000);
+      
+      // Automatically advance to next round after 3 seconds
+      setTimeout(() => {
+        startNewPuzzle();
       }, 3000);
     } else {
       // Log wrong solve attempt
