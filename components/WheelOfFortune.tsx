@@ -366,7 +366,7 @@ function WheelOfFortune() {
   const generatePuzzle = (): Puzzle => {
     try {
       // If we've used most puzzles, offer to reset
-      if (availablePuzzles.length < 10) {
+      if (availablePuzzles.length < 10 && availablePuzzles.length > 0) {
         const shouldReset = confirm(`You've completed ${usedPuzzles.size} puzzles! Only ${availablePuzzles.length} fresh puzzles remain. Would you like to reset and start over with all puzzles available again?`);
         if (shouldReset) {
           setUsedPuzzles(new Set());
@@ -378,9 +378,16 @@ function WheelOfFortune() {
 
       // If no available puzzles, reset automatically
       if (availablePuzzles.length === 0) {
+        console.log('No available puzzles, resetting...');
         setUsedPuzzles(new Set());
         localStorage.removeItem('jenswheelpractice-used-puzzles');
-        return generatePuzzle();
+        // Return a default puzzle instead of recursive call to avoid infinite loop
+        return {
+          text: 'WHEEL OF FORTUNE',
+          category: 'PHRASE',
+          revealed: new Set<string>(),
+          specialFormat: null
+        };
       }
 
       // Pick a random available puzzle
@@ -455,12 +462,15 @@ function WheelOfFortune() {
   // Initialize puzzle on mount (only once)
   useEffect(() => {
     try {
-      const newPuzzle = generatePuzzle();
-      setGameState(prev => ({ ...prev, puzzle: newPuzzle }));
+      // Wait for availablePuzzles to be populated before generating first puzzle
+      if (availablePuzzles.length > 0) {
+        const newPuzzle = generatePuzzle();
+        setGameState(prev => ({ ...prev, puzzle: newPuzzle }));
+      }
     } catch (error) {
       console.error('Error initializing puzzle:', error);
     }
-  }, []); // Remove generatePuzzle dependency to prevent re-rendering
+  }, [availablePuzzles]); // Depend on availablePuzzles to ensure it's populated
 
   // Authentic wheel renderer with visible segments
   const renderWheel = () => {
