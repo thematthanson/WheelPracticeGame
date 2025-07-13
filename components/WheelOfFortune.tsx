@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { RotateCcw, Play, Pause, Award, Clock, DollarSign } from 'lucide-react';
 
 // Type definitions
@@ -380,6 +380,7 @@ function WheelOfFortune() {
   });
   const [showStats, setShowStats] = useState(false);
   const [computerTurnInProgress, setComputerTurnInProgress] = useState(false);
+  const computerTurnRef = useRef(false);
 
   // Load used puzzles and stats from localStorage
   useEffect(() => {
@@ -409,7 +410,7 @@ function WheelOfFortune() {
   // Trigger computer turn when it's their turn
   useEffect(() => {
     const currentPlayer = gameState.players[gameState.currentPlayer];
-    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress;
+    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress && !computerTurnRef.current;
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -423,12 +424,13 @@ function WheelOfFortune() {
     
     if (isComputerTurn) {
       console.log('🤖 Triggering computer turn for:', currentPlayer.name);
+      computerTurnRef.current = true;
       setComputerTurnInProgress(true);
       setTimeout(() => {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -1015,6 +1017,7 @@ function WheelOfFortune() {
           }, 2000);
         } else {
           setComputerTurnInProgress(false); // Reset flag when turn passes to human
+          computerTurnRef.current = false;
         }
       }
     }, 1000);
@@ -1151,6 +1154,7 @@ function WheelOfFortune() {
       
       // Reset computer turn flag
       setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
     }, 1000);
   };
 
@@ -1256,7 +1260,7 @@ function WheelOfFortune() {
       return;
     }
 
-    // Allow consonants with Wild Card even without wheel value (but not in final round)
+    // Only allow consonant guess if wheelValue is set (not 0), unless using Wild Card or in final round
     if (isConsonant && !gameState.wheelValue && !wildCardActive && !gameState.isFinalRound) {
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
@@ -1294,6 +1298,19 @@ function WheelOfFortune() {
             newPlayers[0].roundMoney -= 250;
           }
           message = `Yes! ${letterCount} ${letter}'s. ${prev.isFinalRound ? 'Vowel revealed!' : 'You bought a vowel.'}`;
+          // Player can continue turn (buy another vowel or spin again)
+          return {
+            ...prev,
+            usedLetters: newUsedLetters,
+            puzzle: { ...prev.puzzle, revealed: newRevealed },
+            players: newPlayers,
+            currentPlayer: nextPlayer,
+            message,
+            wheelValue: prev.wheelValue, // Do not reset wheelValue for vowels
+            landedSegmentIndex: prev.landedSegmentIndex,
+            finalRoundLettersRemaining: newFinalRoundLettersRemaining,
+            finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
+          };
         } else {
           // Handle different wheel segment types (not applicable in final round)
           if (!prev.isFinalRound) {
@@ -1302,7 +1319,7 @@ function WheelOfFortune() {
             if (typeof wheelValue === 'number') {
               const earned = wheelValue * letterCount;
               newPlayers[0].roundMoney += earned;
-              message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}.`;
+              message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}. Spin again or buy a vowel.`;
             } else if (typeof wheelValue === 'object' && wheelValue && 'type' in wheelValue) {
               const wheelSegment = wheelValue as WheelSegment;
               if (wheelSegment.type === 'PRIZE') {
@@ -1313,11 +1330,11 @@ function WheelOfFortune() {
                   round: prev.currentRound,
                   description: (wheelSegment.name && PRIZE_DESCRIPTIONS[wheelSegment.name as keyof typeof PRIZE_DESCRIPTIONS]) || 'A fabulous prize!'
                 });
-                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}!`;
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}! Spin again or buy a vowel.`;
               } else if (wheelSegment.type === 'WILD_CARD') {
                 newPlayers[0].roundMoney += 500 * letterCount;
                 newPlayers[0].specialCards.push('WILD_CARD');
-                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD!`;
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD! Spin again or buy a vowel.`;
               } else if (wheelSegment.type === 'GIFT_TAG') {
                 newPlayers[0].roundMoney += 500 * letterCount;
                 newPlayers[0].prizes.push({
@@ -1326,17 +1343,17 @@ function WheelOfFortune() {
                   round: prev.currentRound,
                   description: PRIZE_DESCRIPTIONS['$1000 GIFT TAG']
                 });
-                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG!`;
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG! Spin again or buy a vowel.`;
               } else if (wheelSegment.type === 'MILLION') {
                 newPlayers[0].roundMoney += 900 * letterCount;
                 newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
-                message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE!`;
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE! Spin again or buy a vowel.`;
               }
             } else if (wildCardActive) {
               // Wild Card usage - give base value for consonant
               const earned = 500 * letterCount;
               newPlayers[0].roundMoney += earned;
-              message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}.`;
+              message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}. Spin again or buy a vowel.`;
               // Deactivate Wild Card after use
               setWildCardActive(false);
             }
@@ -1344,8 +1361,20 @@ function WheelOfFortune() {
             // Final round consonant
             message = `Yes! ${letterCount} ${letter}'s. Consonant revealed!`;
           }
+          // After a correct consonant, require spin again (reset wheelValue)
+          return {
+            ...prev,
+            usedLetters: newUsedLetters,
+            puzzle: { ...prev.puzzle, revealed: newRevealed },
+            players: newPlayers,
+            currentPlayer: nextPlayer,
+            message,
+            wheelValue: 0, // Force spin again for next consonant
+            landedSegmentIndex: prev.landedSegmentIndex,
+            finalRoundLettersRemaining: newFinalRoundLettersRemaining,
+            finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
+          };
         }
-        // Player continues turn
       } else {
         // Update statistics for incorrect letter
         updateStats(letter, false);
@@ -1371,8 +1400,8 @@ function WheelOfFortune() {
         players: newPlayers,
         currentPlayer: nextPlayer,
         message,
-        wheelValue: (!letterInPuzzle) ? 0 : prev.wheelValue,
-        landedSegmentIndex: (!letterInPuzzle) ? -1 : prev.landedSegmentIndex,
+        wheelValue: 0,
+        landedSegmentIndex: -1,
         finalRoundLettersRemaining: newFinalRoundLettersRemaining,
         finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
       };
@@ -1913,26 +1942,7 @@ function WheelOfFortune() {
             </button>
             {usedPuzzles.size > 0 && (
               <button
-                onClick={() => {
-                  if (confirm('Reset all progress and start fresh? This will clear all completed puzzles and statistics.')) {
-                    setUsedPuzzles(new Set());
-                    setGameStats({
-                      totalPuzzles: 0,
-                      solvedPuzzles: 0,
-                      totalLettersGuessed: 0,
-                      correctLetters: 0,
-                      letterStats: {},
-                      categoryStats: {},
-                      averageLettersPerPuzzle: 0,
-                      bestCategory: '',
-                      worstCategory: '',
-                      mostSuccessfulLetter: '',
-                      leastSuccessfulLetter: ''
-                    });
-                    localStorage.removeItem('jenswheelpractice-used-puzzles');
-                    localStorage.removeItem('jenswheelpractice-stats');
-                  }
-                }}
+                onClick={() => setShowResetPanel(true)}
                 className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
               >
                 Reset Progress
