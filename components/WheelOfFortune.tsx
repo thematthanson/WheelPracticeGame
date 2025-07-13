@@ -1251,37 +1251,26 @@ function WheelOfFortune() {
           </h1>
         </div>
 
-        {/* Turn Indicator */}
-        <div className="text-center mb-4">
-          <div className={`inline-block px-3 sm:px-4 py-2 rounded-lg font-bold text-base sm:text-lg lg:text-xl ${
-            gameState.currentPlayer === 0 
-              ? 'bg-yellow-500 text-black animate-pulse' 
-              : 'bg-gray-600 text-gray-300'
-          }`}>
-            {gameState.isSpinning ? '🔄 Spinning...' : 
-             gameState.currentPlayer === 0 ? (
-               <div>
-                 <div className="text-sm sm:text-base">🎯 Your Turn!</div>
-                 <div className="text-xs sm:text-sm">
-                   Spin the Wheel (Round {gameState.currentRound})
-                 </div>
-                 {gameState.message && gameState.message.includes('spun') && (
-                   <div className="text-xs sm:text-sm mt-1 text-yellow-600">
-                     {gameState.message}
-                   </div>
-                 )}
-               </div>
-             ) : (
-               <div>
-                 <div className="text-sm sm:text-base">{gameState.players[gameState.currentPlayer].name}'s Turn</div>
-                 <div className="text-xs sm:text-sm">(Round {gameState.currentRound})</div>
-                 {gameState.message && (
-                   <div className="text-xs sm:text-sm mt-1 text-yellow-600">
-                     {gameState.message}
-                   </div>
-                 )}
-               </div>
-             )}
+        {/* Consolidated Status Bar */}
+        <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg p-3 sm:p-4 text-center mb-4">
+          <div className="text-sm sm:text-lg font-semibold text-yellow-100">
+            {/* Show turn, round, and result/spin messages in one line */}
+            {(() => {
+              if (gameState.isSpinning) {
+                return '🔄 Spinning...';
+              }
+              if (gameState.currentPlayer === 0) {
+                if (gameState.message && gameState.message.includes('spun')) {
+                  return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound}) — ${gameState.message}`;
+                }
+                return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound})`;
+              } else {
+                if (gameState.message) {
+                  return `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
+                }
+                return `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound})`;
+              }
+            })()}
           </div>
         </div>
 
