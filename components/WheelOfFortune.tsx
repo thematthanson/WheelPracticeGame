@@ -956,6 +956,19 @@ function WheelOfFortune() {
           <p className="text-lg sm:text-xl text-blue-200">Training Edition v11</p>
         </div>
 
+        {/* Turn Indicator */}
+        <div className="text-center mb-4">
+          <div className={`inline-block px-4 py-2 rounded-lg font-bold text-lg sm:text-xl ${
+            gameState.currentPlayer === 0 
+              ? 'bg-yellow-500 text-black animate-pulse' 
+              : 'bg-gray-600 text-gray-300'
+          }`}>
+            {gameState.isSpinning ? '🔄 Spinning...' : 
+             gameState.currentPlayer === 0 ? '🎯 Your Turn - Spin the Wheel!' : 
+             `${gameState.players[gameState.currentPlayer].name}'s Turn`}
+          </div>
+        </div>
+
         {/* Game Status */}
         <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-4 sm:mb-8 text-xs sm:text-base">
           {gameState.players.map((player, index) => (
