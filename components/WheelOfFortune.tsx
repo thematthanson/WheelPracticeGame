@@ -98,7 +98,7 @@ const WHEEL_SEGMENTS = [
 ];
 
 // Prize descriptions for realistic show feel
-const PRIZE_DESCRIPTIONS = {
+const PRIZE_DESCRIPTIONS: Record<string, string> = {
   "TRIP TO HAWAII": "A 7-day trip for two to Maui, Hawaii including airfare and hotel",
   "NEW CAR": "A brand new sedan courtesy of our sponsors",
   "TRIP TO EUROPE": "A 10-day European vacation for two including airfare",
@@ -717,7 +717,7 @@ function WheelOfFortune() {
                 name: wheelSegment.name || 'Unknown Prize',
                 value: wheelSegment.value,
                 round: prev.currentRound,
-                description: PRIZE_DESCRIPTIONS[wheelSegment.name || 'Unknown Prize'] || 'A fabulous prize!'
+                description: (wheelSegment.name && PRIZE_DESCRIPTIONS[wheelSegment.name as keyof typeof PRIZE_DESCRIPTIONS]) || 'A fabulous prize!'
               });
               message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}!`;
             } else if (wheelSegment.type === 'WILD_CARD') {
@@ -837,15 +837,13 @@ function WheelOfFortune() {
             <div className="text-center">
               <div className="text-sm font-bold text-yellow-300 mb-2">THEN:</div>
               <div className="flex flex-wrap justify-center">
-                {specialFormat.then.split('').map((char, index) => {
+                {specialFormat.then?.split('').map((char, index) => {
                   if (char === ' ') return <span key={`then-${index}`} className="w-2"></span>;
                   const isRevealed = gameState.puzzle.revealed.has(char) || !/[A-Z]/.test(char);
                   return (
                     <span
-                      key={`then-${index}`}
-                      className={`inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 border border-blue-400 bg-white text-sm sm:text-base font-bold m-0.5 ${
-                        isRevealed ? 'text-blue-800' : 'text-transparent'
-                      }`}
+                      key={`then-char-${index}`}
+                      className={`inline-block w-5 sm:w-8 h-8 sm:h-12 mx-0.5 sm:mx-1 rounded-md text-center align-middle font-extrabold text-lg sm:text-2xl ${isRevealed ? 'bg-yellow-200 text-black' : 'bg-gray-700 text-yellow-200'}`}
                     >
                       {isRevealed ? char : ''}
                     </span>
@@ -859,15 +857,13 @@ function WheelOfFortune() {
             <div className="text-center">
               <div className="text-sm font-bold text-yellow-300 mb-2">NOW:</div>
               <div className="flex flex-wrap justify-center">
-                {specialFormat.now.split('').map((char, index) => {
+                {specialFormat.now?.split('').map((char, index) => {
                   if (char === ' ') return <span key={`now-${index}`} className="w-2"></span>;
                   const isRevealed = gameState.puzzle.revealed.has(char) || !/[A-Z]/.test(char);
                   return (
                     <span
-                      key={`now-${index}`}
-                      className={`inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 border border-blue-400 bg-white text-sm sm:text-base font-bold m-0.5 ${
-                        isRevealed ? 'text-blue-800' : 'text-transparent'
-                      }`}
+                      key={`now-char-${index}`}
+                      className={`inline-block w-5 sm:w-8 h-8 sm:h-12 mx-0.5 sm:mx-1 rounded-md text-center align-middle font-extrabold text-lg sm:text-2xl ${isRevealed ? 'bg-yellow-200 text-black' : 'bg-gray-700 text-yellow-200'}`}
                     >
                       {isRevealed ? char : ''}
                     </span>
@@ -892,7 +888,7 @@ function WheelOfFortune() {
             let textColor = isRevealed ? 'text-blue-800' : 'text-transparent';
             
             // Special format styling
-            if (specialFormat?.type === 'BEFORE_AFTER' && specialFormat.shared.includes(char)) {
+            if (specialFormat?.type === 'BEFORE_AFTER' && specialFormat.shared?.includes(char)) {
               borderColor = 'border-yellow-400';
               bgColor = 'bg-yellow-100';
               textColor = isRevealed ? 'text-yellow-800' : 'text-transparent';
@@ -984,7 +980,7 @@ function WheelOfFortune() {
           <div className="text-center mb-4">
             <div className="text-lg sm:text-2xl font-bold text-yellow-400 mb-2">
               {gameState.puzzle.specialFormat?.type === 'QUESTION' 
-                ? gameState.puzzle.specialFormat.question.replace(/_/g, ' ') + '?'
+                ? gameState.puzzle.specialFormat.question?.replace(/_/g, ' ') + '?'
                 : gameState.puzzle.category}
             </div>
             
@@ -999,6 +995,11 @@ function WheelOfFortune() {
             )}
             
             <div className="min-h-16">
+              {gameState.puzzle.specialFormat?.question && (
+                <div className="text-center text-yellow-200 text-lg font-bold mb-2">
+                  {gameState.puzzle.specialFormat.question}
+                </div>
+              )}
               {renderPuzzle()}
             </div>
           </div>
@@ -1084,7 +1085,9 @@ function WheelOfFortune() {
             <div className="text-xs sm:text-sm text-yellow-200 mt-2">
               {typeof gameState.wheelValue === 'number' 
                 ? `Current wheel value: $${gameState.wheelValue}`
-                : `Special: ${gameState.wheelValue.displayValue || gameState.wheelValue}`}
+                : typeof gameState.wheelValue === 'object' && 'displayValue' in gameState.wheelValue
+                  ? `Special: ${(gameState.wheelValue as WheelSegment).displayValue}`
+                  : `Special: ${String(gameState.wheelValue)}`}
             </div>
           )}
           
