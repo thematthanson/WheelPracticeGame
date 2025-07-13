@@ -382,7 +382,16 @@ function WheelOfFortune() {
 
   // Trigger computer turn when it's their turn
   useEffect(() => {
-    if (gameState.currentPlayer === 1 && !gameState.isSpinning && !gameState.turnInProgress) {
+    console.log('🔄 Turn check:', {
+      currentPlayer: gameState.currentPlayer,
+      playerName: gameState.players[gameState.currentPlayer]?.name,
+      isSpinning: gameState.isSpinning,
+      turnInProgress: gameState.turnInProgress,
+      shouldTrigger: (gameState.currentPlayer === 1 || gameState.currentPlayer === 2) && !gameState.isSpinning && !gameState.turnInProgress
+    });
+    
+    if ((gameState.currentPlayer === 1 || gameState.currentPlayer === 2) && !gameState.isSpinning && !gameState.turnInProgress) {
+      console.log('🤖 Triggering computer turn for:', gameState.players[gameState.currentPlayer].name);
       setTimeout(() => {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
@@ -675,7 +684,11 @@ function WheelOfFortune() {
           </svg>
           
           {/* Center hub */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 border-4 border-yellow-500 flex items-center justify-center z-20">
+          <button
+            onClick={spinWheel}
+            disabled={gameState.isSpinning || gameState.currentPlayer !== 0}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 border-4 border-yellow-500 flex items-center justify-center z-20 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
+          >
             <div className="text-white text-xs sm:text-lg font-bold text-center">
               {gameState.isSpinning ? (
                 <RotateCcw className="w-4 h-4 sm:w-8 sm:h-8 animate-spin" />
@@ -687,7 +700,7 @@ function WheelOfFortune() {
                 </div>
               )}
             </div>
-          </div>
+          </button>
         </div>
         
         {/* Pointer */}
@@ -922,13 +935,13 @@ function WheelOfFortune() {
         });
         
         // Determine next player (cycle through all 3 players)
-        let nextPlayer = 1;
-        if (gameState.currentPlayer === 0) {
-          nextPlayer = 1; // You -> Sarah
-        } else if (gameState.currentPlayer === 1) {
+        let nextPlayer = 0;
+        if (gameState.currentPlayer === 1) {
           nextPlayer = 2; // Sarah -> Mike
-        } else {
+        } else if (gameState.currentPlayer === 2) {
           nextPlayer = 0; // Mike -> You
+        } else {
+          nextPlayer = 1; // You -> Sarah
         }
         
         setGameState(prev => ({
@@ -941,13 +954,22 @@ function WheelOfFortune() {
   };
 
   const getLandedSegmentIndex = (rotation: number) => {
-    // The pointer is at -90 degrees (top center)
-    const pointerAngle = -90;
+    // The pointer is at 12 o'clock (top center)
+    // The wheel segments start at -90 degrees (top center) and go clockwise
+    // We need to find which segment is at the top after the wheel rotates
+    
     const normalizedRotation = ((rotation % 360) + 360) % 360;
-    const pointerRelative = (pointerAngle - normalizedRotation + 360) % 360;
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    let index = Math.floor(pointerRelative / segmentAngle);
-    if (index < 0) index += WHEEL_SEGMENTS.length;
+    
+    // The wheel rotates clockwise, so we need to find which segment is at the top
+    // Since segments start at -90 degrees (top), we need to calculate which segment
+    // is now at the top after the rotation
+    let index = Math.floor(normalizedRotation / segmentAngle);
+    
+    // The segments are arranged clockwise starting from the top
+    // So we need to adjust the index to get the correct segment at the top
+    index = index % WHEEL_SEGMENTS.length;
+    
     return index;
   };
 
@@ -1161,7 +1183,7 @@ function WheelOfFortune() {
       });
       
       // Determine next player (cycle through all 3 players)
-      let nextPlayer = 1;
+      let nextPlayer = 0;
       if (gameState.currentPlayer === 0) {
         nextPlayer = 1; // You -> Sarah
       } else if (gameState.currentPlayer === 1) {
@@ -1391,14 +1413,28 @@ function WheelOfFortune() {
               
               {/* Show prizes and special cards */}
               {player.prizes.length > 0 && (
-                <div className="text-xs mt-1 text-green-300">
-                  🏆 {player.prizes.length} prize{player.prizes.length > 1 ? 's' : ''}
+                <div className="text-xs mt-1">
+                  <div className="text-green-300 font-semibold">
+                    🏆 Prizes ({player.prizes.length}):
+                  </div>
+                  {player.prizes.map((prize, prizeIndex) => (
+                    <div key={prizeIndex} className="text-green-200 ml-2 text-xs">
+                      • {prize.name} (${prize.value.toLocaleString()})
+                    </div>
+                  ))}
                 </div>
               )}
               {player.specialCards.length > 0 && (
-                <div className="text-xs mt-1 text-purple-300">
-                  ⭐ {player.specialCards.includes('WILD_CARD') ? 'Wild Card ' : ''}
-                  {player.specialCards.includes('MILLION_DOLLAR_WEDGE') ? 'Million $' : ''}
+                <div className="text-xs mt-1">
+                  <div className="text-purple-300 font-semibold">
+                    ⭐ Special Cards:
+                  </div>
+                  {player.specialCards.map((card, cardIndex) => (
+                    <div key={cardIndex} className="text-purple-200 ml-2 text-xs">
+                      • {card === 'WILD_CARD' ? 'Wild Card' : 
+                         card === 'MILLION_DOLLAR_WEDGE' ? 'Million Dollar Wedge' : card}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1440,16 +1476,6 @@ function WheelOfFortune() {
           {/* Wheel Section */}
           <div className="flex flex-col items-center">
             {renderWheel()}
-            <div className="text-center mt-4">
-              <button
-                onClick={spinWheel}
-                disabled={gameState.isSpinning || gameState.currentPlayer !== 0}
-                className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-500 text-black font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg text-sm sm:text-xl transition-colors"
-              >
-                {gameState.isSpinning ? 'Spinning...' : 
-                 gameState.currentPlayer === 0 ? 'SPIN WHEEL' : 'Wait Your Turn'}
-              </button>
-            </div>
           </div>
 
           {/* Game Controls Section */}
