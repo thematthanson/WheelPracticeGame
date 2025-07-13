@@ -1091,8 +1091,8 @@ function WheelOfFortune() {
               : 'bg-gray-600 text-gray-300'
           }`}>
             {gameState.isSpinning ? '🔄 Spinning...' : 
-             gameState.currentPlayer === 0 ? '🎯 Your Turn - Spin the Wheel!' : 
-             `${gameState.players[gameState.currentPlayer].name}'s Turn`}
+             gameState.currentPlayer === 0 ? `🎯 Your Turn - Spin the Wheel! (Round ${gameState.currentRound})` : 
+             `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound})`}
           </div>
         </div>
 
