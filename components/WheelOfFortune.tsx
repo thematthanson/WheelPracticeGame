@@ -763,6 +763,12 @@ function WheelOfFortune() {
     const currentPlayer = gameState.players[gameState.currentPlayer];
     if (!currentPlayer || currentPlayer.isHuman) return;
     
+    // Computers cannot play in the final round - only human can reach final round
+    if (gameState.isFinalRound) {
+      console.log('❌ Computer cannot play in final round');
+      return;
+    }
+    
     // Computer spins the wheel
     setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
     
@@ -845,6 +851,12 @@ function WheelOfFortune() {
   const computerGuess = (wheelValue: number | string | WheelSegment) => {
     const currentPlayer = gameState.players[gameState.currentPlayer];
     if (!currentPlayer || currentPlayer.isHuman) return;
+    
+    // Computers cannot play in the final round - only human can reach final round
+    if (gameState.isFinalRound) {
+      console.log('❌ Computer cannot play in final round');
+      return;
+    }
     
     // Common letters in English (E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z)
     const commonLetters = ['E', 'T', 'A', 'O', 'I', 'N', 'S', 'H', 'R', 'D', 'L', 'C', 'U', 'M', 'W', 'F', 'G', 'Y', 'P', 'B', 'V', 'K', 'J', 'X', 'Q', 'Z'];
@@ -940,6 +952,12 @@ function WheelOfFortune() {
     const currentPlayer = gameState.players[gameState.currentPlayer];
     if (!currentPlayer || currentPlayer.isHuman) return;
     
+    // Computers cannot play in the final round - only human can reach final round
+    if (gameState.isFinalRound) {
+      console.log('❌ Computer cannot play in final round');
+      return;
+    }
+    
     // Computer tries to solve the puzzle (with some randomness)
     const puzzleText = gameState.puzzle.text;
     const revealedText = Array.from(gameState.puzzle.revealed).join('');
@@ -971,19 +989,64 @@ function WheelOfFortune() {
         const newPlayers = [...gameState.players];
         newPlayers[gameState.currentPlayer].totalMoney += newPlayers[gameState.currentPlayer].roundMoney;
         
-        setGameState(prev => ({
-          ...prev,
-          players: newPlayers,
-          puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
-          message: `${prev.players[prev.currentPlayer].name} solved "${prev.puzzle.text}" and earned $${newPlayers[gameState.currentPlayer].roundMoney}!`
-        }));
-        
-        setTimeout(() => {
+        // Check if this is a regular round (1-3) and computer won
+        if (gameState.currentRound <= 3) {
+          // Computer won a regular round - game over, start new game
           setGameState(prev => ({
             ...prev,
-            message: `${prev.players[prev.currentPlayer].name} wins the round! Click "NEW PUZZLE" to continue.`
+            players: newPlayers,
+            puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+            message: `${prev.players[prev.currentPlayer].name} solved "${prev.puzzle.text}" and earned $${newPlayers[gameState.currentPlayer].roundMoney}!`
           }));
-        }, 3000);
+          
+          setTimeout(() => {
+            setGameState(prev => ({
+              ...prev,
+              message: `${prev.players[prev.currentPlayer].name} wins the round! Game over - starting new game...`
+            }));
+          }, 3000);
+          
+          // Start a completely new game after 4 seconds
+          setTimeout(() => {
+            const newPuzzle = generatePuzzle();
+            setGameState(prev => ({
+              ...prev,
+              currentRound: 1,
+              puzzle: newPuzzle,
+              usedLetters: new Set(),
+              players: [
+                { name: 'You', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] },
+                { name: 'Sarah', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] },
+                { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
+              ],
+              currentPlayer: 0,
+              wheelValue: 0,
+              lastSpinResult: null,
+              landedSegmentIndex: -1,
+              turnInProgress: false,
+              isFinalRound: false,
+              finalRoundLettersRemaining: 0,
+              finalRoundVowelsRemaining: 0,
+              message: 'New game started!'
+            }));
+            setCurrentWheelSegments(getRandomizedWheelSegments());
+          }, 4000);
+        } else {
+          // This shouldn't happen since only human can reach final round
+          setGameState(prev => ({
+            ...prev,
+            players: newPlayers,
+            puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+            message: `${prev.players[prev.currentPlayer].name} solved "${prev.puzzle.text}" and earned $${newPlayers[gameState.currentPlayer].roundMoney}!`
+          }));
+          
+          setTimeout(() => {
+            setGameState(prev => ({
+              ...prev,
+              message: `${prev.players[prev.currentPlayer].name} wins the round! Click "NEW PUZZLE" to continue.`
+            }));
+          }, 3000);
+        }
       } else {
         // Computer fails to solve
         console.log('❌ Computer failed to solve:', {
@@ -1303,6 +1366,45 @@ function WheelOfFortune() {
   const startNewPuzzle = () => {
     const newPuzzle = generatePuzzle();
     const isFinalRound = gameState.currentRound >= 3; // Final round starts at round 4
+    
+    // Only human player can advance to final round
+    if (isFinalRound) {
+      // Check if the human player won the previous round
+      const humanPlayer = gameState.players[0];
+      if (humanPlayer.roundMoney === 0) {
+        // Human didn't win the round - game over, start new game
+        setGameState(prev => ({
+          ...prev,
+          message: 'You didn\'t win the round! Game over - starting new game...'
+        }));
+        
+        setTimeout(() => {
+          const newPuzzle = generatePuzzle();
+          setGameState(prev => ({
+            ...prev,
+            currentRound: 1,
+            puzzle: newPuzzle,
+            usedLetters: new Set(),
+            players: [
+              { name: 'You', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] },
+              { name: 'Sarah', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] },
+              { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
+            ],
+            currentPlayer: 0,
+            wheelValue: 0,
+            lastSpinResult: null,
+            landedSegmentIndex: -1,
+            turnInProgress: false,
+            isFinalRound: false,
+            finalRoundLettersRemaining: 0,
+            finalRoundVowelsRemaining: 0,
+            message: 'New game started!'
+          }));
+          setCurrentWheelSegments(getRandomizedWheelSegments());
+        }, 2000);
+        return;
+      }
+    }
     
     // Randomize wheel segments for the new round (except final round)
     if (!isFinalRound) {
