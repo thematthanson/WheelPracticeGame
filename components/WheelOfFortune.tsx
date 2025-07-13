@@ -86,6 +86,9 @@ interface GameState {
   lastSpinResult: number | string | WheelSegment | null;
   landedSegmentIndex: number;
   message: string;
+  isFinalRound: boolean;
+  finalRoundLettersRemaining: number;
+  finalRoundVowelsRemaining: number;
 }
 
 // Authentic Wheel of Fortune wheel segments
@@ -347,7 +350,10 @@ function WheelOfFortune() {
     turnInProgress: false,
     lastSpinResult: null,
     landedSegmentIndex: -1,
-    message: 'Welcome to Wheel of Fortune!'
+    message: 'Welcome to Wheel of Fortune!',
+    isFinalRound: false,
+    finalRoundLettersRemaining: 0,
+    finalRoundVowelsRemaining: 0
   });
 
   const [inputLetter, setInputLetter] = useState('');
@@ -711,12 +717,17 @@ function WheelOfFortune() {
           {/* Center hub */}
           <button
             onClick={spinWheel}
-            disabled={gameState.isSpinning || gameState.currentPlayer !== 0}
+            disabled={gameState.isSpinning || gameState.currentPlayer !== 0 || gameState.isFinalRound}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 border-4 border-yellow-500 flex items-center justify-center z-20 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
           >
             <div className="text-white text-xs sm:text-lg font-bold text-center">
               {gameState.isSpinning ? (
                 <RotateCcw className="w-4 h-4 sm:w-8 sm:h-8 animate-spin" />
+              ) : gameState.isFinalRound ? (
+                <div>
+                  <div className="text-xs sm:text-base">FINAL</div>
+                  <div className="text-xs">ROUND</div>
+                </div>
               ) : (
                 <div>
                   <div className="text-xs sm:text-base">WHEEL</div>
@@ -1081,13 +1092,25 @@ function WheelOfFortune() {
     const isVowel = 'AEIOU'.includes(letter);
     const isConsonant = 'BCDFGHJKLMNPQRSTVWXYZ'.includes(letter);
     
-    if (isVowel && gameState.players[0].roundMoney < 250) {
+    // Final round restrictions
+    if (gameState.isFinalRound) {
+      if (isVowel && gameState.finalRoundVowelsRemaining <= 0) {
+        setGameState(prev => ({ ...prev, message: 'No vowels remaining in final round!' }));
+        return;
+      }
+      if (isConsonant && gameState.finalRoundLettersRemaining <= 0) {
+        setGameState(prev => ({ ...prev, message: 'No consonants remaining in final round!' }));
+        return;
+      }
+    }
+    
+    if (isVowel && gameState.players[0].roundMoney < 250 && !gameState.isFinalRound) {
       setGameState(prev => ({ ...prev, message: 'Not enough money to buy a vowel! ($250 required)' }));
       return;
     }
 
-    // Allow consonants with Wild Card even without wheel value
-    if (isConsonant && !gameState.wheelValue && !wildCardActive) {
+    // Allow consonants with Wild Card even without wheel value (but not in final round)
+    if (isConsonant && !gameState.wheelValue && !wildCardActive && !gameState.isFinalRound) {
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
     }
@@ -1103,57 +1126,76 @@ function WheelOfFortune() {
       let message = '';
       let nextPlayer = prev.currentPlayer;
       
+      // Update final round letter counts
+      let newFinalRoundLettersRemaining = prev.finalRoundLettersRemaining;
+      let newFinalRoundVowelsRemaining = prev.finalRoundVowelsRemaining;
+      
+      if (prev.isFinalRound) {
+        if (isConsonant) {
+          newFinalRoundLettersRemaining--;
+        } else if (isVowel) {
+          newFinalRoundVowelsRemaining--;
+        }
+      }
+      
       if (letterInPuzzle) {
         // Update statistics for correct letter
         updateStats(letter, true);
         
         if (isVowel) {
-          newPlayers[0].roundMoney -= 250;
-          message = `Yes! ${letterCount} ${letter}'s. You bought a vowel.`;
+          if (!prev.isFinalRound) {
+            newPlayers[0].roundMoney -= 250;
+          }
+          message = `Yes! ${letterCount} ${letter}'s. ${prev.isFinalRound ? 'Vowel revealed!' : 'You bought a vowel.'}`;
         } else {
-          // Handle different wheel segment types
-          const wheelValue = prev.wheelValue;
-          
-          if (typeof wheelValue === 'number') {
-            const earned = wheelValue * letterCount;
-            newPlayers[0].roundMoney += earned;
-            message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}.`;
-          } else if (typeof wheelValue === 'object' && wheelValue && 'type' in wheelValue) {
-            const wheelSegment = wheelValue as WheelSegment;
-            if (wheelSegment.type === 'PRIZE') {
-              newPlayers[0].roundMoney += 500 * letterCount; // Base value for consonants
-              newPlayers[0].prizes.push({
-                name: wheelSegment.name || 'Unknown Prize',
-                value: wheelSegment.value,
-                round: prev.currentRound,
-                description: (wheelSegment.name && PRIZE_DESCRIPTIONS[wheelSegment.name as keyof typeof PRIZE_DESCRIPTIONS]) || 'A fabulous prize!'
-              });
-              message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}!`;
-            } else if (wheelSegment.type === 'WILD_CARD') {
-              newPlayers[0].roundMoney += 500 * letterCount;
-              newPlayers[0].specialCards.push('WILD_CARD');
-              message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD!`;
-            } else if (wheelSegment.type === 'GIFT_TAG') {
-              newPlayers[0].roundMoney += 500 * letterCount;
-              newPlayers[0].prizes.push({
-                name: '$1000 GIFT TAG',
-                value: 1000,
-                round: prev.currentRound,
-                description: PRIZE_DESCRIPTIONS['$1000 GIFT TAG']
-              });
-              message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG!`;
-            } else if (wheelSegment.type === 'MILLION') {
-              newPlayers[0].roundMoney += 900 * letterCount;
-              newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
-              message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE!`;
+          // Handle different wheel segment types (not applicable in final round)
+          if (!prev.isFinalRound) {
+            const wheelValue = prev.wheelValue;
+            
+            if (typeof wheelValue === 'number') {
+              const earned = wheelValue * letterCount;
+              newPlayers[0].roundMoney += earned;
+              message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}.`;
+            } else if (typeof wheelValue === 'object' && wheelValue && 'type' in wheelValue) {
+              const wheelSegment = wheelValue as WheelSegment;
+              if (wheelSegment.type === 'PRIZE') {
+                newPlayers[0].roundMoney += 500 * letterCount; // Base value for consonants
+                newPlayers[0].prizes.push({
+                  name: wheelSegment.name || 'Unknown Prize',
+                  value: wheelSegment.value,
+                  round: prev.currentRound,
+                  description: (wheelSegment.name && PRIZE_DESCRIPTIONS[wheelSegment.name as keyof typeof PRIZE_DESCRIPTIONS]) || 'A fabulous prize!'
+                });
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}!`;
+              } else if (wheelSegment.type === 'WILD_CARD') {
+                newPlayers[0].roundMoney += 500 * letterCount;
+                newPlayers[0].specialCards.push('WILD_CARD');
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD!`;
+              } else if (wheelSegment.type === 'GIFT_TAG') {
+                newPlayers[0].roundMoney += 500 * letterCount;
+                newPlayers[0].prizes.push({
+                  name: '$1000 GIFT TAG',
+                  value: 1000,
+                  round: prev.currentRound,
+                  description: PRIZE_DESCRIPTIONS['$1000 GIFT TAG']
+                });
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG!`;
+              } else if (wheelSegment.type === 'MILLION') {
+                newPlayers[0].roundMoney += 900 * letterCount;
+                newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
+                message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE!`;
+              }
+            } else if (wildCardActive) {
+              // Wild Card usage - give base value for consonant
+              const earned = 500 * letterCount;
+              newPlayers[0].roundMoney += earned;
+              message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}.`;
+              // Deactivate Wild Card after use
+              setWildCardActive(false);
             }
-          } else if (wildCardActive) {
-            // Wild Card usage - give base value for consonant
-            const earned = 500 * letterCount;
-            newPlayers[0].roundMoney += earned;
-            message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}.`;
-            // Deactivate Wild Card after use
-            setWildCardActive(false);
+          } else {
+            // Final round consonant
+            message = `Yes! ${letterCount} ${letter}'s. Consonant revealed!`;
           }
         }
         // Player continues turn
@@ -1161,7 +1203,7 @@ function WheelOfFortune() {
         // Update statistics for incorrect letter
         updateStats(letter, false);
         
-        if (isVowel) {
+        if (isVowel && !prev.isFinalRound) {
           newPlayers[0].roundMoney -= 250;
         }
         message = `Sorry, no ${letter}'s. `;
@@ -1183,7 +1225,9 @@ function WheelOfFortune() {
         currentPlayer: nextPlayer,
         message,
         wheelValue: (!letterInPuzzle) ? 0 : prev.wheelValue,
-        landedSegmentIndex: (!letterInPuzzle) ? -1 : prev.landedSegmentIndex
+        landedSegmentIndex: (!letterInPuzzle) ? -1 : prev.landedSegmentIndex,
+        finalRoundLettersRemaining: newFinalRoundLettersRemaining,
+        finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
       };
     });
     
@@ -1258,8 +1302,13 @@ function WheelOfFortune() {
   // Add new puzzle function for manual control
   const startNewPuzzle = () => {
     const newPuzzle = generatePuzzle();
-    // Randomize wheel segments for the new round
-    setCurrentWheelSegments(getRandomizedWheelSegments());
+    const isFinalRound = gameState.currentRound >= 3; // Final round starts at round 4
+    
+    // Randomize wheel segments for the new round (except final round)
+    if (!isFinalRound) {
+      setCurrentWheelSegments(getRandomizedWheelSegments());
+    }
+    
     setGameState(prev => ({
       ...prev,
       currentRound: prev.currentRound + 1,
@@ -1277,8 +1326,24 @@ function WheelOfFortune() {
       lastSpinResult: null,
       landedSegmentIndex: -1,
       turnInProgress: false,
-      message: 'New round!'
+      isFinalRound: isFinalRound,
+      finalRoundLettersRemaining: isFinalRound ? 3 : 0, // 3 consonants in final round
+      finalRoundVowelsRemaining: isFinalRound ? 1 : 0, // 1 vowel in final round
+      message: isFinalRound ? 'FINAL ROUND! R, S, T, L, N, E are revealed. You get 3 consonants + 1 vowel.' : 'New round!'
     }));
+    
+    // If it's the final round, automatically reveal R, S, T, L, N, E
+    if (isFinalRound) {
+      setTimeout(() => {
+        setGameState(prev => ({
+          ...prev,
+          puzzle: {
+            ...prev.puzzle,
+            revealed: new Set(['R', 'S', 'T', 'L', 'N', 'E'])
+          }
+        }));
+      }, 1000);
+    }
   };
 
   const handleResetProgress = () => {
@@ -1441,6 +1506,9 @@ function WheelOfFortune() {
                   const [pre, spinMsg] = gameState.message.split(/(You spun.*Call a consonant\.?)/);
                   return <span>🎯 Your Turn! Spin the Wheel (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg || gameState.message}</span></span>;
                 }
+                if (gameState.isFinalRound) {
+                  return `🏆 FINAL ROUND! (Round ${gameState.currentRound}) — ${gameState.finalRoundLettersRemaining} consonants, ${gameState.finalRoundVowelsRemaining} vowel remaining`;
+                }
                 return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound})`;
               } else {
                 if (gameState.message && gameState.message.includes('spun')) {
@@ -1559,7 +1627,11 @@ function WheelOfFortune() {
                   onChange={(e) => setInputLetter(e.target.value)}
                   disabled={gameState.currentPlayer !== 0}
                   className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
-                  placeholder={gameState.currentPlayer === 0 ? "Enter letter..." : "Computer is thinking..."}
+                  placeholder={gameState.currentPlayer === 0 ? 
+                    (gameState.isFinalRound ? 
+                      `Call letter (${gameState.finalRoundLettersRemaining} consonants, ${gameState.finalRoundVowelsRemaining} vowel left)` : 
+                      "Enter letter...") : 
+                    "Computer is thinking..."}
                   maxLength={1}
                 />
                 <button
