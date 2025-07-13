@@ -341,6 +341,8 @@ function WheelOfFortune() {
   const [availablePuzzles, setAvailablePuzzles] = useState<string[]>([]);
   const [showResetPanel, setShowResetPanel] = useState(false);
   const [wildCardActive, setWildCardActive] = useState(false);
+  const [computerAction, setComputerAction] = useState('');
+  const [computerSolveAttempt, setComputerSolveAttempt] = useState('');
   const [gameStats, setGameStats] = useState<GameStats>({
     totalPuzzles: 0,
     solvedPuzzles: 0,
@@ -850,6 +852,8 @@ function WheelOfFortune() {
     const randomIndex = Math.floor(Math.random() * Math.min(unusedLetters.length, 5)); // Pick from top 5 unused
     const letter = unusedLetters[randomIndex];
     
+    // Show computer's action in the input box
+    setComputerAction(letter);
     setGameState(prev => ({ ...prev, message: `${prev.players[prev.currentPlayer].name} calls ${letter}!` }));
     
     setTimeout(() => {
@@ -891,6 +895,9 @@ function WheelOfFortune() {
         turnInProgress: false
       }));
       
+      // Clear computer action
+      setComputerAction('');
+      
       // If computer continues, they spin again after 2 seconds
       const nextPlayerObj = gameState.players[nextPlayer];
       if (nextPlayerObj && !nextPlayerObj.isHuman) {
@@ -921,6 +928,8 @@ function WheelOfFortune() {
       timestamp: new Date().toISOString()
     });
     
+    // Show computer's solve attempt
+    setComputerSolveAttempt(willSolve ? puzzleText : 'Incorrect guess');
     setGameState(prev => ({ ...prev, message: `${prev.players[prev.currentPlayer].name} is thinking...` }));
     
     setTimeout(() => {
@@ -965,6 +974,9 @@ function WheelOfFortune() {
           message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
         }));
       }
+      
+      // Clear computer solve attempt
+      setComputerSolveAttempt('');
     }, 1000);
   };
 
@@ -1154,8 +1166,8 @@ function WheelOfFortune() {
         players: newPlayers,
         currentPlayer: nextPlayer,
         message,
-        wheelValue: (isVowel || !letterInPuzzle) ? 0 : prev.wheelValue,
-        landedSegmentIndex: (isVowel || !letterInPuzzle) ? -1 : prev.landedSegmentIndex
+        wheelValue: (!letterInPuzzle) ? 0 : prev.wheelValue,
+        landedSegmentIndex: (!letterInPuzzle) ? -1 : prev.landedSegmentIndex
       };
     });
     
@@ -1525,11 +1537,11 @@ function WheelOfFortune() {
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  value={inputLetter}
+                  value={gameState.currentPlayer === 0 ? inputLetter : computerAction}
                   onChange={(e) => setInputLetter(e.target.value)}
                   disabled={gameState.currentPlayer !== 0}
                   className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
-                  placeholder={gameState.currentPlayer === 0 ? "Enter letter..." : "Wait..."}
+                  placeholder={gameState.currentPlayer === 0 ? "Enter letter..." : "Computer is thinking..."}
                   maxLength={1}
                 />
                 <button
@@ -1552,11 +1564,11 @@ function WheelOfFortune() {
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  value={solveAttempt}
+                  value={gameState.currentPlayer === 0 ? solveAttempt : computerSolveAttempt}
                   onChange={(e) => setSolveAttempt(e.target.value)}
                   disabled={gameState.currentPlayer !== 0}
                   className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
-                  placeholder={gameState.currentPlayer === 0 ? "Your answer..." : "Wait..."}
+                  placeholder={gameState.currentPlayer === 0 ? "Your answer..." : "Computer is solving..."}
                 />
                 <button
                   onClick={solvePuzzle}
