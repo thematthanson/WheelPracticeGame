@@ -791,7 +791,20 @@ function WheelOfFortune() {
       
       if (typeof segment === 'number') {
         newMessage = `${gameState.players[gameState.currentPlayer].name} spun $${segment}!`;
-        // Computer makes a guess
+        // Update game state first, then computer makes a guess
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Computer makes a guess after state is updated
         setTimeout(() => {
           computerGuess(segment);
         }, 1000);
@@ -801,11 +814,51 @@ function WheelOfFortune() {
         // Determine next player (cycle through all 3 players)
         nextPlayer = getNextPlayer(gameState.currentPlayer);
         newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+        
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Start next player's turn if it's a computer
+        setTimeout(() => {
+          const nextPlayerObj = gameState.players[nextPlayer];
+          if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            computerTurn();
+          }
+        }, 2000);
       } else if (segment === 'LOSE A TURN') {
         newMessage = `${gameState.players[gameState.currentPlayer].name} lost their turn! `;
         // Determine next player (cycle through all 3 players)
         nextPlayer = getNextPlayer(gameState.currentPlayer);
         newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+        
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Start next player's turn if it's a computer
+        setTimeout(() => {
+          const nextPlayerObj = gameState.players[nextPlayer];
+          if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            computerTurn();
+          }
+        }, 2000);
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
           newMessage = `${gameState.players[gameState.currentPlayer].name} landed on ${(segment as WheelSegment).displayValue}!`;
@@ -816,23 +869,24 @@ function WheelOfFortune() {
         } else if (segment.type === 'MILLION') {
           newMessage = `${gameState.players[gameState.currentPlayer].name} got the MILLION DOLLAR WEDGE!`;
         }
-        // Computer makes a guess
+        // Update game state first, then computer makes a guess
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Computer makes a guess after state is updated
         setTimeout(() => {
           computerGuess(segment);
         }, 1000);
       }
-      
-      setGameState(prev => ({
-        ...prev,
-        isSpinning: false,
-        wheelValue: segment,
-        lastSpinResult: segment,
-        landedSegmentIndex: landedIndex,
-        message: newMessage,
-        players: newPlayers,
-        currentPlayer: nextPlayer,
-        turnInProgress: false
-      }));
     }, 1000);
   };
 
