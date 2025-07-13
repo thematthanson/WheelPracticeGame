@@ -59,6 +59,20 @@ interface Player {
   specialCards: string[];
 }
 
+interface GameStats {
+  totalPuzzles: number;
+  solvedPuzzles: number;
+  totalLettersGuessed: number;
+  correctLetters: number;
+  letterStats: { [letter: string]: { correct: number; incorrect: number; } };
+  categoryStats: { [category: string]: { attempted: number; solved: number; } };
+  averageLettersPerPuzzle: number;
+  bestCategory: string;
+  worstCategory: string;
+  mostSuccessfulLetter: string;
+  leastSuccessfulLetter: string;
+}
+
 interface GameState {
   currentRound: number;
   puzzle: Puzzle;
@@ -326,21 +340,111 @@ function WheelOfFortune() {
   const [usedPuzzles, setUsedPuzzles] = useState<Set<string>>(new Set());
   const [availablePuzzles, setAvailablePuzzles] = useState<string[]>([]);
   const [showResetPanel, setShowResetPanel] = useState(false);
+  const [gameStats, setGameStats] = useState<GameStats>({
+    totalPuzzles: 0,
+    solvedPuzzles: 0,
+    totalLettersGuessed: 0,
+    correctLetters: 0,
+    letterStats: {},
+    categoryStats: {},
+    averageLettersPerPuzzle: 0,
+    bestCategory: '',
+    worstCategory: '',
+    mostSuccessfulLetter: '',
+    leastSuccessfulLetter: ''
+  });
+  const [showStats, setShowStats] = useState(false);
 
-  // Load used puzzles from localStorage
+  // Load used puzzles and stats from localStorage
   useEffect(() => {
     const savedUsedPuzzles = localStorage.getItem('jenswheelpractice-used-puzzles');
     if (savedUsedPuzzles) {
       setUsedPuzzles(new Set(JSON.parse(savedUsedPuzzles)));
     }
+    
+    const savedStats = localStorage.getItem('jenswheelpractice-stats');
+    if (savedStats) {
+      setGameStats(JSON.parse(savedStats));
+    }
   }, []);
 
-  // Save used puzzles to localStorage
+  // Save used puzzles and stats to localStorage
   useEffect(() => {
     if (usedPuzzles.size > 0) {
       localStorage.setItem('jenswheelpractice-used-puzzles', JSON.stringify([...usedPuzzles]));
     }
   }, [usedPuzzles]);
+
+  // Save stats to localStorage
+  useEffect(() => {
+    localStorage.setItem('jenswheelpractice-stats', JSON.stringify(gameStats));
+  }, [gameStats]);
+
+  // Function to update statistics
+  const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
+    setGameStats(prev => {
+      const newStats = { ...prev };
+      
+      // Update letter statistics
+      if (!newStats.letterStats[letter]) {
+        newStats.letterStats[letter] = { correct: 0, incorrect: 0 };
+      }
+      if (wasCorrect) {
+        newStats.letterStats[letter].correct++;
+        newStats.correctLetters++;
+      } else {
+        newStats.letterStats[letter].incorrect++;
+      }
+      newStats.totalLettersGuessed++;
+      
+      // Update puzzle statistics
+      if (puzzleSolved) {
+        newStats.solvedPuzzles++;
+        newStats.totalPuzzles++;
+        
+        // Update category statistics
+        const category = gameState.puzzle.category;
+        if (!newStats.categoryStats[category]) {
+          newStats.categoryStats[category] = { attempted: 0, solved: 0 };
+        }
+        newStats.categoryStats[category].attempted++;
+        newStats.categoryStats[category].solved++;
+      }
+      
+      // Calculate derived statistics
+      newStats.averageLettersPerPuzzle = newStats.totalPuzzles > 0 
+        ? Math.round((newStats.totalLettersGuessed / newStats.totalPuzzles) * 10) / 10 
+        : 0;
+      
+      // Find best/worst categories
+      const categories = Object.entries(newStats.categoryStats);
+      if (categories.length > 0) {
+        const sortedCategories = categories.sort((a, b) => {
+          const aRate = a[1].attempted > 0 ? a[1].solved / a[1].attempted : 0;
+          const bRate = b[1].attempted > 0 ? b[1].solved / b[1].attempted : 0;
+          return bRate - aRate;
+        });
+        newStats.bestCategory = sortedCategories[0][0];
+        newStats.worstCategory = sortedCategories[sortedCategories.length - 1][0];
+      }
+      
+      // Find most/least successful letters
+      const letters = Object.entries(newStats.letterStats);
+      if (letters.length > 0) {
+        const sortedLetters = letters.sort((a, b) => {
+          const aTotal = a[1].correct + a[1].incorrect;
+          const bTotal = b[1].correct + b[1].incorrect;
+          const aRate = aTotal > 0 ? a[1].correct / aTotal : 0;
+          const bRate = bTotal > 0 ? b[1].correct / bTotal : 0;
+          return bRate - aRate;
+        });
+        newStats.mostSuccessfulLetter = sortedLetters[0][0];
+        newStats.leastSuccessfulLetter = sortedLetters[sortedLetters.length - 1][0];
+      }
+      
+      return newStats;
+    });
+  };
 
   // Generate available puzzles list
   useEffect(() => {
@@ -705,6 +809,9 @@ function WheelOfFortune() {
       let nextPlayer = prev.currentPlayer;
       
       if (letterInPuzzle) {
+        // Update statistics for correct letter
+        updateStats(letter, true);
+        
         if (isVowel) {
           newPlayers[0].roundMoney -= 250;
           message = `Yes! ${letterCount} ${letter}'s. You bought a vowel.`;
@@ -749,6 +856,9 @@ function WheelOfFortune() {
         }
         // Player continues turn
       } else {
+        // Update statistics for incorrect letter
+        updateStats(letter, false);
+        
         if (isVowel) {
           newPlayers[0].roundMoney -= 250;
         }
@@ -779,6 +889,9 @@ function WheelOfFortune() {
     const correct = attempt === gameState.puzzle.text;
     
     if (correct) {
+      // Update statistics for solved puzzle
+      updateStats('', false, true);
+      
       const newPlayers = [...gameState.players];
       newPlayers[0].totalMoney += newPlayers[0].roundMoney;
       
@@ -835,7 +948,21 @@ function WheelOfFortune() {
 
   const handleResetProgress = () => {
     setUsedPuzzles(new Set());
+    setGameStats({
+      totalPuzzles: 0,
+      solvedPuzzles: 0,
+      totalLettersGuessed: 0,
+      correctLetters: 0,
+      letterStats: {},
+      categoryStats: {},
+      averageLettersPerPuzzle: 0,
+      bestCategory: '',
+      worstCategory: '',
+      mostSuccessfulLetter: '',
+      leastSuccessfulLetter: ''
+    });
     localStorage.removeItem('jenswheelpractice-used-puzzles');
+    localStorage.removeItem('jenswheelpractice-stats');
     setShowResetPanel(false);
     // Generate a fresh puzzle after reset
     const newPuzzle = generatePuzzle();
@@ -1158,22 +1285,136 @@ function WheelOfFortune() {
             <strong>🎯 Always Fresh Content:</strong> 500+ unique puzzles • No repeats • Auto-reset when needed
           </p>
           <p className="mt-1 sm:mt-2">
-            <strong>Version 12:</strong> Persistent progress • Expanded puzzle database • Always fresh content
+            <strong>Version 13:</strong> Comprehensive statistics • Letter tracking • Category analysis
           </p>
-          {usedPuzzles.size > 0 && (
+          <div className="mt-2 space-x-2">
             <button
-              onClick={() => {
-                if (confirm('Reset all progress and start fresh? This will clear all completed puzzles.')) {
-                  setUsedPuzzles(new Set());
-                  localStorage.removeItem('jenswheelpractice-used-puzzles');
-                }
-              }}
-              className="mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+              onClick={() => setShowStats(!showStats)}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
             >
-              Reset Progress
+              📊 {showStats ? 'Hide' : 'Show'} Statistics
             </button>
-          )}
+            {usedPuzzles.size > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm('Reset all progress and start fresh? This will clear all completed puzzles and statistics.')) {
+                    setUsedPuzzles(new Set());
+                    setGameStats({
+                      totalPuzzles: 0,
+                      solvedPuzzles: 0,
+                      totalLettersGuessed: 0,
+                      correctLetters: 0,
+                      letterStats: {},
+                      categoryStats: {},
+                      averageLettersPerPuzzle: 0,
+                      bestCategory: '',
+                      worstCategory: '',
+                      mostSuccessfulLetter: '',
+                      leastSuccessfulLetter: ''
+                    });
+                    localStorage.removeItem('jenswheelpractice-used-puzzles');
+                    localStorage.removeItem('jenswheelpractice-stats');
+                  }
+                }}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+              >
+                Reset Progress
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Statistics Panel */}
+        {showStats && (
+          <div className="bg-gray-800 bg-opacity-80 rounded-lg p-4 sm:p-6 mb-4">
+            <h3 className="text-lg sm:text-xl font-bold text-yellow-400 mb-4 text-center">📊 Your Statistics</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-800 bg-opacity-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-blue-300">{gameStats.solvedPuzzles}</div>
+                <div className="text-xs text-blue-200">Puzzles Solved</div>
+              </div>
+              <div className="bg-green-800 bg-opacity-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-green-300">
+                  {gameStats.totalLettersGuessed > 0 
+                    ? Math.round((gameStats.correctLetters / gameStats.totalLettersGuessed) * 100)
+                    : 0}%
+                </div>
+                <div className="text-xs text-green-200">Letter Accuracy</div>
+              </div>
+              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-purple-300">{gameStats.averageLettersPerPuzzle}</div>
+                <div className="text-xs text-purple-200">Avg Letters/Puzzle</div>
+              </div>
+              <div className="bg-orange-800 bg-opacity-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-orange-300">{gameStats.totalLettersGuessed}</div>
+                <div className="text-xs text-orange-200">Total Letters</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Letter Statistics */}
+              <div>
+                <h4 className="text-md font-bold text-yellow-300 mb-3">Letter Performance</h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {Object.entries(gameStats.letterStats)
+                    .sort((a, b) => (b[1].correct + b[1].incorrect) - (a[1].correct + a[1].incorrect))
+                    .slice(0, 10)
+                    .map(([letter, stats]) => {
+                      const total = stats.correct + stats.incorrect;
+                      const accuracy = total > 0 ? Math.round((stats.correct / total) * 100) : 0;
+                      return (
+                        <div key={letter} className="flex justify-between items-center bg-gray-700 bg-opacity-50 rounded px-3 py-1">
+                          <span className="font-bold text-lg">{letter}</span>
+                          <div className="text-right">
+                            <div className="text-sm">{stats.correct}/{total} ({accuracy}%)</div>
+                            <div className="text-xs text-gray-400">{stats.correct} correct, {stats.incorrect} wrong</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+                {gameStats.mostSuccessfulLetter && (
+                  <div className="mt-3 text-sm">
+                    <span className="text-green-400">Best: {gameStats.mostSuccessfulLetter}</span>
+                    {gameStats.leastSuccessfulLetter && gameStats.leastSuccessfulLetter !== gameStats.mostSuccessfulLetter && (
+                      <span className="ml-3 text-red-400">Needs work: {gameStats.leastSuccessfulLetter}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Category Statistics */}
+              <div>
+                <h4 className="text-md font-bold text-yellow-300 mb-3">Category Performance</h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {Object.entries(gameStats.categoryStats)
+                    .sort((a, b) => b[1].solved - a[1].solved)
+                    .map(([category, stats]) => {
+                      const successRate = stats.attempted > 0 ? Math.round((stats.solved / stats.attempted) * 100) : 0;
+                      return (
+                        <div key={category} className="flex justify-between items-center bg-gray-700 bg-opacity-50 rounded px-3 py-1">
+                          <span className="font-semibold">{category}</span>
+                          <div className="text-right">
+                            <div className="text-sm">{stats.solved}/{stats.attempted} ({successRate}%)</div>
+                            <div className="text-xs text-gray-400">{stats.solved} solved</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+                {gameStats.bestCategory && (
+                  <div className="mt-3 text-sm">
+                    <span className="text-green-400">Best: {gameStats.bestCategory}</span>
+                    {gameStats.worstCategory && gameStats.worstCategory !== gameStats.bestCategory && (
+                      <span className="ml-3 text-red-400">Practice: {gameStats.worstCategory}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Reset Progress Panel */}
         {showResetPanel && (
