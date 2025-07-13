@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -16,4 +16,7 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    X-DNS-Prefetch-Control = "on" 
+    X-DNS-Prefetch-Control = "on"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs" 

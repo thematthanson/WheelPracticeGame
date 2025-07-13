@@ -5,6 +5,11 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   generateEtags: false,
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
   async headers() {
     return [
       {
