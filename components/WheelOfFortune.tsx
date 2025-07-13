@@ -333,6 +333,27 @@ const getRandomizedWheelSegments = () => {
   return shuffleArray(WHEEL_SEGMENTS);
 };
 
+// Add a helper to get all puzzles synchronously
+const getAllPuzzles = () => {
+  const allPuzzles: string[] = [];
+  Object.entries(PUZZLE_TEMPLATES).forEach(([category, templates]) => {
+    templates.forEach((template: any) => {
+      let puzzleText = '';
+      if (category === "BEFORE & AFTER") {
+        puzzleText = template.full;
+      } else if (category === "THEN AND NOW") {
+        puzzleText = `${template.then} / ${template.now}`;
+      } else if (typeof template === 'string') {
+        puzzleText = template;
+      }
+      if (puzzleText) {
+        allPuzzles.push(puzzleText);
+      }
+    });
+  });
+  return allPuzzles;
+};
+
 function WheelOfFortune() {
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
@@ -521,18 +542,10 @@ function WheelOfFortune() {
   // Generate puzzle function with guaranteed no duplicates
   const generatePuzzle = (): Puzzle => {
     try {
-      // If we've used most puzzles, reset automatically
+      // If we've used most puzzles, show reset panel instead of alert
       if (availablePuzzles.length < 10 && availablePuzzles.length > 0) {
-        // Reset automatically when running low on puzzles
-        setUsedPuzzles(new Set());
-        localStorage.removeItem('jenswheelpractice-used-puzzles');
-        // Return a default puzzle instead of recursive call to avoid infinite loop
-        return {
-          text: 'WHEEL OF FORTUNE',
-          category: 'PHRASE',
-          revealed: new Set<string>(),
-          specialFormat: null
-        };
+        // Return current puzzle while user decides
+        return gameState.puzzle;
       }
 
       // If no available puzzles, reset automatically
@@ -1607,10 +1620,53 @@ function WheelOfFortune() {
     localStorage.removeItem('jenswheelpractice-used-puzzles');
     localStorage.removeItem('jenswheelpractice-stats');
     // Generate a fresh puzzle after reset
-    const newPuzzle = generatePuzzle();
+    const allPuzzles = getAllPuzzles();
+    const randomPuzzle = allPuzzles[Math.floor(Math.random() * allPuzzles.length)];
+    let category = '';
+    let specialFormat = null;
+    for (const [cat, templates] of Object.entries(PUZZLE_TEMPLATES)) {
+      const found = templates.find((template: any) => {
+        if (cat === "BEFORE & AFTER") {
+          return template.full === randomPuzzle;
+        } else if (cat === "THEN AND NOW") {
+          return `${template.then} / ${template.now}` === randomPuzzle;
+        } else {
+          return template === randomPuzzle;
+        }
+      });
+      if (found) {
+        category = cat;
+        if (cat === "BEFORE & AFTER" && typeof found === 'object' && 'before' in found) {
+          specialFormat = {
+            type: 'BEFORE_AFTER',
+            before: found.before,
+            shared: found.shared,
+            after: found.after
+          };
+        } else if (cat === "THEN AND NOW" && typeof found === 'object' && 'then' in found) {
+          specialFormat = {
+            type: 'THEN_AND_NOW',
+            then: found.then,
+            now: found.now
+          };
+        } else if (cat === "RHYME TIME") {
+          specialFormat = { type: 'RHYME_TIME' };
+        } else if (cat === "SAME LETTER") {
+          specialFormat = { type: 'SAME_LETTER', letter: randomPuzzle.charAt(0) };
+        } else if (cat === "WHAT ARE YOU DOING?") {
+          specialFormat = { type: 'QUESTION', question: cat };
+        }
+        break;
+      }
+    }
     setGameState(prev => ({ 
       ...prev, 
-      puzzle: newPuzzle,
+      puzzle: {
+        text: randomPuzzle.toUpperCase(),
+        category,
+        revealed: new Set<string>(),
+        specialFormat
+      },
       usedLetters: new Set<string>(),
       wheelValue: 0,
       message: 'Progress reset! Fresh puzzles available!',
@@ -1724,6 +1780,63 @@ function WheelOfFortune() {
     const currentPlayer = gameState.players[gameState.currentPlayer];
     return currentPlayer ? currentPlayer.isHuman : false;
   };
+
+  // On mount, always set a puzzle immediately if not set
+  useEffect(() => {
+    if (!gameState.puzzle.text) {
+      const allPuzzles = getAllPuzzles();
+      const unused = allPuzzles.filter(p => !usedPuzzles.has(p));
+      const pickFrom = unused.length > 0 ? unused : allPuzzles;
+      const randomPuzzle = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+      // Find category and special format
+      let category = '';
+      let specialFormat = null;
+      for (const [cat, templates] of Object.entries(PUZZLE_TEMPLATES)) {
+        const found = templates.find((template: any) => {
+          if (cat === "BEFORE & AFTER") {
+            return template.full === randomPuzzle;
+          } else if (cat === "THEN AND NOW") {
+            return `${template.then} / ${template.now}` === randomPuzzle;
+          } else {
+            return template === randomPuzzle;
+          }
+        });
+        if (found) {
+          category = cat;
+          if (cat === "BEFORE & AFTER" && typeof found === 'object' && 'before' in found) {
+            specialFormat = {
+              type: 'BEFORE_AFTER',
+              before: found.before,
+              shared: found.shared,
+              after: found.after
+            };
+          } else if (cat === "THEN AND NOW" && typeof found === 'object' && 'then' in found) {
+            specialFormat = {
+              type: 'THEN_AND_NOW',
+              then: found.then,
+              now: found.now
+            };
+          } else if (cat === "RHYME TIME") {
+            specialFormat = { type: 'RHYME_TIME' };
+          } else if (cat === "SAME LETTER") {
+            specialFormat = { type: 'SAME_LETTER', letter: randomPuzzle.charAt(0) };
+          } else if (cat === "WHAT ARE YOU DOING?") {
+            specialFormat = { type: 'QUESTION', question: cat };
+          }
+          break;
+        }
+      }
+      setGameState(prev => ({
+        ...prev,
+        puzzle: {
+          text: randomPuzzle.toUpperCase(),
+          category,
+          revealed: new Set<string>(),
+          specialFormat
+        }
+      }));
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white p-2 sm:p-4">
@@ -1974,7 +2087,14 @@ function WheelOfFortune() {
             >
               📊 {showStats ? 'Hide' : 'Show'} Statistics
             </button>
-
+            {usedPuzzles.size > 0 && (
+              <button
+                onClick={handleResetProgress}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+              >
+                Reset Progress
+              </button>
+            )}
           </div>
         </div>
 
@@ -2069,8 +2189,6 @@ function WheelOfFortune() {
             </div>
           </div>
         )}
-
-
       </div>
     </div>
   );
