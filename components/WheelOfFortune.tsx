@@ -578,7 +578,7 @@ function WheelOfFortune() {
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     
     return (
-      <div className="relative w-48 h-48 sm:w-80 sm:h-80 mx-auto mb-8">
+      <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 mx-auto mb-4 sm:mb-8">
         {/* Main wheel container */}
         <div className="absolute inset-0 rounded-full border-4 border-yellow-600 shadow-2xl bg-gray-800 overflow-hidden">
           
@@ -1058,7 +1058,7 @@ function WheelOfFortune() {
             return (
               <span
                 key={index}
-                className={`inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 border-2 ${borderColor} ${bgColor} text-sm sm:text-xl font-bold m-0.5 sm:m-1 ${textColor}`}
+                className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 border-2 ${borderColor} ${bgColor} text-xs sm:text-sm md:text-lg lg:text-xl font-bold m-0.5 sm:m-1 ${textColor}`}
               >
                 {isRevealed ? char : ''}
               </span>
@@ -1085,14 +1085,23 @@ function WheelOfFortune() {
 
         {/* Turn Indicator */}
         <div className="text-center mb-4">
-          <div className={`inline-block px-4 py-2 rounded-lg font-bold text-lg sm:text-xl ${
+          <div className={`inline-block px-3 sm:px-4 py-2 rounded-lg font-bold text-base sm:text-lg lg:text-xl ${
             gameState.currentPlayer === 0 
               ? 'bg-yellow-500 text-black animate-pulse' 
               : 'bg-gray-600 text-gray-300'
           }`}>
             {gameState.isSpinning ? '🔄 Spinning...' : 
-             gameState.currentPlayer === 0 ? `🎯 Your Turn - Spin the Wheel! (Round ${gameState.currentRound})` : 
-             `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound})`}
+             gameState.currentPlayer === 0 ? (
+               <div>
+                 <div className="text-sm sm:text-base">🎯 Your Turn!</div>
+                 <div className="text-xs sm:text-sm">Spin the Wheel (Round {gameState.currentRound})</div>
+               </div>
+             ) : (
+               <div>
+                 <div className="text-sm sm:text-base">{gameState.players[gameState.currentPlayer].name}'s Turn</div>
+                 <div className="text-xs sm:text-sm">(Round {gameState.currentRound})</div>
+               </div>
+             )}
           </div>
         </div>
 
@@ -1179,7 +1188,7 @@ function WheelOfFortune() {
           </div>
 
           {/* Game Controls Section */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Call a Letter */}
             <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
               <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3">Call a Letter</h3>
@@ -1189,14 +1198,14 @@ function WheelOfFortune() {
                   value={inputLetter}
                   onChange={(e) => setInputLetter(e.target.value.slice(0, 1))}
                   disabled={gameState.currentPlayer !== 0}
-                  className="flex-1 px-2 py-2 sm:px-3 bg-gray-700 border border-gray-600 rounded text-white text-sm disabled:bg-gray-800 disabled:text-gray-500"
+                  className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
                   placeholder={gameState.currentPlayer === 0 ? "Letter..." : "Wait..."}
                   maxLength={1}
                 />
                 <button
                   onClick={callLetter}
                   disabled={gameState.currentPlayer !== 0}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-3 py-2 rounded font-semibold transition-colors text-sm"
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm min-w-[60px]"
                 >
                   Call
                 </button>
@@ -1216,20 +1225,20 @@ function WheelOfFortune() {
                   value={solveAttempt}
                   onChange={(e) => setSolveAttempt(e.target.value)}
                   disabled={gameState.currentPlayer !== 0}
-                  className="flex-1 px-2 py-2 sm:px-3 bg-gray-700 border border-gray-600 rounded text-white text-sm disabled:bg-gray-800 disabled:text-gray-500"
+                  className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
                   placeholder={gameState.currentPlayer === 0 ? "Your answer..." : "Wait..."}
                 />
                 <button
                   onClick={solvePuzzle}
                   disabled={gameState.currentPlayer !== 0}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-3 py-2 rounded font-semibold transition-colors text-sm"
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm min-w-[60px]"
                 >
                   Solve
                 </button>
               </div>
               <button
                 onClick={startNewPuzzle}
-                className="w-full bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded font-semibold transition-colors text-sm"
+                className="w-full bg-purple-600 hover:bg-purple-700 px-3 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm"
               >
                 NEW PUZZLE
               </button>
@@ -1319,45 +1328,45 @@ function WheelOfFortune() {
           <div className="bg-gray-800 bg-opacity-80 rounded-lg p-4 sm:p-6 mb-4">
             <h3 className="text-lg sm:text-xl font-bold text-yellow-400 mb-4 text-center">📊 Your Statistics</h3>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-blue-800 bg-opacity-50 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-blue-300">{gameStats.solvedPuzzles}</div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-blue-800 bg-opacity-50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-blue-300">{gameStats.solvedPuzzles}</div>
                 <div className="text-xs text-blue-200">Puzzles Solved</div>
               </div>
-              <div className="bg-green-800 bg-opacity-50 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-green-300">
+              <div className="bg-green-800 bg-opacity-50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-green-300">
                   {gameStats.totalLettersGuessed > 0 
                     ? Math.round((gameStats.correctLetters / gameStats.totalLettersGuessed) * 100)
                     : 0}%
                 </div>
                 <div className="text-xs text-green-200">Letter Accuracy</div>
               </div>
-              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-purple-300">{gameStats.averageLettersPerPuzzle}</div>
+              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-purple-300">{gameStats.averageLettersPerPuzzle}</div>
                 <div className="text-xs text-purple-200">Avg Letters/Puzzle</div>
               </div>
-              <div className="bg-orange-800 bg-opacity-50 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-orange-300">{gameStats.totalLettersGuessed}</div>
+              <div className="bg-orange-800 bg-opacity-50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-lg sm:text-2xl font-bold text-orange-300">{gameStats.totalLettersGuessed}</div>
                 <div className="text-xs text-orange-200">Total Letters</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Letter Statistics */}
               <div>
-                <h4 className="text-md font-bold text-yellow-300 mb-3">Letter Performance</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <h4 className="text-sm sm:text-md font-bold text-yellow-300 mb-2 sm:mb-3">Letter Performance</h4>
+                <div className="space-y-1 sm:space-y-2 max-h-32 sm:max-h-48 overflow-y-auto">
                   {Object.entries(gameStats.letterStats)
                     .sort((a, b) => (b[1].correct + b[1].incorrect) - (a[1].correct + a[1].incorrect))
-                    .slice(0, 10)
+                    .slice(0, 8)
                     .map(([letter, stats]) => {
                       const total = stats.correct + stats.incorrect;
                       const accuracy = total > 0 ? Math.round((stats.correct / total) * 100) : 0;
                       return (
-                        <div key={letter} className="flex justify-between items-center bg-gray-700 bg-opacity-50 rounded px-3 py-1">
-                          <span className="font-bold text-lg">{letter}</span>
+                        <div key={letter} className="flex justify-between items-center bg-gray-700 bg-opacity-50 rounded px-2 sm:px-3 py-1">
+                          <span className="font-bold text-base sm:text-lg">{letter}</span>
                           <div className="text-right">
-                            <div className="text-sm">{stats.correct}/{total} ({accuracy}%)</div>
+                            <div className="text-xs sm:text-sm">{stats.correct}/{total} ({accuracy}%)</div>
                             <div className="text-xs text-gray-400">{stats.correct} correct, {stats.incorrect} wrong</div>
                           </div>
                         </div>
@@ -1365,10 +1374,10 @@ function WheelOfFortune() {
                     })}
                 </div>
                 {gameStats.mostSuccessfulLetter && (
-                  <div className="mt-3 text-sm">
+                  <div className="mt-2 sm:mt-3 text-xs sm:text-sm">
                     <span className="text-green-400">Best: {gameStats.mostSuccessfulLetter}</span>
                     {gameStats.leastSuccessfulLetter && gameStats.leastSuccessfulLetter !== gameStats.mostSuccessfulLetter && (
-                      <span className="ml-3 text-red-400">Needs work: {gameStats.leastSuccessfulLetter}</span>
+                      <span className="ml-2 sm:ml-3 text-red-400">Needs work: {gameStats.leastSuccessfulLetter}</span>
                     )}
                   </div>
                 )}
@@ -1376,17 +1385,17 @@ function WheelOfFortune() {
 
               {/* Category Statistics */}
               <div>
-                <h4 className="text-md font-bold text-yellow-300 mb-3">Category Performance</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <h4 className="text-sm sm:text-md font-bold text-yellow-300 mb-2 sm:mb-3">Category Performance</h4>
+                <div className="space-y-1 sm:space-y-2 max-h-32 sm:max-h-48 overflow-y-auto">
                   {Object.entries(gameStats.categoryStats)
                     .sort((a, b) => b[1].solved - a[1].solved)
                     .map(([category, stats]) => {
                       const successRate = stats.attempted > 0 ? Math.round((stats.solved / stats.attempted) * 100) : 0;
                       return (
-                        <div key={category} className="flex justify-between items-center bg-gray-700 bg-opacity-50 rounded px-3 py-1">
-                          <span className="font-semibold">{category}</span>
+                        <div key={category} className="flex justify-between items-center bg-gray-700 bg-opacity-50 rounded px-2 sm:px-3 py-1">
+                          <span className="font-semibold text-xs sm:text-sm">{category}</span>
                           <div className="text-right">
-                            <div className="text-sm">{stats.solved}/{stats.attempted} ({successRate}%)</div>
+                            <div className="text-xs sm:text-sm">{stats.solved}/{stats.attempted} ({successRate}%)</div>
                             <div className="text-xs text-gray-400">{stats.solved} solved</div>
                           </div>
                         </div>
@@ -1394,10 +1403,10 @@ function WheelOfFortune() {
                     })}
                 </div>
                 {gameStats.bestCategory && (
-                  <div className="mt-3 text-sm">
+                  <div className="mt-2 sm:mt-3 text-xs sm:text-sm">
                     <span className="text-green-400">Best: {gameStats.bestCategory}</span>
                     {gameStats.worstCategory && gameStats.worstCategory !== gameStats.bestCategory && (
-                      <span className="ml-3 text-red-400">Practice: {gameStats.worstCategory}</span>
+                      <span className="ml-2 sm:ml-3 text-red-400">Practice: {gameStats.worstCategory}</span>
                     )}
                   </div>
                 )}
