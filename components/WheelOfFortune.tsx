@@ -799,24 +799,12 @@ function WheelOfFortune() {
         newMessage = `${gameState.players[gameState.currentPlayer].name} went BANKRUPT! `;
         newPlayers[gameState.currentPlayer].roundMoney = 0;
         // Determine next player (cycle through all 3 players)
-        if (gameState.currentPlayer === 1) {
-          nextPlayer = 2; // Sarah -> Mike
-        } else if (gameState.currentPlayer === 2) {
-          nextPlayer = 0; // Mike -> You
-        } else {
-          nextPlayer = 1; // You -> Sarah
-        }
+        nextPlayer = getNextPlayer(gameState.currentPlayer);
         newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
       } else if (segment === 'LOSE A TURN') {
         newMessage = `${gameState.players[gameState.currentPlayer].name} lost their turn! `;
         // Determine next player (cycle through all 3 players)
-        if (gameState.currentPlayer === 1) {
-          nextPlayer = 2; // Sarah -> Mike
-        } else if (gameState.currentPlayer === 2) {
-          nextPlayer = 0; // Mike -> You
-        } else {
-          nextPlayer = 1; // You -> Sarah
-        }
+        nextPlayer = getNextPlayer(gameState.currentPlayer);
         newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
@@ -914,7 +902,8 @@ function WheelOfFortune() {
         } else {
           message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[gameState.currentPlayer].name} continues!`;
         }
-        // Computer continues their turn
+        // Computer continues their turn - keep same player
+        nextPlayer = gameState.currentPlayer;
       } else {
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
@@ -937,12 +926,20 @@ function WheelOfFortune() {
       // Clear computer action
       setComputerAction('');
       
-      // If computer continues, they spin again after 2 seconds
-      const nextPlayerObj = gameState.players[nextPlayer];
-      if (nextPlayerObj && !nextPlayerObj.isHuman) {
+      // If computer continues their turn, they spin again after 2 seconds
+      if (nextPlayer === gameState.currentPlayer) {
+        // Computer got a correct letter and continues
         setTimeout(() => {
           computerTurn();
         }, 2000);
+      } else {
+        // Computer got an incorrect letter, next player's turn
+        const nextPlayerObj = gameState.players[nextPlayer];
+        if (nextPlayerObj && !nextPlayerObj.isHuman) {
+          setTimeout(() => {
+            computerTurn();
+          }, 2000);
+        }
       }
     }, 1000);
   };
@@ -1341,14 +1338,7 @@ function WheelOfFortune() {
       });
       
       // Determine next player (cycle through all 3 players)
-      let nextPlayer = 0;
-      if (gameState.currentPlayer === 0) {
-        nextPlayer = 1; // You -> Sarah
-      } else if (gameState.currentPlayer === 1) {
-        nextPlayer = 2; // Sarah -> Mike
-      } else {
-        nextPlayer = 0; // Mike -> You
-      }
+      const nextPlayer = getNextPlayer(gameState.currentPlayer);
       
       setGameState(prev => {
         return {
