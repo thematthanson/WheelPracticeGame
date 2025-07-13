@@ -1264,27 +1264,22 @@ function WheelOfFortune() {
                  <div className="text-sm sm:text-base">🎯 Your Turn!</div>
                  <div className="text-xs sm:text-sm">
                    Spin the Wheel (Round {gameState.currentRound})
-                   {gameState.lastSpinResult && !gameState.isSpinning && (
-                     <span className="ml-2 text-yellow-600">
-                       • {typeof gameState.lastSpinResult === 'number' 
-                         ? `$${gameState.lastSpinResult}`
-                         : gameState.lastSpinResult === 'BANKRUPT'
-                           ? '💥 BANKRUPT'
-                           : gameState.lastSpinResult === 'LOSE A TURN'
-                             ? '❌ LOSE TURN'
-                             : typeof gameState.lastSpinResult === 'object' && gameState.lastSpinResult && 'type' in gameState.lastSpinResult
-                               ? gameState.lastSpinResult.type === 'PRIZE'
-                                 ? `🏆 ${(gameState.lastSpinResult as WheelSegment).displayValue}`
-                                 : `⭐ ${(gameState.lastSpinResult as WheelSegment).displayValue}`
-                               : String(gameState.lastSpinResult)}
-                     </span>
-                   )}
                  </div>
+                 {gameState.message && gameState.message.includes('spun') && (
+                   <div className="text-xs sm:text-sm mt-1 text-yellow-600">
+                     {gameState.message}
+                   </div>
+                 )}
                </div>
              ) : (
                <div>
                  <div className="text-sm sm:text-base">{gameState.players[gameState.currentPlayer].name}'s Turn</div>
                  <div className="text-xs sm:text-sm">(Round {gameState.currentRound})</div>
+                 {gameState.message && (
+                   <div className="text-xs sm:text-sm mt-1 text-yellow-600">
+                     {gameState.message}
+                   </div>
+                 )}
                </div>
              )}
           </div>
@@ -1431,36 +1426,7 @@ function WheelOfFortune() {
           </div>
         </div>
 
-        {/* Message Display */}
-        <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg p-3 sm:p-4 text-center mb-4">
-          <div className="text-sm sm:text-lg font-semibold text-yellow-100">
-            {gameState.message}
-          </div>
-          {gameState.wheelValue && (
-            <div className="text-xs sm:text-sm text-yellow-200 mt-2">
-              {typeof gameState.wheelValue === 'number' 
-                ? `Current wheel value: $${gameState.wheelValue}`
-                : typeof gameState.wheelValue === 'object' && 'displayValue' in gameState.wheelValue
-                  ? `Special: ${(gameState.wheelValue as WheelSegment).displayValue}`
-                  : `Special: ${String(gameState.wheelValue)}`}
-            </div>
-          )}
-          
-          {/* Show your current prizes */}
-          {gameState.players[0].prizes.length > 0 && (
-            <div className="mt-2 text-xs sm:text-sm text-green-200">
-              <div className="font-semibold mb-1">Your Prizes:</div>
-              {gameState.players[0].prizes.slice(-2).map((prize, index) => (
-                <div key={index} className="truncate">
-                  🏆 {prize.name} (${prize.value.toLocaleString()})
-                </div>
-              ))}
-              {gameState.players[0].prizes.length > 2 && (
-                <div>...and {gameState.players[0].prizes.length - 2} more!</div>
-              )}
-            </div>
-          )}
-        </div>
+
 
         {/* Game Info */}
         <div className="text-center text-xs sm:text-sm text-gray-400">
