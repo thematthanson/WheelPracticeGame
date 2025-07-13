@@ -401,6 +401,7 @@ function WheelOfFortune() {
   const [showStats, setShowStats] = useState(false);
   const [computerTurnInProgress, setComputerTurnInProgress] = useState(false);
   const computerTurnRef = useRef(false);
+  const computerTurnScheduledRef = useRef(false);
 
   // Load used puzzles and stats from localStorage
   useEffect(() => {
@@ -430,7 +431,7 @@ function WheelOfFortune() {
   // Trigger computer turn when it's their turn
   useEffect(() => {
     const currentPlayer = gameState.players[gameState.currentPlayer];
-    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress && !computerTurnRef.current;
+    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress && !computerTurnRef.current && !computerTurnScheduledRef.current;
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -439,12 +440,14 @@ function WheelOfFortune() {
       isSpinning: gameState.isSpinning,
       turnInProgress: gameState.turnInProgress,
       computerTurnInProgress,
+      computerTurnScheduled: computerTurnScheduledRef.current,
       shouldTrigger: isComputerTurn
     });
     
     if (isComputerTurn) {
       console.log('🤖 Triggering computer turn for:', currentPlayer.name);
       computerTurnRef.current = true;
+      computerTurnScheduledRef.current = true;
       setComputerTurnInProgress(true);
       setTimeout(() => {
         computerTurn();
@@ -788,6 +791,9 @@ function WheelOfFortune() {
     // Computers cannot play in the final round - only human can reach final round
     if (gameState.isFinalRound) {
       console.log('❌ Computer cannot play in final round');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
       return;
     }
     
@@ -863,10 +869,12 @@ function WheelOfFortune() {
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             setComputerTurnInProgress(false);
             computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
             computerTurn();
           } else {
             setComputerTurnInProgress(false);
             computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
           }
         }, 2000);
       } else if (segment === 'LOSE A TURN') {
@@ -893,10 +901,12 @@ function WheelOfFortune() {
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             setComputerTurnInProgress(false);
             computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
             computerTurn();
           } else {
             setComputerTurnInProgress(false);
             computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
           }
         }, 2000);
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
@@ -979,9 +989,23 @@ function WheelOfFortune() {
       return;
     }
     
-    // Computer picks a letter (with some randomness)
-    const randomIndex = Math.floor(Math.random() * Math.min(unusedLetters.length, 5)); // Pick from top 5 unused
-    const letter = unusedLetters[randomIndex];
+    // Computer should only call consonants when it's their turn (after spinning)
+    // Only vowels in final round, but computers can't reach final round
+    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
+    const unusedConsonants = consonants.filter(letter => !gameState.usedLetters.has(letter));
+    
+    // If no consonants left, computer tries to solve
+    if (unusedConsonants.length === 0) {
+      console.log(`🤖 Computer ${currentPlayer.name} attempting to solve (no consonants left)`);
+      setTimeout(() => {
+        computerSolve(0.7); // 70% success rate
+      }, 1000);
+      return;
+    }
+    
+    // Computer picks a consonant (with some randomness)
+    const randomIndex = Math.floor(Math.random() * Math.min(unusedConsonants.length, 5)); // Pick from top 5 unused consonants
+    const letter = unusedConsonants[randomIndex];
     
     // Show computer's action in the input box
     setComputerAction(letter);
@@ -1043,11 +1067,13 @@ function WheelOfFortune() {
           setTimeout(() => {
             setComputerTurnInProgress(false); // Reset flag before next computer turn
             computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
             computerTurn();
           }, 2000);
         } else {
           setComputerTurnInProgress(false); // Reset flag when turn passes to human
           computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
         }
       }
     }, 1000);
