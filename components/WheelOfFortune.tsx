@@ -747,7 +747,7 @@ function WheelOfFortune() {
       const segment = WHEEL_SEGMENTS[landedIndex];
       let newMessage = '';
       let newPlayers = [...gameState.players];
-      let nextPlayer = 0; // Switch back to player
+      let nextPlayer = gameState.currentPlayer; // Default to same player
       
       if (typeof segment === 'number') {
         newMessage = `${gameState.players[gameState.currentPlayer].name} spun $${segment}!`;
@@ -834,7 +834,7 @@ function WheelOfFortune() {
       const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
       
       let newPlayers = [...gameState.players];
-      let nextPlayer = 0;
+      let nextPlayer = gameState.currentPlayer; // Default to same player
       let message = '';
       
       if (letterInPuzzle) {
@@ -848,7 +848,7 @@ function WheelOfFortune() {
         } else {
           message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[gameState.currentPlayer].name} continues!`;
         }
-        nextPlayer = gameState.currentPlayer; // Computer continues
+        // Computer continues their turn
       } else {
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
