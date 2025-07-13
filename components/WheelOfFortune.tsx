@@ -694,22 +694,7 @@ function WheelOfFortune() {
           }}
         />
         
-        {/* Result display */}
-        {gameState.lastSpinResult && !gameState.isSpinning && (
-          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-4 py-2 rounded-lg font-bold text-sm shadow-lg border-2 border-yellow-600 z-10">
-            {typeof gameState.lastSpinResult === 'number' 
-              ? `${gameState.lastSpinResult}`
-              : gameState.lastSpinResult === 'BANKRUPT'
-                ? '💥 BANKRUPT'
-                : gameState.lastSpinResult === 'LOSE A TURN'
-                  ? '❌ LOSE TURN'
-                  : typeof gameState.lastSpinResult === 'object' && gameState.lastSpinResult && 'type' in gameState.lastSpinResult
-                    ? gameState.lastSpinResult.type === 'PRIZE'
-                      ? `🏆 ${(gameState.lastSpinResult as WheelSegment).displayValue}`
-                      : `⭐ ${(gameState.lastSpinResult as WheelSegment).displayValue}`
-                    : String(gameState.lastSpinResult)}
-          </div>
-        )}
+
       </div>
     );
   };
@@ -1078,9 +1063,8 @@ function WheelOfFortune() {
         {/* Header */}
         <div className="text-center mb-4 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-            WHEEL OF FORTUNE
+            WHEEL OF FORTUNE - Training Edition v11
           </h1>
-          <p className="text-lg sm:text-xl text-blue-200">Training Edition v11</p>
         </div>
 
         {/* Turn Indicator */}
@@ -1094,7 +1078,24 @@ function WheelOfFortune() {
              gameState.currentPlayer === 0 ? (
                <div>
                  <div className="text-sm sm:text-base">🎯 Your Turn!</div>
-                 <div className="text-xs sm:text-sm">Spin the Wheel (Round {gameState.currentRound})</div>
+                 <div className="text-xs sm:text-sm">
+                   Spin the Wheel (Round {gameState.currentRound})
+                   {gameState.lastSpinResult && !gameState.isSpinning && (
+                     <span className="ml-2 text-yellow-600">
+                       • {typeof gameState.lastSpinResult === 'number' 
+                         ? `$${gameState.lastSpinResult}`
+                         : gameState.lastSpinResult === 'BANKRUPT'
+                           ? '💥 BANKRUPT'
+                           : gameState.lastSpinResult === 'LOSE A TURN'
+                             ? '❌ LOSE TURN'
+                             : typeof gameState.lastSpinResult === 'object' && gameState.lastSpinResult && 'type' in gameState.lastSpinResult
+                               ? gameState.lastSpinResult.type === 'PRIZE'
+                                 ? `🏆 ${(gameState.lastSpinResult as WheelSegment).displayValue}`
+                                 : `⭐ ${(gameState.lastSpinResult as WheelSegment).displayValue}`
+                               : String(gameState.lastSpinResult)}
+                     </span>
+                   )}
+                 </div>
                </div>
              ) : (
                <div>
