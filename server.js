@@ -7,13 +7,27 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: [
+      "http://localhost:3000",
+      "https://your-netlify-app.netlify.app", // Replace with your Netlify URL
+      "https://wheel-of-fortune-game.netlify.app", // Example Netlify URL
+      process.env.FRONTEND_URL // Environment variable for frontend URL
+    ].filter(Boolean),
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://your-netlify-app.netlify.app", // Replace with your Netlify URL
+    "https://wheel-of-fortune-game.netlify.app", // Example Netlify URL
+    process.env.FRONTEND_URL // Environment variable for frontend URL
+  ].filter(Boolean),
+  credentials: true
+}));
 app.use(express.json());
 
 // Store active games in memory
@@ -244,4 +258,6 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`WebSocket server ready for multiplayer games`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS origins: ${process.env.FRONTEND_URL || 'localhost:3000'}`);
 }); 

@@ -58,8 +58,11 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
+    // Get WebSocket server URL from environment or default to localhost
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+    
     // Connect to WebSocket server
-    const newSocket = io('http://localhost:3001');
+    const newSocket = io(wsUrl);
     socketRef.current = newSocket;
     setSocket(newSocket);
 
