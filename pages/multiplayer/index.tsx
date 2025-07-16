@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { Player, GameState } from '../../lib/firebaseGameService'
 
 export default function MultiplayerHub() {
   const router = useRouter()
@@ -26,13 +27,13 @@ export default function MultiplayerHub() {
       // Generate a random 6-character game code
       const code = Math.random().toString(36).substring(2, 8).toUpperCase()
       
-      const gameState = {
+      const gameState: Partial<GameState> = {
         id: Date.now().toString(),
         code: code,
         status: 'waiting',
-        createdAt: new Date().toISOString(),
-        players: [],
-        currentPlayer: 0,
+        createdAt: Date.now(),
+        players: {} as { [key: string]: Player },
+        currentPlayer: '',
         currentRound: 1,
         puzzle: null,
         usedLetters: [],
@@ -51,11 +52,12 @@ export default function MultiplayerHub() {
         bonusRoundPuzzle: null,
         bonusRoundEnvelope: null,
         bonusRoundEnvelopeValue: null,
-        maxPlayers: 2
+        maxPlayers: 2,
+        lastUpdated: Date.now()
       }
 
       // Add the host player
-      const hostPlayer = {
+      const hostPlayer: Player = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         name: playerName.trim(),
         isHost: true,
@@ -64,10 +66,12 @@ export default function MultiplayerHub() {
         totalMoney: 0,
         prizes: [],
         specialCards: [],
-        freeSpins: 0
+        freeSpins: 0,
+        lastSeen: Date.now()
       }
 
-      gameState.players.push(hostPlayer)
+      gameState.players![hostPlayer.id] = hostPlayer
+      gameState.currentPlayer = hostPlayer.id
 
       // Store the game state
       localStorage.setItem(`game_${code}`, JSON.stringify(gameState))
