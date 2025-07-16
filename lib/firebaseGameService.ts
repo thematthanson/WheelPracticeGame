@@ -190,7 +190,6 @@ export class FirebaseGameService {
       });
     }
 
-    // We already have the current game state in checkGame, return that to avoid redeclaration conflicts
     return { game: checkGame, player: newPlayer };
   }
 
@@ -293,6 +292,44 @@ export class FirebaseGameService {
         });
       }
     }
+  }
+
+  // ---- Multiplayer helper wrappers (used by host UI) ----
+
+  /**
+   * Host pushes the result of a wheel spin (value + rotation angle).
+   * Guests will receive these via the onGameStateChange listener.
+   */
+  async pushSpin(spinData: { value: number | string; rotation: number }): Promise<void> {
+    await this.handleWheelSpin(spinData);
+  }
+
+  /**
+   * Host pushes a consonant or vowel guess. The Firebase document maintains
+   * a union set of usedLetters so all clients stay in sync.
+   */
+  async pushLetterGuess(letter: string, playerId: string): Promise<void> {
+    await this.handleLetterGuess(letter, playerId);
+  }
+
+  /**
+   * Host attempts to solve the current puzzle. If correct, the game status
+   * is set to "finished" and a winning message is broadcast.
+   */
+  async pushSolveAttempt(solution: string, playerId: string): Promise<void> {
+    await this.handleSolveAttempt(solution, playerId);
+  }
+
+  /**
+   * End the current player’s turn and move play to the next player.
+   * This uses a simple round-robin advance based on the players object.
+   */
+  async endTurn(nextPlayerId: string): Promise<void> {
+    await update(this.gameRef, {
+      currentPlayer: nextPlayerId,
+      turnInProgress: false,
+      lastUpdated: Date.now()
+    });
   }
 
   // Add computer players to fill remaining slots (always 3 total players)

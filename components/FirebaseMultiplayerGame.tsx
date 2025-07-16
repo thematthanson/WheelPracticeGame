@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import WheelOfFortune from './WheelOfFortune';
+import MultiplayerWheelOfFortune from './MultiplayerWheelOfFortune';
 import { FirebaseGameService, Player, GameState } from '../lib/firebaseGameService';
 
 // Simplified puzzle templates for multiplayer
@@ -71,13 +72,27 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     }
     hasJoinedRef.current = true;
     
-    // Generate a stable player ID that won't change on re-renders
+    // Generate (or retrieve) a stable player ID that survives React StrictMode remounts
     if (!playerIdRef.current) {
-      // Use a more unique ID that includes player name and timestamp
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substr(2, 9);
-      const nameHash = playerName.replace(/\s+/g, '').toLowerCase();
-      playerIdRef.current = `${nameHash}_${timestamp}_${random}`;
+      // Try to restore from localStorage first
+      const storageKey = `wheel_playerId_${gameCode}_${playerName}`;
+      if (typeof window !== 'undefined') {
+        const storedId = localStorage.getItem(storageKey);
+        if (storedId) {
+          playerIdRef.current = storedId;
+        }
+      }
+
+      // If none found, generate a new one and save it
+      if (!playerIdRef.current) {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 9);
+        const nameHash = playerName.replace(/\s+/g, '').toLowerCase();
+        playerIdRef.current = `${nameHash}_${timestamp}_${random}`;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(storageKey, playerIdRef.current);
+        }
+      }
     }
     
     const playerId = playerIdRef.current;
@@ -260,7 +275,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
         </div>
       </div>
 
-      {/* Players List */}
+      {/* Players List – hide once game is active */}
+      {gameState.status !== 'active' && (
       <div className="bg-blue-800 bg-opacity-30 p-4 mb-4">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-lg font-semibold text-yellow-200 mb-2">Players:</h3>
@@ -288,6 +304,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           </div>
         </div>
       </div>
+      )}
 
       {/* Game Status */}
       {gameState.status === 'waiting' && (
@@ -309,65 +326,12 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
       {/* Game Component */}
       {gameState.status === 'active' && gameService && (
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-green-600 bg-opacity-30 p-4 text-center mb-4">
-            <h2 className="text-xl font-bold text-green-200">Game Started!</h2>
-            {gameState.puzzle ? (
-              <>
-                <p className="text-green-100">
-                  Puzzle: {gameState.puzzle.text}
-                </p>
-                <p className="text-green-100">
-                  Category: {gameState.puzzle.category}
-                </p>
-                <p className="text-sm text-green-200 mt-2">
-                  Current Turn: {gameState.players[gameState.currentPlayer]?.name || 'Unknown'}
-                </p>
-              </>
-            ) : (
-              <p className="text-green-100">Generating puzzle...</p>
-            )}
-          </div>
-          
-          {/* Only host generates puzzle initially */}
-          {currentPlayer?.isHost && !gameState.puzzle && (
-            <div className="bg-yellow-600 bg-opacity-30 p-4 text-center">
-              <p className="text-yellow-200">Host is generating puzzle...</p>
-              <button
-                onClick={async () => {
-                  // Generate puzzle and sync to Firebase
-                  const puzzleData = generateMultiplayerPuzzle();
-                  console.log('Host generating puzzle:', puzzleData);
-                  
-                  if (gameService) {
-                    await gameService.updateGameState({
-                      puzzle: puzzleData,
-                      message: 'Puzzle generated! Game ready to start.',
-                      status: 'active'
-                    });
-                  }
-                }}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg mt-2"
-              >
-                Generate Puzzle
-              </button>
-            </div>
-          )}
-          
-          {/* Show waiting message for non-hosts */}
-          {!currentPlayer?.isHost && !gameState.puzzle && (
-            <div className="bg-blue-600 bg-opacity-30 p-4 text-center">
-              <p className="text-blue-200">Waiting for host to generate puzzle...</p>
-            </div>
-          )}
-          
-          {/* Auto-generate puzzle when game starts and host is present */}
-          {gameState.status === 'active' && currentPlayer?.isHost && !gameState.puzzle && (
-            <div className="bg-green-600 bg-opacity-30 p-4 text-center">
-              <p className="text-green-200">Auto-generating puzzle...</p>
-            </div>
-          )}
-        </div>
+        <MultiplayerWheelOfFortune
+          gameState={gameState}
+          currentPlayer={currentPlayer}
+          isHost={!!currentPlayer?.isHost}
+          service={gameService}
+        />
       )}
 
       {/* Game Message */}
