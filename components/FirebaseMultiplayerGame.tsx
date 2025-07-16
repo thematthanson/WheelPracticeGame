@@ -73,7 +73,11 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     
     // Generate a stable player ID that won't change on re-renders
     if (!playerIdRef.current) {
-      playerIdRef.current = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      // Use a more unique ID that includes player name and timestamp
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substr(2, 9);
+      const nameHash = playerName.replace(/\s+/g, '').toLowerCase();
+      playerIdRef.current = `${nameHash}_${timestamp}_${random}`;
     }
     
     const playerId = playerIdRef.current;
@@ -153,7 +157,6 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
     // Cleanup on unmount
     return () => {
-      hasJoinedRef.current = false;
       if (cleanupRef.current) {
         cleanupRef.current();
       }

@@ -132,10 +132,17 @@ export class FirebaseGameService {
     const game = snapshot.val() as GameState;
     console.log(`Firebase: Found game ${this.gameCode}, current players:`, Object.keys(game.players));
     
-    // Check if this player is already in the game
+    // Check if this player is already in the game (by ID)
     if (game.players[player.id]) {
       console.log(`Firebase: Player ${player.name} already in game, returning existing player`);
       return { game, player: game.players[player.id] };
+    }
+    
+    // Check if a player with the same name is already in the game
+    const existingPlayerWithName = Object.values(game.players).find(p => p.name === player.name);
+    if (existingPlayerWithName) {
+      console.log(`Firebase: Player with name ${player.name} already exists, returning existing player`);
+      return { game, player: existingPlayerWithName };
     }
     
     // Check if game is full - only count human players
@@ -144,13 +151,8 @@ export class FirebaseGameService {
       throw new Error(`Game is full - maximum ${game.maxPlayers} human players allowed`);
     }
 
-    // Check if player name is already taken
-    let finalPlayerName = player.name;
-    let counter = 1;
-    while (Object.values(game.players).some(p => p.name === finalPlayerName)) {
-      finalPlayerName = `${player.name} ${counter}`;
-      counter++;
-    }
+    // Use the original player name since we've already checked for duplicates
+    const finalPlayerName = player.name;
 
     const newPlayer = {
       ...player,

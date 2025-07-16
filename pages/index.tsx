@@ -4,18 +4,13 @@ import Head from 'next/head'
 
 export default function GameModeSelector() {
   const router = useRouter()
-  const [selectedMode, setSelectedMode] = useState('')
 
-  const handleModeSelect = (mode: string) => {
-    setSelectedMode(mode)
+  const handleSinglePlayer = () => {
+    router.push('/single-player')
   }
 
-  const handleStartGame = () => {
-    if (selectedMode === 'single') {
-      router.push('/single-player')
-    } else if (selectedMode === 'multiplayer') {
-      router.push('/multiplayer')
-    }
+  const handleMultiplayer = () => {
+    router.push('/multiplayer')
   }
 
   return (
@@ -45,72 +40,35 @@ export default function GameModeSelector() {
 
           {/* Game Mode Selection */}
           <div className="max-w-md mx-auto">
-            {/* Dropdown */}
-            <div className="mb-6">
-              <label htmlFor="gameMode" className="block text-sm font-medium text-yellow-200 mb-2">
-                Select Game Mode:
-              </label>
-              <select
-                id="gameMode"
-                value={selectedMode}
-                onChange={(e) => handleModeSelect(e.target.value)}
-                className="w-full px-3 py-2 bg-white bg-opacity-10 border border-yellow-300 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-              >
-                <option value="">Choose a mode...</option>
-                <option value="single">🎮 Single Player</option>
-                <option value="multiplayer">👥 Multiplayer</option>
-              </select>
-            </div>
-
             {/* Mode Buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <button
-                onClick={() => handleModeSelect('single')}
-                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  selectedMode === 'single'
-                    ? 'bg-green-600 text-white shadow-lg'
-                    : 'bg-green-600 bg-opacity-50 text-green-200 hover:bg-opacity-70'
-                }`}
+                onClick={handleSinglePlayer}
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
               >
-                🎮 Single
+                🎮 Single Player
               </button>
               <button
-                onClick={() => handleModeSelect('multiplayer')}
-                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  selectedMode === 'multiplayer'
-                    ? 'bg-purple-600 text-white shadow-lg'
-                    : 'bg-purple-600 bg-opacity-50 text-purple-200 hover:bg-opacity-70'
-                }`}
+                onClick={handleMultiplayer}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
               >
                 👥 Multiplayer
               </button>
             </div>
 
-            {/* Start Button */}
-            {selectedMode && (
-              <button
-                onClick={handleStartGame}
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
-              >
-                Start Game
-              </button>
-            )}
-
             {/* Mode Descriptions */}
-            {selectedMode === 'single' && (
-              <div className="mt-4 p-3 bg-green-600 bg-opacity-20 rounded-lg">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-green-600 bg-opacity-20 rounded-lg">
                 <p className="text-sm text-green-200">
                   Practice against computer opponents. Perfect for training and getting familiar with the game.
                 </p>
               </div>
-            )}
-            {selectedMode === 'multiplayer' && (
-              <div className="mt-4 p-3 bg-purple-600 bg-opacity-20 rounded-lg">
+              <div className="p-3 bg-purple-600 bg-opacity-20 rounded-lg">
                 <p className="text-sm text-purple-200">
                   Play with friends online! Create or join a game with a unique code.
                 </p>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Additional Info */}
