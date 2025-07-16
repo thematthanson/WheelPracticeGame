@@ -173,10 +173,10 @@ export class FirebaseGameService {
     const checkSnapshot = await get(this.gameRef);
     const checkGame = checkSnapshot.val() as GameState;
     const totalPlayers = Object.keys(checkGame.players).length;
-    const humanCount = Object.values(checkGame.players).filter(p => p.isHuman).length;
+    const humanPlayersAfter = Object.values(checkGame.players).filter(p => p.isHuman).length;
 
     // Only start the game if we have exactly 3 players and at least 1 human
-    if (totalPlayers === 3 && humanCount >= 1) {
+    if (totalPlayers === 3 && humanPlayersAfter >= 1) {
       await update(this.gameRef, {
         status: 'active',
         message: 'Game starting with 3 players...',
