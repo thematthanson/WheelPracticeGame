@@ -100,7 +100,7 @@ export class FirebaseGameService {
       bonusRoundPuzzle: null,
       bonusRoundEnvelope: null,
       bonusRoundEnvelopeValue: null,
-      maxPlayers: 2,
+      maxPlayers: 3,
       lastUpdated: Date.now()
     };
 
@@ -118,9 +118,10 @@ export class FirebaseGameService {
 
     const game = snapshot.val() as GameState;
     
-    // Check if game is full
-    if (Object.keys(game.players).length >= game.maxPlayers) {
-      throw new Error('Game is full');
+    // Check if game is full - only count human players
+    const humanPlayerCount = Object.values(game.players).filter(p => p.isHuman).length;
+    if (humanPlayerCount >= 2) {
+      throw new Error('Game is full - maximum 2 human players allowed');
     }
 
     // Check if player name is already taken
