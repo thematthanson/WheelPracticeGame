@@ -153,8 +153,20 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           console.log(`Players in updated game:`, Object.keys(updatedGameState.players));
           setGameState(updatedGameState);
           
-          // Find current player
-          const player = updatedGameState.players[playerId];
+          // Find current player – primary by ID, fallback by name (handles rare ID mismatch)
+          let player: Player | null = updatedGameState.players[playerId] || null;
+          if (!player) {
+            player = Object.values(updatedGameState.players).find(p => p.name === playerName) || null;
+            if (player) {
+              console.warn('Player ID mismatch – recovered player by name');
+              // Persist recovered ID to localStorage for future look-ups
+              const storageKey = `wheel_playerId_${gameCode}_${playerName}`;
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(storageKey, player.id);
+              }
+              playerIdRef.current = player.id;
+            }
+          }
           setCurrentPlayer(player || null);
         });
 
