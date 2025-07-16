@@ -171,9 +171,10 @@ export class FirebaseGameService {
     const checkSnapshot = await get(this.gameRef);
     const checkGame = checkSnapshot.val() as GameState;
     const totalPlayers = Object.keys(checkGame.players).length;
+    const humanCount = Object.values(checkGame.players).filter(p => p.isHuman).length;
 
-    // Only start the game if we have exactly 3 players
-    if (totalPlayers === 3) {
+    // Only start the game if we have exactly 3 players and at least 1 human
+    if (totalPlayers === 3 && humanCount >= 1) {
       await update(this.gameRef, {
         status: 'active',
         message: 'Game starting with 3 players...',
@@ -315,48 +316,53 @@ export class FirebaseGameService {
     console.log(`Firebase: Player counts - ${humanPlayerCount} humans, ${computerPlayerCount} computers`);
     console.log(`Firebase: Need ${computersNeeded} computers, removing ${computersToRemove} excess computers`);
 
-    // Remove excess computer players first
-    if (computersToRemove > 0) {
-      const computersToDelete = computerPlayers.slice(0, computersToRemove);
-      const deleteUpdates: { [key: string]: any } = {};
-      
-      for (const computer of computersToDelete) {
-        deleteUpdates[computer.id] = null;
-      }
-      
-      await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
-      console.log(`Firebase: Removed ${computersToRemove} excess computer players`);
-    }
-
-    // Add needed computer players
-    const currentComputerCount = computerPlayerCount - computersToRemove;
-    const newComputersNeeded = computersNeeded - currentComputerCount;
-    
-    if (newComputersNeeded > 0) {
-      const newComputerPlayers: { [key: string]: Player } = {};
-      
-      for (let i = 0; i < newComputersNeeded; i++) {
-        const computerId = `computer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const computerName = `Computer ${i + 1}`;
+    // Only manage computer players if game is still in waiting state
+    if (game.status === 'waiting') {
+      // Remove excess computer players first
+      if (computersToRemove > 0) {
+        const computersToDelete = computerPlayers.slice(0, computersToRemove);
+        const deleteUpdates: { [key: string]: any } = {};
         
-        newComputerPlayers[computerId] = {
-          id: computerId,
-          name: computerName,
-          isHost: false,
-          isHuman: false,
-          roundMoney: 0,
-          totalMoney: 0,
-          prizes: [],
-          specialCards: [],
-          freeSpins: 0,
-          lastSeen: Date.now()
-        };
+        for (const computer of computersToDelete) {
+          deleteUpdates[computer.id] = null;
+        }
+        
+        await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
+        console.log(`Firebase: Removed ${computersToRemove} excess computer players`);
       }
 
-      if (Object.keys(newComputerPlayers).length > 0) {
-        await update(ref(database, `games/${this.gameCode}/players`), newComputerPlayers);
-        console.log(`Firebase: Added ${newComputersNeeded} computer players:`, Object.keys(newComputerPlayers));
+      // Add needed computer players
+      const currentComputerCount = computerPlayerCount - computersToRemove;
+      const newComputersNeeded = computersNeeded - currentComputerCount;
+      
+      if (newComputersNeeded > 0) {
+        const newComputerPlayers: { [key: string]: Player } = {};
+        
+        for (let i = 0; i < newComputersNeeded; i++) {
+          const computerId = `computer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const computerName = `Computer ${i + 1}`;
+          
+          newComputerPlayers[computerId] = {
+            id: computerId,
+            name: computerName,
+            isHost: false,
+            isHuman: false,
+            roundMoney: 0,
+            totalMoney: 0,
+            prizes: [],
+            specialCards: [],
+            freeSpins: 0,
+            lastSeen: Date.now()
+          };
+        }
+
+        if (Object.keys(newComputerPlayers).length > 0) {
+          await update(ref(database, `games/${this.gameCode}/players`), newComputerPlayers);
+          console.log(`Firebase: Added ${newComputersNeeded} computer players:`, Object.keys(newComputerPlayers));
+        }
       }
+    } else {
+      console.log(`Firebase: Game is ${game.status}, skipping computer player management`);
     }
   }
 
