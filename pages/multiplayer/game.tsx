@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import MultiplayerGame from '../../components/MultiplayerGame'
+import FirebaseMultiplayerGame from '../../components/FirebaseMultiplayerGame'
 
 export default function MultiplayerGamePage() {
   const router = useRouter()
@@ -50,12 +50,12 @@ export default function MultiplayerGamePage() {
     <>
       <Head>
         <title>Multiplayer Game - Wheel of Fortune</title>
-        <meta name="description" content="Multiplayer Wheel of Fortune game" />
+        <meta name="description" content="Multiplayer Wheel of Fortune game with Firebase" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
 
-      <MultiplayerGame gameCode={gameCode} playerName={playerName} />
+      <FirebaseMultiplayerGame gameCode={gameCode} playerName={playerName} />
     </>
   )
 } 
