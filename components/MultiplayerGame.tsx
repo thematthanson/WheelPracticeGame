@@ -59,7 +59,7 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
 
   useEffect(() => {
     // Get WebSocket server URL from environment or default to localhost
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3005';
     
     // Connect to WebSocket server
     const newSocket = io(wsUrl);

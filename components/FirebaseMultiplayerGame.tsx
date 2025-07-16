@@ -3,6 +3,49 @@ import { useRouter } from 'next/router';
 import WheelOfFortune from './WheelOfFortune';
 import { FirebaseGameService, Player, GameState } from '../lib/firebaseGameService';
 
+// Simplified puzzle templates for multiplayer
+const SIMPLE_PUZZLES = {
+  PHRASE: [
+    "GREAT IDEA", "HAPPY BIRTHDAY", "GOOD LUCK", "SWEET DREAMS", "BEST WISHES",
+    "TRUE LOVE", "BRIGHT FUTURE", "PERFECT TIMING", "FRESH START", "GOLDEN OPPORTUNITY",
+    "SECOND CHANCE", "WILD GUESS", "LAST RESORT", "COMMON SENSE", "PIECE OF CAKE",
+    "BREAK A LEG", "BITE THE BULLET", "SPILL THE BEANS", "BREAK THE ICE", "CALL IT A DAY",
+    "CROSS YOUR FINGERS", "EASY AS PIE", "ONCE IN A LIFETIME", "BETTER LATE THAN NEVER",
+    "ACTIONS SPEAK LOUDER THAN WORDS", "PRACTICE MAKES PERFECT", "TIME IS MONEY",
+    "KNOWLEDGE IS POWER", "LAUGHTER IS THE BEST MEDICINE", "HONESTY IS THE BEST POLICY"
+  ],
+  PERSON: [
+    "FAMOUS ACTOR", "MOVIE STAR", "ROCK STAR", "BASKETBALL PLAYER", "FOOTBALL PLAYER",
+    "TENNIS PLAYER", "GOLF PLAYER", "RACE CAR DRIVER", "ASTRONAUT", "SCIENTIST",
+    "INVENTOR", "ARTIST", "MUSICIAN", "SINGER", "DANCER", "COMEDIAN", "MAGICIAN"
+  ],
+  PLACE: [
+    "NEW YORK CITY", "LOS ANGELES", "CHICAGO", "MIAMI", "SEATTLE", "DENVER",
+    "GRAND CANYON", "YELLOWSTONE", "CENTRAL PARK", "TIMES SQUARE", "GOLDEN GATE BRIDGE",
+    "STATUE OF LIBERTY", "WHITE HOUSE", "EMPIRE STATE BUILDING", "HOLLYWOOD SIGN"
+  ],
+  THING: [
+    "BIRTHDAY CAKE", "WEDDING DRESS", "SPORTS CAR", "LAPTOP COMPUTER", "CELL PHONE",
+    "TELEVISION", "REFRIGERATOR", "WASHING MACHINE", "VACUUM CLEANER", "MICROWAVE OVEN",
+    "COFFEE MAKER", "ALARM CLOCK", "CAMERA", "BICYCLE", "MOTORCYCLE"
+  ]
+};
+
+// Simple puzzle generator
+const generateMultiplayerPuzzle = () => {
+  const categories = Object.keys(SIMPLE_PUZZLES);
+  const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+  const puzzles = SIMPLE_PUZZLES[randomCategory as keyof typeof SIMPLE_PUZZLES];
+  const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+  
+  return {
+    text: randomPuzzle.toUpperCase(),
+    category: randomCategory,
+    revealed: new Set<string>(),
+    specialFormat: null
+  };
+};
+
 interface FirebaseMultiplayerGameProps {
   gameCode: string;
   playerName: string;
@@ -17,9 +60,23 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isJoining, setIsJoining] = useState(true);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const hasJoinedRef = useRef(false);
+  const playerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const playerId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    // Prevent duplicate joins - check and set atomically
+    if (hasJoinedRef.current) {
+      console.log('Duplicate join attempt prevented');
+      return;
+    }
+    hasJoinedRef.current = true;
+    
+    // Generate a stable player ID that won't change on re-renders
+    if (!playerIdRef.current) {
+      playerIdRef.current = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    }
+    
+    const playerId = playerIdRef.current;
     const service = new FirebaseGameService(gameCode, playerId);
     setGameService(service);
 
@@ -41,16 +98,23 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           lastSeen: Date.now()
         };
 
+        // Small delay to ensure Firebase operations are complete
+        await new Promise(resolve => setTimeout(resolve, 200));
+
         // Check if game exists
         const gameExists = await service.gameExists();
+        console.log(`Game ${gameCode} exists:`, gameExists);
+        console.log(`Checking for game with code: ${gameCode}`);
         
         if (gameExists) {
-          // Join existing game
+          // Game exists - join it
+          console.log(`Player ${player.name} joining existing game ${gameCode}`);
           const result = await service.joinGame(player);
           setGameState(result.game);
           setCurrentPlayer(result.player);
         } else {
-          // Create new game
+          // Game doesn't exist - create it (this player becomes host)
+          console.log(`Player ${player.name} creating new game ${gameCode}`);
           const newGame = await service.createGame({
             ...player,
             isHost: true
@@ -66,7 +130,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
         // Set up real-time listener
         const cleanup = service.onGameStateChange((updatedGameState) => {
-          console.log('Game state updated:', updatedGameState);
+          console.log(`Real-time update for game ${gameCode}:`, updatedGameState);
+          console.log(`Players in updated game:`, Object.keys(updatedGameState.players));
           setGameState(updatedGameState);
           
           // Find current player
@@ -88,6 +153,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
     // Cleanup on unmount
     return () => {
+      hasJoinedRef.current = false;
       if (cleanupRef.current) {
         cleanupRef.current();
       }
@@ -147,6 +213,11 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
   const players = Object.values(gameState.players);
   const playerCount = players.length;
+  const humanPlayerCount = players.filter(p => p.isHuman).length;
+  
+  console.log(`UI: Game ${gameCode} has ${playerCount} total players:`, players.map(p => p.name));
+  console.log(`UI: ${humanPlayerCount} humans, ${playerCount - humanPlayerCount} computers`);
+  console.log(`UI: Current player is:`, currentPlayer?.name);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white">
@@ -183,13 +254,20 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                 className={`px-3 py-1 rounded-full text-sm ${
                   player.name === playerName
                     ? 'bg-green-600 text-white'
-                    : 'bg-blue-600 text-white'
+                    : player.isHuman
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-600 text-gray-200'
                 }`}
               >
-                {player.name} {player.isHost ? '(Host)' : ''}
+                {player.name} {player.isHost ? '👑' : ''} {!player.isHuman && '🤖'}
                 {player.roundMoney > 0 && ` - $${player.roundMoney}`}
               </div>
             ))}
+          </div>
+          
+          <div className="mt-2 text-sm text-blue-200">
+            {humanPlayerCount} human player{humanPlayerCount !== 1 ? 's' : ''}, 
+            {' '}{playerCount - humanPlayerCount} computer player{playerCount - humanPlayerCount !== 1 ? 's' : ''}
           </div>
         </div>
       </div>
@@ -213,9 +291,52 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       )}
 
       {/* Game Component */}
-      {gameState.status === 'active' && (
+      {gameState.status === 'active' && gameService && (
         <div className="max-w-4xl mx-auto">
-          <WheelOfFortune />
+          <div className="bg-green-600 bg-opacity-30 p-4 text-center mb-4">
+            <h2 className="text-xl font-bold text-green-200">Game Started!</h2>
+            <p className="text-green-100">
+              Puzzle: {gameState.puzzle?.text || 'Loading...'}
+            </p>
+            <p className="text-green-100">
+              Category: {gameState.puzzle?.category || 'Loading...'}
+            </p>
+            <p className="text-sm text-green-200 mt-2">
+              Current Turn: {gameState.players[gameState.currentPlayer]?.name || 'Unknown'}
+            </p>
+          </div>
+          
+          {/* Only host generates puzzle initially */}
+          {currentPlayer?.isHost && !gameState.puzzle && (
+            <div className="bg-yellow-600 bg-opacity-30 p-4 text-center">
+              <p className="text-yellow-200">Host is generating puzzle...</p>
+              <button
+                onClick={async () => {
+                  // Generate puzzle and sync to Firebase
+                  const puzzleData = generateMultiplayerPuzzle();
+                  console.log('Host generating puzzle:', puzzleData);
+                  
+                  if (gameService) {
+                                          await gameService.updateGameState({
+                        puzzle: puzzleData,
+                        message: 'Puzzle generated! Game ready to start.',
+                        status: 'active'
+                      });
+                  }
+                }}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg mt-2"
+              >
+                Generate Puzzle
+              </button>
+            </div>
+          )}
+          
+          {/* Show waiting message for non-hosts */}
+          {!currentPlayer?.isHost && !gameState.puzzle && (
+            <div className="bg-blue-600 bg-opacity-30 p-4 text-center">
+              <p className="text-blue-200">Waiting for host to generate puzzle...</p>
+            </div>
+          )}
         </div>
       )}
 

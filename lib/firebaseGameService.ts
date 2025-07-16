@@ -65,10 +65,13 @@ export class FirebaseGameService {
     this.playerId = playerId;
     this.gameRef = ref(database, `games/${gameCode}`);
     this.playerRef = ref(database, `games/${gameCode}/players/${playerId}`);
+    console.log(`Firebase: Game reference created for ${gameCode}, player ${playerId}`);
+    console.log(`Firebase: Game path: games/${gameCode}`);
   }
 
   // Create a new game
   async createGame(hostPlayer: Player): Promise<GameState> {
+    console.log(`Firebase: Creating new game ${this.gameCode} with host ${hostPlayer.name}`);
     const gameState: GameState = {
       id: Date.now().toString(),
       code: this.gameCode,
@@ -105,23 +108,36 @@ export class FirebaseGameService {
     };
 
     await set(this.gameRef, gameState);
+    
+    // Add computer players to fill remaining slots
+    await this.addComputerPlayers();
+    
     return gameState;
   }
 
   // Join an existing game
   async joinGame(player: Player): Promise<{ game: GameState; player: Player }> {
+    console.log(`Firebase: Attempting to join game ${this.gameCode} as ${player.name}`);
     const snapshot = await get(this.gameRef);
     
     if (!snapshot.exists()) {
+      console.log(`Firebase: Game ${this.gameCode} not found`);
       throw new Error('Game not found');
     }
 
     const game = snapshot.val() as GameState;
+    console.log(`Firebase: Found game ${this.gameCode}, current players:`, Object.keys(game.players));
+    
+    // Check if this player is already in the game
+    if (game.players[player.id]) {
+      console.log(`Firebase: Player ${player.name} already in game, returning existing player`);
+      return { game, player: game.players[player.id] };
+    }
     
     // Check if game is full - only count human players
     const humanPlayerCount = Object.values(game.players).filter(p => p.isHuman).length;
-    if (humanPlayerCount >= 2) {
-      throw new Error('Game is full - maximum 2 human players allowed');
+    if (humanPlayerCount >= game.maxPlayers) {
+      throw new Error(`Game is full - maximum ${game.maxPlayers} human players allowed`);
     }
 
     // Check if player name is already taken
@@ -144,16 +160,21 @@ export class FirebaseGameService {
       [player.id]: newPlayer
     });
 
-    // Update game status if we have enough players
-    if (Object.keys(game.players).length + 1 >= game.maxPlayers) {
-      await update(this.gameRef, {
-        status: 'active',
-        message: 'Game starting...',
-        lastUpdated: Date.now()
-      });
-    }
+    // Add computer players to fill remaining slots (always 3 total players)
+    await this.addComputerPlayers();
 
-    return { game, player: newPlayer };
+    // Always start the game once we have at least 1 human player
+    await update(this.gameRef, {
+      status: 'active',
+      message: 'Game starting with computer players...',
+      lastUpdated: Date.now()
+    });
+
+    // Get the updated game state to return
+    const updatedSnapshot = await get(this.gameRef);
+    const updatedGame = updatedSnapshot.val() as GameState;
+
+    return { game: updatedGame, player: newPlayer };
   }
 
   // Listen to game state changes
@@ -173,8 +194,9 @@ export class FirebaseGameService {
     };
   }
 
-  // Update game state
+  // Update game state (for synchronizing puzzle, turns, etc.)
   async updateGameState(updates: Partial<GameState>): Promise<void> {
+    console.log(`Firebase: Updating game ${this.gameCode} with:`, updates);
     await update(this.gameRef, {
       ...updates,
       lastUpdated: Date.now()
@@ -256,6 +278,68 @@ export class FirebaseGameService {
     }
   }
 
+  // Add computer players to fill remaining slots (always 3 total players)
+  async addComputerPlayers(): Promise<void> {
+    const snapshot = await get(this.gameRef);
+    if (!snapshot.exists()) return;
+
+    const game = snapshot.val() as GameState;
+    const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+    const computerPlayers = Object.values(game.players).filter(p => !p.isHuman);
+    
+    const humanPlayerCount = humanPlayers.length;
+    const computerPlayerCount = computerPlayers.length;
+    
+    // We want exactly 3 total players: humans + computers
+    const computersNeeded = Math.max(0, 3 - humanPlayerCount);
+    const computersToRemove = Math.max(0, computerPlayerCount - computersNeeded);
+
+    console.log(`Firebase: Player counts - ${humanPlayerCount} humans, ${computerPlayerCount} computers`);
+    console.log(`Firebase: Need ${computersNeeded} computers, removing ${computersToRemove} excess computers`);
+
+    // Remove excess computer players first
+    if (computersToRemove > 0) {
+      const computersToDelete = computerPlayers.slice(0, computersToRemove);
+      const deleteUpdates: { [key: string]: any } = {};
+      
+      for (const computer of computersToDelete) {
+        deleteUpdates[computer.id] = null;
+      }
+      
+      await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
+      console.log(`Firebase: Removed ${computersToRemove} excess computer players`);
+    }
+
+    // Add needed computer players
+    if (computersNeeded > computerPlayerCount) {
+      const newComputersNeeded = computersNeeded - computerPlayerCount;
+      const newComputerPlayers: { [key: string]: Player } = {};
+      
+      for (let i = 0; i < newComputersNeeded; i++) {
+        const computerId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        const computerName = `Computer ${i + 1}`;
+        
+        newComputerPlayers[computerId] = {
+          id: computerId,
+          name: computerName,
+          isHost: false,
+          isHuman: false,
+          roundMoney: 0,
+          totalMoney: 0,
+          prizes: [],
+          specialCards: [],
+          freeSpins: 0,
+          lastSeen: Date.now()
+        };
+      }
+
+      if (Object.keys(newComputerPlayers).length > 0) {
+        await update(ref(database, `games/${this.gameCode}/players`), newComputerPlayers);
+        console.log(`Firebase: Added ${newComputersNeeded} computer players:`, Object.keys(newComputerPlayers));
+      }
+    }
+  }
+
   // Clean up listeners
   cleanup(): void {
     Object.values(this.listeners).forEach(listener => {
@@ -279,5 +363,15 @@ export class FirebaseGameService {
   async gameExists(): Promise<boolean> {
     const snapshot = await get(this.gameRef);
     return snapshot.exists();
+  }
+
+  // Debug method to clear the game completely
+  async clearGame(): Promise<void> {
+    try {
+      await remove(this.gameRef);
+      console.log('Game data cleared');
+    } catch (error) {
+      console.error('Error clearing game:', error);
+    }
   }
 } 

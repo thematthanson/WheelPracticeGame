@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false, // Temporarily disabled to fix double useEffect in dev
   swcMinify: true,
   poweredByHeader: false,
   compress: true,
   generateEtags: false,
-  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true

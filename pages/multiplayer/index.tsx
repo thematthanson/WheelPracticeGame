@@ -214,7 +214,7 @@ export default function MultiplayerHub() {
                 <ul className="text-blue-100 space-y-1 text-sm">
                   <li>• Create a game to get a unique 6-character code</li>
                   <li>• Share the code with friends to join</li>
-                  <li>• Games support up to 2 human players</li>
+                  <li>• Games support up to 3 human players</li>
                   <li>• Computer players will be added automatically</li>
                   <li>• Games are stored locally in your browser</li>
                 </ul>

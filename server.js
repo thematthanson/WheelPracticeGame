@@ -9,6 +9,11 @@ const io = socketIo(server, {
   cors: {
     origin: [
       "http://localhost:3000",
+      "http://localhost:3001", 
+      "http://localhost:3002",
+      "http://localhost:3003",
+      "http://localhost:3004",
+      "http://localhost:3005",
       "https://your-netlify-app.netlify.app", // Replace with your Netlify URL
       "https://wheel-of-fortune-game.netlify.app", // Example Netlify URL
       process.env.FRONTEND_URL // Environment variable for frontend URL
@@ -22,6 +27,11 @@ const io = socketIo(server, {
 app.use(cors({
   origin: [
     "http://localhost:3000",
+    "http://localhost:3001", 
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "http://localhost:3005",
     "https://your-netlify-app.netlify.app", // Replace with your Netlify URL
     "https://wheel-of-fortune-game.netlify.app", // Example Netlify URL
     process.env.FRONTEND_URL // Environment variable for frontend URL
@@ -61,7 +71,7 @@ const GameManager = {
       bonusRoundPuzzle: null,
       bonusRoundEnvelope: null,
       bonusRoundEnvelopeValue: null,
-      maxPlayers: 2
+      maxPlayers: 3
     };
     
     activeGames.set(gameCode, gameState);
@@ -253,7 +263,7 @@ app.get('/api/games', (req, res) => {
   res.json(games);
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3005;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -61,7 +61,7 @@ const GameManager = {
       bonusRoundPuzzle: null,
       bonusRoundEnvelope: null,
       bonusRoundEnvelopeValue: null,
-      maxPlayers: 2
+      maxPlayers: 3
     };
     
     activeGames.set(gameCode, gameState);
