@@ -146,8 +146,8 @@ export class FirebaseGameService {
     }
     
     // Check if game is full - only count human players
-    const humanPlayerCount = Object.values(game.players).filter(p => p.isHuman).length;
-    if (humanPlayerCount >= game.maxPlayers) {
+    const initialHumanCount = Object.values(game.players).filter(p => p.isHuman).length;
+    if (initialHumanCount >= game.maxPlayers) {
       throw new Error(`Game is full - maximum ${game.maxPlayers} human players allowed`);
     }
 
@@ -190,11 +190,8 @@ export class FirebaseGameService {
       });
     }
 
-    // Get the updated game state to return
-    const updatedSnapshot = await get(this.gameRef);
-    const updatedGame = updatedSnapshot.val() as GameState;
-
-    return { game: updatedGame, player: newPlayer };
+    // We already have the current game state in checkGame, return that to avoid redeclaration conflicts
+    return { game: checkGame, player: newPlayer };
   }
 
   // Listen to game state changes
