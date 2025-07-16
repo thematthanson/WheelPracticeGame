@@ -1,14 +1,14 @@
 [build]
   command = "npm run build"
-  publish = "out"
-
-[build.environment]
-  NODE_VERSION = "18"
+  publish = ".next"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[build.environment]
+  NODE_VERSION = "18"
 
 [[headers]]
   for = "/*"
