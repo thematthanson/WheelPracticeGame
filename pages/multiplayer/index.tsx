@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { Player, GameState } from '../../lib/firebaseGameService'
+import { Player, GameState, FirebaseGameService } from '../../lib/firebaseGameService'
 
 export default function MultiplayerHub() {
   const router = useRouter()
@@ -27,38 +27,12 @@ export default function MultiplayerHub() {
       // Generate a random 6-character game code
       const code = Math.random().toString(36).substring(2, 8).toUpperCase()
       
-      const gameState: Partial<GameState> = {
-        id: Date.now().toString(),
-        code: code,
-        status: 'waiting',
-        createdAt: Date.now(),
-        players: {} as { [key: string]: Player },
-        currentPlayer: '',
-        currentRound: 1,
-        puzzle: null,
-        usedLetters: [],
-        wheelValue: null,
-        isSpinning: false,
-        wheelRotation: 0,
-        turnInProgress: false,
-        lastSpinResult: null,
-        landedSegmentIndex: 0,
-        message: 'Waiting for players to join...',
-        isFinalRound: false,
-        finalRoundLettersRemaining: 0,
-        finalRoundVowelsRemaining: 0,
-        isBonusRound: false,
-        bonusRoundTimeRemaining: 0,
-        bonusRoundPuzzle: null,
-        bonusRoundEnvelope: null,
-        bonusRoundEnvelopeValue: null,
-        maxPlayers: 2,
-        lastUpdated: Date.now()
-      }
-
-      // Add the host player
+      // Create Firebase game service instance
+      const gameService = new FirebaseGameService(code, 'host')
+      
+      // Create host player
       const hostPlayer: Player = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        id: 'host',
         name: playerName.trim(),
         isHost: true,
         isHuman: true,
@@ -69,15 +43,12 @@ export default function MultiplayerHub() {
         freeSpins: 0,
         lastSeen: Date.now()
       }
-
-      gameState.players![hostPlayer.id] = hostPlayer
-      gameState.currentPlayer = hostPlayer.id
-
-      // Store the game state
-      localStorage.setItem(`game_${code}`, JSON.stringify(gameState))
+      
+      // Create the game in Firebase
+      await gameService.createGame(hostPlayer)
       
       // Redirect to the game
-      router.push(`/multiplayer/game?code=${code}`)
+      router.push(`/multiplayer/game?code=${code}&name=${encodeURIComponent(playerName.trim())}`)
 
     } catch (error) {
       console.error('Error creating game:', error)
@@ -98,7 +69,8 @@ export default function MultiplayerHub() {
       return
     }
 
-    router.push(`/multiplayer/join?code=${gameCode.trim().toUpperCase()}&name=${encodeURIComponent(playerName.trim())}`)
+    // Redirect to the game page with join parameters
+    router.push(`/multiplayer/game?code=${gameCode.toUpperCase()}&name=${encodeURIComponent(playerName.trim())}`)
   }
 
   return (
