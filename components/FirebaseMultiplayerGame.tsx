@@ -164,6 +164,20 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     };
   }, [gameCode, playerName]);
 
+  // Auto-generate puzzle when game starts and host is present
+  useEffect(() => {
+    if (gameState?.status === 'active' && currentPlayer?.isHost && !gameState.puzzle && gameService) {
+      console.log('Auto-generating puzzle for host');
+      const puzzleData = generateMultiplayerPuzzle();
+      
+      gameService.updateGameState({
+        puzzle: puzzleData,
+        message: 'Puzzle generated! Game ready to start.',
+        status: 'active'
+      });
+    }
+  }, [gameState?.status, currentPlayer?.isHost, gameState?.puzzle, gameService]);
+
   const handleBack = () => {
     if (gameService) {
       gameService.removePlayer();
@@ -295,15 +309,21 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
         <div className="max-w-4xl mx-auto">
           <div className="bg-green-600 bg-opacity-30 p-4 text-center mb-4">
             <h2 className="text-xl font-bold text-green-200">Game Started!</h2>
-            <p className="text-green-100">
-              Puzzle: {gameState.puzzle?.text || 'Loading...'}
-            </p>
-            <p className="text-green-100">
-              Category: {gameState.puzzle?.category || 'Loading...'}
-            </p>
-            <p className="text-sm text-green-200 mt-2">
-              Current Turn: {gameState.players[gameState.currentPlayer]?.name || 'Unknown'}
-            </p>
+            {gameState.puzzle ? (
+              <>
+                <p className="text-green-100">
+                  Puzzle: {gameState.puzzle.text}
+                </p>
+                <p className="text-green-100">
+                  Category: {gameState.puzzle.category}
+                </p>
+                <p className="text-sm text-green-200 mt-2">
+                  Current Turn: {gameState.players[gameState.currentPlayer]?.name || 'Unknown'}
+                </p>
+              </>
+            ) : (
+              <p className="text-green-100">Generating puzzle...</p>
+            )}
           </div>
           
           {/* Only host generates puzzle initially */}
@@ -317,11 +337,11 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                   console.log('Host generating puzzle:', puzzleData);
                   
                   if (gameService) {
-                                          await gameService.updateGameState({
-                        puzzle: puzzleData,
-                        message: 'Puzzle generated! Game ready to start.',
-                        status: 'active'
-                      });
+                    await gameService.updateGameState({
+                      puzzle: puzzleData,
+                      message: 'Puzzle generated! Game ready to start.',
+                      status: 'active'
+                    });
                   }
                 }}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg mt-2"
@@ -335,6 +355,13 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           {!currentPlayer?.isHost && !gameState.puzzle && (
             <div className="bg-blue-600 bg-opacity-30 p-4 text-center">
               <p className="text-blue-200">Waiting for host to generate puzzle...</p>
+            </div>
+          )}
+          
+          {/* Auto-generate puzzle when game starts and host is present */}
+          {gameState.status === 'active' && currentPlayer?.isHost && !gameState.puzzle && (
+            <div className="bg-green-600 bg-opacity-30 p-4 text-center">
+              <p className="text-green-200">Auto-generating puzzle...</p>
             </div>
           )}
         </div>
