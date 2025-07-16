@@ -112,7 +112,11 @@ export class FirebaseGameService {
     // Add computer players to fill remaining slots
     await this.addComputerPlayers();
     
-    return gameState;
+    // Get the updated game state to return
+    const finalSnapshot = await get(this.gameRef);
+    const finalGame = finalSnapshot.val() as GameState;
+    
+    return finalGame;
   }
 
   // Join an existing game
@@ -163,12 +167,25 @@ export class FirebaseGameService {
     // Add computer players to fill remaining slots (always 3 total players)
     await this.addComputerPlayers();
 
-    // Always start the game once we have at least 1 human player
-    await update(this.gameRef, {
-      status: 'active',
-      message: 'Game starting with computer players...',
-      lastUpdated: Date.now()
-    });
+    // Get the updated game state to check player count
+    const checkSnapshot = await get(this.gameRef);
+    const checkGame = checkSnapshot.val() as GameState;
+    const totalPlayers = Object.keys(checkGame.players).length;
+
+    // Only start the game if we have exactly 3 players
+    if (totalPlayers === 3) {
+      await update(this.gameRef, {
+        status: 'active',
+        message: 'Game starting with 3 players...',
+        lastUpdated: Date.now()
+      });
+    } else {
+      await update(this.gameRef, {
+        status: 'waiting',
+        message: `Waiting for players... (${totalPlayers}/3)`,
+        lastUpdated: Date.now()
+      });
+    }
 
     // Get the updated game state to return
     const updatedSnapshot = await get(this.gameRef);
@@ -291,7 +308,8 @@ export class FirebaseGameService {
     const computerPlayerCount = computerPlayers.length;
     
     // We want exactly 3 total players: humans + computers
-    const computersNeeded = Math.max(0, 3 - humanPlayerCount);
+    const totalPlayersNeeded = 3;
+    const computersNeeded = Math.max(0, totalPlayersNeeded - humanPlayerCount);
     const computersToRemove = Math.max(0, computerPlayerCount - computersNeeded);
 
     console.log(`Firebase: Player counts - ${humanPlayerCount} humans, ${computerPlayerCount} computers`);
@@ -311,12 +329,14 @@ export class FirebaseGameService {
     }
 
     // Add needed computer players
-    if (computersNeeded > computerPlayerCount) {
-      const newComputersNeeded = computersNeeded - computerPlayerCount;
+    const currentComputerCount = computerPlayerCount - computersToRemove;
+    const newComputersNeeded = computersNeeded - currentComputerCount;
+    
+    if (newComputersNeeded > 0) {
       const newComputerPlayers: { [key: string]: Player } = {};
       
       for (let i = 0; i < newComputersNeeded; i++) {
-        const computerId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        const computerId = `computer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const computerName = `Computer ${i + 1}`;
         
         newComputerPlayers[computerId] = {
