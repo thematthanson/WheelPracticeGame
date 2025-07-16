@@ -1,80 +1,135 @@
-# JensWheelPractice
+# Wheel of Fortune Multiplayer Game
 
-A Wheel of Fortune training game designed specifically for practice before appearing on the TV show. This application provides an authentic Wheel of Fortune experience with realistic game mechanics, multiple puzzle categories, and mobile optimization.
+A real-time multiplayer Wheel of Fortune game built with Next.js, Firebase, and Socket.IO.
 
-## 🎯 Features
+## Features
 
-- **Authentic Wheel Mechanics**: Realistic wheel segments with proper probability distribution
-- **Multiple Puzzle Categories**: 
-  - "BEFORE & AFTER"
-  - "ON THE MAP" 
-  - "FOOD & DRINK"
-  - "PHRASE"
-  - "THING"
-  - "PERSON"
-  - "PLACE"
-  - "TITLE"
-- **Progress Tracking**: localStorage persistence to track completed puzzles
-- **Smart Reset System**: Auto-reset when puzzles run low, manual reset option
-- **Mobile Optimized**: Responsive design for all devices
-- **Fresh Content**: 500+ unique puzzles with no duplicates
+- Real-time multiplayer gameplay
+- Firebase integration for game state management
+- Computer players for single-player experience
+- Responsive design with Tailwind CSS
+- Deployed on Netlify
 
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
-- Node.js 18.x or higher
+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
+
+1. Clone the repository:
 ```bash
-# Clone the repository
-git clone https://github.com/thematthanson/WheelPracticeGame.git
-cd WheelPracticeGame
+git clone <your-repo-url>
+cd wheel
+```
 
-# Install dependencies
+2. Install dependencies:
+```bash
 npm install
+```
 
-# Run development server
+3. Set up environment variables:
+```bash
+cp env.example .env.local
+```
+
+4. Add your Firebase configuration to `.env.local`:
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+### Development
+
+Run the development server:
+```bash
 npm run dev
 ```
 
-### Build for Production
+Or run with the WebSocket server for local multiplayer:
+```bash
+npm run dev:full
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the game.
+
+### Production
+
+Build the application:
 ```bash
 npm run build
+```
+
+Start the production server:
+```bash
 npm start
 ```
 
-## 🎮 How to Play
+## Deployment
 
-1. **Spin the Wheel**: Click the wheel to spin and land on a segment
-2. **Guess Letters**: Click on letter buttons to guess consonants or vowels
-3. **Solve the Puzzle**: When ready, click "SOLVE" to attempt the solution
-4. **Track Progress**: Your completed puzzles are saved locally
-5. **Fresh Content**: New puzzles automatically load when you run low
+This project is configured for deployment on Netlify with automatic deployments from GitHub.
 
-## 📱 Deployment
+### Netlify Configuration
 
-This application is optimized for Vercel deployment with:
-- Modern Next.js 14 configuration
-- Optimized TypeScript setup
-- Clean dependency management
-- Performance optimizations
+The project includes:
+- `netlify.toml` for build configuration
+- Next.js plugin for optimal performance
+- Security headers for production
 
-## 🛠️ Technical Stack
+### Manual Deployment
 
-- **Framework**: Next.js 14
-- **Language**: TypeScript
+1. Build the project:
+```bash
+npm run build
+```
+
+2. Deploy to Netlify via drag-and-drop or Git integration
+
+## Game Modes
+
+### Single Player
+- Play against computer opponents
+- Practice mode with unlimited turns
+
+### Multiplayer
+- Real-time multiplayer games
+- Host or join game rooms
+- Up to 3 players per game
+
+## Technologies Used
+
+- **Frontend**: Next.js, React, TypeScript
 - **Styling**: Tailwind CSS
+- **Real-time**: Firebase Firestore, Socket.IO
+- **Deployment**: Netlify
 - **Icons**: Lucide React
-- **Deployment**: Vercel
 
-## 📊 Puzzle Statistics
+## Project Structure
 
-- **Total Puzzles**: 500+ unique puzzles
-- **Categories**: 8 different puzzle types
-- **Progress Tracking**: Persistent localStorage
-- **Auto-Reset**: Smart content management
+```
+wheel/
+├── components/          # React components
+├── lib/                # Firebase configuration
+├── pages/              # Next.js pages
+├── public/             # Static assets
+├── styles/             # Global styles
+├── server.js           # WebSocket server (local dev)
+└── netlify.toml        # Netlify configuration
+```
 
----
+## Contributing
 
-**Built for Jens's Wheel of Fortune practice - Good luck on the show! 🎯**
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
