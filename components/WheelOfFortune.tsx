@@ -475,9 +475,18 @@ function WheelOfFortune({
     localStorage.setItem('jenswheelpractice-stats', JSON.stringify(gameStats));
   }, [gameStats]);
 
+  // Helper function to get current player (handles both single-player and multiplayer)
+  const getCurrentPlayer = () => {
+    if (Array.isArray(gameState.players)) {
+      return gameState.players[gameState.currentPlayer];
+    } else {
+      return gameState.players[gameState.currentPlayer];
+    }
+  };
+
   // Computer player logic
   const computerTurn = useCallback(() => {
-    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
     // Computers cannot play in the final round - only human can reach final round
@@ -632,7 +641,7 @@ function WheelOfFortune({
 
   // Trigger computer turn when it's their turn
   useEffect(() => {
-    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const currentPlayer = getCurrentPlayer();
     const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress && !computerTurnRef.current && !computerTurnScheduledRef.current;
     
     console.log('🔄 Turn check:', {
@@ -655,7 +664,7 @@ function WheelOfFortune({
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress, gameState.players, computerTurn]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress, gameState.players, computerTurn, getCurrentPlayer]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -981,7 +990,7 @@ function WheelOfFortune({
   };
 
   const computerGuess = (wheelValue: number | string | WheelSegment) => {
-    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
     // Computers cannot play in the final round - only human can reach final round
@@ -1122,7 +1131,7 @@ function WheelOfFortune({
 
   // Update computerSolve to accept a successRate argument
   const computerSolve = (successRate = 0.3) => {
-    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
     // Computers cannot play in the final round - only human can reach final round
@@ -1146,13 +1155,13 @@ function WheelOfFortune({
     // 70% chance to solve if called with 0.7
     const willSolve = Math.random() < successRate;
     
-    console.log('🤖 Computer solve attempt:', {
-      player: gameState.players[gameState.currentPlayer].name,
-      willSolve: willSolve,
-      revealedLetters: Array.from(gameState.puzzle.revealed),
-      puzzleText: puzzleText,
-      timestamp: new Date().toISOString()
-    });
+            console.log('🤖 Computer solve attempt:', {
+          player: getCurrentPlayer()?.name,
+          willSolve: willSolve,
+          revealedLetters: Array.from(gameState.puzzle.revealed),
+          puzzleText: puzzleText,
+          timestamp: new Date().toISOString()
+        });
     
     // Show computer's solve attempt
     setComputerSolveAttempt(willSolve ? puzzleText : 'Incorrect guess');
@@ -1162,7 +1171,7 @@ function WheelOfFortune({
       if (willSolve) {
         // Computer solves correctly
         console.log('✅ Computer solved correctly:', {
-          player: gameState.players[gameState.currentPlayer].name,
+          player: getCurrentPlayer()?.name,
           puzzleText: puzzleText,
           timestamp: new Date().toISOString()
         });
@@ -1231,7 +1240,7 @@ function WheelOfFortune({
       } else {
         // Computer fails to solve
         console.log('❌ Computer failed to solve:', {
-          player: gameState.players[gameState.currentPlayer].name,
+          player: getCurrentPlayer()?.name,
           puzzleText: puzzleText,
           timestamp: new Date().toISOString()
         });
@@ -1863,7 +1872,7 @@ function WheelOfFortune({
 
   // Helper function to check if current player is human
   const isCurrentPlayerHuman = (): boolean => {
-    const currentPlayer = gameState.players[gameState.currentPlayer];
+    const currentPlayer = getCurrentPlayer();
     return currentPlayer ? currentPlayer.isHuman : false;
   };
 
@@ -2002,12 +2011,12 @@ function WheelOfFortune({
               } else {
                 if (gameState.message && gameState.message.includes('spun')) {
                   const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
-                  return <span>{gameState.players[gameState.currentPlayer].name}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
+                  return <span>{getCurrentPlayer()?.name}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
                 }
                 if (gameState.message) {
-                  return `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
+                  return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
                 }
-                return `${gameState.players[gameState.currentPlayer].name}'s Turn (Round ${gameState.currentRound})`;
+                return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound})`;
               }
             })()}
           </div>
