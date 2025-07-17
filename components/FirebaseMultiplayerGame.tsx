@@ -263,6 +263,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   console.log(`UI: ${humanPlayerCount} humans, ${playerCount - humanPlayerCount} computers`);
   console.log(`UI: Current player is:`, currentPlayer?.name);
 
+  const hasPuzzle = Boolean(gameState.puzzle);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white">
       {/* Game Header */}
@@ -287,8 +289,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
         </div>
       </div>
 
-      {/* Players List – hide once game is active */}
-      {gameState.status !== 'active' && (
+      {/* Players List – hide once a puzzle is available */}
+      {!hasPuzzle && (
       <div className="bg-blue-800 bg-opacity-30 p-4 mb-4">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-lg font-semibold text-yellow-200 mb-2">Players:</h3>
@@ -319,7 +321,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       )}
 
       {/* Game Status */}
-      {gameState.status === 'waiting' && (
+      {!hasPuzzle && gameState.status === 'waiting' && (
         <div className="bg-yellow-600 bg-opacity-30 p-4 text-center">
           <p className="text-yellow-200">
             Waiting for players to join... ({playerCount}/{gameState.maxPlayers})
@@ -337,7 +339,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       )}
 
       {/* Game Component */}
-      {gameState.status === 'active' && gameService && (
+      {hasPuzzle && gameService && (
         <MultiplayerWheelOfFortune
           gameState={gameState}
           currentPlayer={currentPlayer}
@@ -347,7 +349,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       )}
 
       {/* Game Message */}
-      {gameState.message && gameState.status !== 'waiting' && (
+      {gameState.message && (hasPuzzle || gameState.status !== 'waiting') && (
         <div className="bg-blue-600 bg-opacity-30 p-4 text-center">
           <p className="text-blue-200">{gameState.message}</p>
         </div>

@@ -112,11 +112,18 @@ export class FirebaseGameService {
     // Add computer players to fill remaining slots
     await this.addComputerPlayers();
     
-    // Get the updated game state to return
-    const finalSnapshot = await get(this.gameRef);
-    const finalGame = finalSnapshot.val() as GameState;
-    
-    return finalGame;
+    // Re-read game state (once computers added) – decide status
+    const snapshotAfterComputers = await get(this.gameRef);
+    const gameAfterComputers = snapshotAfterComputers.val() as GameState;
+    const playerTotal = Object.keys(gameAfterComputers.players).length;
+
+    await update(this.gameRef, {
+      status: playerTotal === 3 ? 'active' : 'waiting',
+      message: playerTotal === 3 ? 'Game starting with 3 players...' : `Waiting for players... (${playerTotal}/3)`,
+      lastUpdated: Date.now()
+    });
+
+    return gameAfterComputers;
   }
 
   // Join an existing game
@@ -146,8 +153,8 @@ export class FirebaseGameService {
     }
     
     // Check if game is full - only count human players
-    const initialHumanCount = Object.values(game.players).filter(p => p.isHuman).length;
-    if (initialHumanCount >= game.maxPlayers) {
+    const humanCountBeforeJoin = Object.values(game.players).filter(p => p.isHuman).length;
+    if (humanCountBeforeJoin >= game.maxPlayers) {
       throw new Error(`Game is full - maximum ${game.maxPlayers} human players allowed`);
     }
 
@@ -169,14 +176,14 @@ export class FirebaseGameService {
     // Add computer players to fill remaining slots (always 3 total players)
     await this.addComputerPlayers();
 
-    // Get the updated game state to check player count
-    const checkSnapshot = await get(this.gameRef);
-    const checkGame = checkSnapshot.val() as GameState;
-    const totalPlayers = Object.keys(checkGame.players).length;
-    const humanPlayersAfter = Object.values(checkGame.players).filter(p => p.isHuman).length;
+    // Re-read game state (once computers added) – decide status
+    const checkGame = await get(this.gameRef);
+    const checkGameState = checkGame.val() as GameState;
+    const totalPlayers = Object.keys(checkGameState.players).length;
+    const humanCountAfterCheck = Object.values(checkGameState.players).filter(p => p.isHuman).length;
 
     // Only start the game if we have exactly 3 players and at least 1 human
-    if (totalPlayers === 3 && humanPlayersAfter >= 1) {
+    if (totalPlayers === 3 && humanCountAfterCheck >= 1) {
       await update(this.gameRef, {
         status: 'active',
         message: 'Game starting with 3 players...',
@@ -190,7 +197,7 @@ export class FirebaseGameService {
       });
     }
 
-    return { game: checkGame, player: newPlayer };
+    return { game: checkGameState, player: newPlayer };
   }
 
   // Listen to game state changes

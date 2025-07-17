@@ -1,5 +1,6 @@
 import React from 'react';
 import WheelOfFortune from './WheelOfFortune';
+import { Player } from '../lib/firebaseGameService';
 
 interface MultiplayerWheelProps {
   gameState: any;
@@ -22,12 +23,48 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
   isHost,
   service
 }) => {
+  // Derive deterministic order: host first (current), then remaining by name
+  const ordered: Player[] = [...Object.values(gameState.players)] as Player[];
+  ordered.sort((a, b) => {
+    if (a.id === currentPlayer?.id) return -1;
+    if (b.id === currentPlayer?.id) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   // HOST VIEW – full controls
   if (isHost) {
     return (
       <div className="max-w-4xl mx-auto">
-        {/* TODO: In Phase B we will intercept WheelOfFortune callbacks and pipe them to Firebase */}
-        <WheelOfFortune />
+        <WheelOfFortune
+          initialPlayers={ordered.map((p) => ({ name: p.name, isHuman: p.isHuman }))}
+          onSpin={(data) => {
+            service.pushSpin(data);
+          }}
+          onLetterGuess={(letter) => {
+            if (currentPlayer?.id) {
+              service.pushLetterGuess(letter, currentPlayer.id);
+            }
+          }}
+          onSolveAttempt={(attempt, correct) => {
+            if (currentPlayer?.id) {
+              service.pushSolveAttempt(attempt, currentPlayer.id);
+            }
+          }}
+          onEndTurn={(nextPlayerIndex) => {
+            // Map numeric index from local game to actual Firebase player ID order
+            const allPlayers = Object.values(gameState.players) as Player[];
+            // Ensure deterministic ordering: host first, then others by name
+            const ordered = allPlayers.sort((playerA, playerB) => {
+              if (playerA.id === currentPlayer?.id) return -1;
+              if (playerB.id === currentPlayer?.id) return 1;
+              return playerA.name.localeCompare(playerB.name);
+            });
+            const next = ordered[nextPlayerIndex];
+            if (next) {
+              service.endTurn(next.id);
+            }
+          }}
+        />
       </div>
     );
   }

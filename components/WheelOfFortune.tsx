@@ -354,19 +354,48 @@ const getAllPuzzles = () => {
   return allPuzzles;
 };
 
-function WheelOfFortune() {
+// Props passed from multiplayer wrapper to broadcast host actions
+interface WheelOfFortuneProps {
+  /** Fired when the host finishes a wheel spin (after the wheel stops). */
+  onSpin?: (data: { value: number | string; rotation: number }) => void;
+  /** Fired when the host guesses a consonant or buys a vowel. */
+  onLetterGuess?: (letter: string) => void;
+  /** Fired whenever the host attempts to solve the puzzle. */
+  onSolveAttempt?: (attempt: string, wasCorrect: boolean) => void;
+  /** Fired when the current turn moves to the next player (0-based index). */
+  onEndTurn?: (nextPlayerIndex: number) => void;
+  /** Optional list of player names (length 3) to seed the local game state. */
+  initialPlayers?: { name: string; isHuman: boolean }[];
+}
+
+function WheelOfFortune({
+  onSpin,
+  onLetterGuess,
+  onSolveAttempt,
+  onEndTurn,
+  initialPlayers
+}: WheelOfFortuneProps = {}) {
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
     puzzle: { text: '', category: '', revealed: new Set<string>(), specialFormat: null },
-    usedLetters: new Set<string>(),
+    usedLetters: new Set(),
     wheelValue: 0,
     isSpinning: false,
     wheelRotation: 0,
-    players: [
-      { name: 'You', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] },
-      { name: 'Sarah', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] },
-      { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
-    ],
+    players: (initialPlayers && initialPlayers.length === 3)
+      ? initialPlayers.map(p => ({
+          name: p.name,
+          roundMoney: 0,
+          totalMoney: 0,
+          isHuman: p.isHuman,
+          prizes: [],
+          specialCards: []
+        }))
+      : [
+          { name: 'You', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] },
+          { name: 'Sarah', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] },
+          { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
+        ],
     currentPlayer: 0,
     turnInProgress: false,
     lastSpinResult: null,
@@ -376,6 +405,13 @@ function WheelOfFortune() {
     finalRoundLettersRemaining: 0,
     finalRoundVowelsRemaining: 0
   });
+
+  // Keep a ref with the latest gameState for use inside async callbacks (avoids stale closures)
+  const gameStateRef = useRef<GameState>(gameState);
+
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   const [inputLetter, setInputLetter] = useState('');
   const [solveAttempt, setSolveAttempt] = useState('');
@@ -634,18 +670,14 @@ function WheelOfFortune() {
     }
   };
 
-  // Initialize puzzle on mount (only once)
+  // Once on mount, generate the first puzzle now that helper exists
   useEffect(() => {
-    try {
-      // Wait for availablePuzzles to be populated before generating first puzzle
-      if (availablePuzzles.length > 0) {
-        const newPuzzle = generatePuzzle();
-        setGameState(prev => ({ ...prev, puzzle: newPuzzle }));
-      }
-    } catch (error) {
-      console.error('Error initializing puzzle:', error);
-    }
-  }, [availablePuzzles]); // Depend on availablePuzzles to ensure it's populated
+    setGameState(prev => ({
+      ...prev,
+      puzzle: generatePuzzle()
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Authentic wheel renderer with visible segments
   const renderWheel = () => {
@@ -822,14 +854,15 @@ function WheelOfFortune() {
     setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
     
     setTimeout(() => {
+      const gs = gameStateRef.current;
       const landedIndex = getLandedSegmentIndex(newRotation);
       const segment = currentWheelSegments[landedIndex];
       let newMessage = '';
-      let newPlayers = [...gameState.players];
-      let nextPlayer = gameState.currentPlayer; // Default to same player
+      let newPlayers = [...gs.players];
+      let nextPlayer = gs.currentPlayer; // Default to same player
       
       if (typeof segment === 'number') {
-        newMessage = `${gameState.players[gameState.currentPlayer].name} spun $${segment}!`;
+        newMessage = `${gs.players[gs.currentPlayer].name} spun $${segment}!`;
         // Update game state first, then computer makes a guess
         setGameState(prev => ({
           ...prev,
@@ -848,11 +881,11 @@ function WheelOfFortune() {
           computerGuess(segment);
         }, 1000);
       } else if (segment === 'BANKRUPT') {
-        newMessage = `${gameState.players[gameState.currentPlayer].name} went BANKRUPT! `;
-        newPlayers[gameState.currentPlayer].roundMoney = 0;
+        newMessage = `${gs.players[gs.currentPlayer].name} went BANKRUPT! `;
+        newPlayers[gs.currentPlayer].roundMoney = 0;
         // Determine next player (cycle through all 3 players)
-        nextPlayer = getNextPlayer(gameState.currentPlayer);
-        newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+        nextPlayer = (gs.currentPlayer + 1) % gs.players.length; // advance to next player
+        newMessage += `${gs.players[nextPlayer].name}'s turn!`;
         
         setGameState(prev => ({
           ...prev,
@@ -872,16 +905,16 @@ function WheelOfFortune() {
           computerTurnRef.current = false;
           computerTurnScheduledRef.current = false;
           
-          const nextPlayerObj = gameState.players[nextPlayer];
+          const nextPlayerObj = gs.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             computerTurn();
           }
         }, 2000);
       } else if (segment === 'LOSE A TURN') {
-        newMessage = `${gameState.players[gameState.currentPlayer].name} lost their turn! `;
+        newMessage = `${gs.players[gs.currentPlayer].name} lost their turn! `;
         // Determine next player (cycle through all 3 players)
-        nextPlayer = getNextPlayer(gameState.currentPlayer);
-        newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+        nextPlayer = (gs.currentPlayer + 1) % gs.players.length; // advance to next player
+        newMessage += `${gs.players[nextPlayer].name}'s turn!`;
         
         setGameState(prev => ({
           ...prev,
@@ -901,20 +934,20 @@ function WheelOfFortune() {
           computerTurnRef.current = false;
           computerTurnScheduledRef.current = false;
           
-          const nextPlayerObj = gameState.players[nextPlayer];
+          const nextPlayerObj = gs.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             computerTurn();
           }
         }, 2000);
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
-          newMessage = `${gameState.players[gameState.currentPlayer].name} landed on ${(segment as WheelSegment).displayValue}!`;
+          newMessage = `${gs.players[gs.currentPlayer].name} landed on ${(segment as WheelSegment).displayValue}!`;
         } else if (segment.type === 'WILD_CARD') {
-          newMessage = `${gameState.players[gameState.currentPlayer].name} got the WILD CARD!`;
+          newMessage = `${gs.players[gs.currentPlayer].name} got the WILD CARD!`;
         } else if (segment.type === 'GIFT_TAG') {
-          newMessage = `${gameState.players[gameState.currentPlayer].name} got the $1000 GIFT TAG!`;
+          newMessage = `${gs.players[gs.currentPlayer].name} got the $1000 GIFT TAG!`;
         } else if (segment.type === 'MILLION') {
-          newMessage = `${gameState.players[gameState.currentPlayer].name} got the MILLION DOLLAR WEDGE!`;
+          newMessage = `${gs.players[gs.currentPlayer].name} got the MILLION DOLLAR WEDGE!`;
         }
         // Update game state first, then computer makes a guess
         setGameState(prev => ({
@@ -1009,11 +1042,12 @@ function WheelOfFortune() {
     setGameState(prev => ({ ...prev, message: `${prev.players[prev.currentPlayer].name} calls ${letter}!` }));
     
     setTimeout(() => {
-      const letterInPuzzle = gameState.puzzle.text.includes(letter);
-      const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
+      const gsGuess = gameStateRef.current;
+      const letterInPuzzle = gsGuess.puzzle.text.includes(letter);
+      const letterCount = (gsGuess.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
       
-      let newPlayers = [...gameState.players];
-      let nextPlayer = gameState.currentPlayer; // Default to same player
+      let newPlayers = [...gsGuess.players];
+      let nextPlayer = gsGuess.currentPlayer; // Default to same player
       let message = '';
       
       if (letterInPuzzle) {
@@ -1022,20 +1056,20 @@ function WheelOfFortune() {
         
         if (typeof wheelValue === 'number') {
           const earned = wheelValue * letterCount;
-          newPlayers[gameState.currentPlayer].roundMoney += earned;
-          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[gameState.currentPlayer].name} earned $${earned}.`;
+          newPlayers[gsGuess.currentPlayer].roundMoney += earned;
+          message = `Yes! ${letterCount} ${letter}'s. ${gsGuess.players[gsGuess.currentPlayer].name} earned $${earned}.`;
         } else {
-          message = `Yes! ${letterCount} ${letter}'s. ${gameState.players[gameState.currentPlayer].name} continues!`;
+          message = `Yes! ${letterCount} ${letter}'s. ${gsGuess.players[gsGuess.currentPlayer].name} continues!`;
         }
         // Computer continues their turn - keep same player
-        nextPlayer = gameState.currentPlayer;
+        nextPlayer = gsGuess.currentPlayer;
       } else {
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
         
         // Determine next player (cycle through all 3 players)
-        nextPlayer = getNextPlayer(gameState.currentPlayer);
-        message = `No ${letter}'s. ${gameState.players[nextPlayer].name}'s turn!`;
+        nextPlayer = (gsGuess.currentPlayer + 1) % gsGuess.players.length; // advance to next player
+        message = `No ${letter}'s. ${gsGuess.players[nextPlayer].name}'s turn!`;
       }
       
       setGameState(prev => ({
@@ -1052,7 +1086,7 @@ function WheelOfFortune() {
       setComputerAction('');
       
       // If computer continues their turn, they spin again after 2 seconds
-      if (nextPlayer === gameState.currentPlayer) {
+      if (nextPlayer === gsGuess.currentPlayer) {
         // Computer got a correct letter and continues
         setTimeout(() => {
           setComputerTurnInProgress(false);
@@ -1066,7 +1100,7 @@ function WheelOfFortune() {
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         
-        const nextPlayerObj = gameState.players[nextPlayer];
+        const nextPlayerObj = gameStateRef.current.players[nextPlayer];
         if (nextPlayerObj && !nextPlayerObj.isHuman) {
           setTimeout(() => {
             computerTurn();
@@ -1193,7 +1227,7 @@ function WheelOfFortune() {
         });
         
         // Determine next player (cycle through all 3 players)
-        let nextPlayer = getNextPlayer(gameState.currentPlayer);
+        let nextPlayer = (gameState.currentPlayer + 1) % gameState.players.length; // advance to next player
         
         setGameState(prev => ({
           ...prev,
@@ -1203,7 +1237,7 @@ function WheelOfFortune() {
         
         // Start next player's turn if it's a computer
         setTimeout(() => {
-          const nextPlayerObj = gameState.players[nextPlayer];
+          const nextPlayerObj = gameStateRef.current.players[nextPlayer];
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             setComputerTurnInProgress(false);
             computerTurnRef.current = false;
@@ -1266,12 +1300,12 @@ function WheelOfFortune() {
         newMessage = 'BANKRUPT! You lose your round money and any prizes from this round. ';
         newPlayers[0].roundMoney = 0;
         newPlayers[0].prizes = newPlayers[0].prizes.filter(p => p.round !== gameState.currentRound);
-        nextPlayer = 1; // You -> Sarah
-        newMessage += `${gameState.players[1].name}'s turn!`;
+        nextPlayer = (gameState.currentPlayer + 1) % gameState.players.length; // advance to next player
+        newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
       } else if (segment === 'LOSE A TURN') {
         newMessage = 'LOSE A TURN! ';
-        nextPlayer = 1; // You -> Sarah
-        newMessage += `${gameState.players[1].name}'s turn!`;
+        nextPlayer = (gameState.currentPlayer + 1) % gameState.players.length; // advance to next player
+        newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
           newMessage = `You landed on ${(segment as WheelSegment).displayValue}! Call a consonant to claim it.`;
@@ -1294,6 +1328,15 @@ function WheelOfFortune() {
         currentPlayer: nextPlayer,
         turnInProgress: false
       }));
+
+      // ---- Multiplayer callbacks ----
+      const spinVal = typeof segment === 'object' ? (segment as any).type || 'PRIZE' : segment;
+      if (onSpin) {
+        onSpin({ value: spinVal, rotation: newRotation });
+      }
+      if (nextPlayer !== gameState.currentPlayer && onEndTurn) {
+        onEndTurn(nextPlayer);
+      }
     }, 1000);
   };
 
@@ -1450,7 +1493,7 @@ function WheelOfFortune() {
         }
         message = `Sorry, no ${letter}'s. `;
         // Determine next player (cycle through all 3 players)
-        nextPlayer = getNextPlayer(gameState.currentPlayer);
+        nextPlayer = (gameState.currentPlayer + 1) % gameState.players.length; // advance to next player
         message += `${gameState.players[nextPlayer].name}'s turn!`;
         
         // Deactivate Wild Card if used and letter was wrong
@@ -1474,6 +1517,11 @@ function WheelOfFortune() {
     });
     
     setInputLetter('');
+
+    // Broadcast letter guess immediately
+    if (onLetterGuess) {
+      onLetterGuess(letter);
+    }
   };
 
   const solvePuzzle = () => {
@@ -1525,7 +1573,7 @@ function WheelOfFortune() {
       });
       
       // Determine next player (cycle through all 3 players)
-      const nextPlayer = getNextPlayer(gameState.currentPlayer);
+      const nextPlayer = (gameState.currentPlayer + 1) % gameState.players.length; // advance to next player
       
       setGameState(prev => {
         return {
@@ -1537,6 +1585,11 @@ function WheelOfFortune() {
     }
     
     setSolveAttempt('');
+
+    // Broadcast solve attempt
+    if (onSolveAttempt) {
+      onSolveAttempt(attempt, correct);
+    }
   };
 
   // Add new puzzle function for manual control
@@ -1860,6 +1913,18 @@ function WheelOfFortune() {
       }));
     }
   }, []);
+
+  // Keep track of turn changes so we can emit end-turn events
+  const prevPlayerRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (prevPlayerRef.current !== gameState.currentPlayer) {
+      if (onEndTurn) {
+        onEndTurn(gameState.currentPlayer);
+      }
+      prevPlayerRef.current = gameState.currentPlayer;
+    }
+  }, [gameState.currentPlayer]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white p-2 sm:p-4">
