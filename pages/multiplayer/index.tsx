@@ -11,6 +11,7 @@ export default function MultiplayerHub() {
   const [error, setError] = useState('')
   const [createdGameCode, setCreatedGameCode] = useState('')
   const [showGameLobby, setShowGameLobby] = useState(false)
+  const gameServiceRef = React.useRef<FirebaseGameService | null>(null)
 
   const handleBack = () => {
     router.push('/')
@@ -31,6 +32,7 @@ export default function MultiplayerHub() {
       
       // Create Firebase game service instance
       const gameService = new FirebaseGameService(code, 'host')
+      gameServiceRef.current = gameService
       
       // Create host player
       const hostPlayer: Player = {
@@ -76,8 +78,19 @@ export default function MultiplayerHub() {
     router.push(`/multiplayer/game?code=${gameCode.toUpperCase()}&name=${encodeURIComponent(playerName.trim())}`)
   }
 
-  const handleStartGame = () => {
-    // Now redirect to the game
+  const handleStartGame = async () => {
+    // Mark lobby as active so waiting players transition immediately
+    try {
+      if (gameServiceRef.current) {
+        await gameServiceRef.current.updateGameState({
+          status: 'active',
+          message: 'Host started the game – loading puzzle...'
+        })
+      }
+    } catch (err) {
+      console.error('Error starting game:', err)
+    }
+    // Redirect host to the gameplay screen
     router.push(`/multiplayer/game?code=${createdGameCode}&name=${encodeURIComponent(playerName.trim())}`)
   }
 
