@@ -1,6 +1,6 @@
 import React from 'react';
 import WheelOfFortune from './WheelOfFortune';
-import { Player } from '../lib/firebaseGameService';
+import { Player, GameHistoryEntry } from '../lib/firebaseGameService';
 
 interface MultiplayerWheelProps {
   gameState: any;
@@ -12,10 +12,9 @@ interface MultiplayerWheelProps {
 /**
  * MultiplayerWheelOfFortune
  * ----------------------------------
- * Host: renders the full interactive WheelOfFortune component. All actions
- *       are mirrored to Firebase via the passed service helper methods.
- * Guest: renders a passive read-only view of the puzzle + basic info so
- *        they can watch the game progress in real-time.
+ * Both players always see the full game board with puzzle, wheel, and controls.
+ * Controls are enabled/disabled based on whose turn it is.
+ * All actions are synced via Firebase through the service helper methods.
  */
 const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
   gameState,
@@ -37,36 +36,71 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
 
   const isActiveHuman = currentPlayer && currentPlayer.isHuman && currentPlayer.id === gameState.currentPlayer;
 
-  // HOST VIEW – full controls
-  if (isActiveHuman) {
-    const passTurn = () => {
-      const humanIds = Object.values(gameState.players)
-        .filter((p): p is Player => (p as Player).isHuman)
-        .map(p => p.id);
-      const currentIdx = humanIds.indexOf(gameState.currentPlayer);
-      if (currentIdx === -1) return;
-      const nextId = humanIds[(currentIdx + 1) % humanIds.length];
-      service.endTurn(nextId);
-    };
+  return (
+    <div className="max-w-4xl mx-auto space-y-4">
+      {/* Status indicator for non-active players */}
+      {!isActiveHuman && currentPlayer?.isHuman && (
+        <div className="bg-yellow-600 bg-opacity-20 border border-yellow-500 rounded-lg p-3 text-center mb-4">
+          <div className="text-yellow-200 font-semibold">
+            🕐 Waiting for {gameState?.players?.[gameState?.currentPlayer]?.name || 'other player'}'s turn...
+          </div>
+          <div className="text-sm text-yellow-300 mt-1">
+            You can see the game board but controls are disabled until your turn
+          </div>
+        </div>
+      )}
 
-    return (
-      <div className="max-w-4xl mx-auto space-y-4">
-        <WheelOfFortune
-          initialPlayers={ordered.map((p) => ({ name: p.name, isHuman: p.isHuman }))}
-          onSpin={(data) => {
+      {/* Game History */}
+      {gameState?.gameHistory && gameState.gameHistory.length > 0 && (
+        <div className="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-4">
+          <h3 className="text-lg font-bold text-yellow-200 mb-3">Game History</h3>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {gameState.gameHistory.slice(-10).map((entry: GameHistoryEntry, index: number) => (
+              <div key={index} className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                    entry.type === 'letter' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
+                  }`}>
+                    {entry.type === 'letter' ? '🔤' : '💭'}
+                  </span>
+                  <span className="text-gray-300">{entry.playerName}</span>
+                  <span className="text-white font-mono">{entry.value}</span>
+                </div>
+                {entry.result && (
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    entry.result === 'correct' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                  }`}>
+                    {entry.result === 'correct' ? '✓' : '✗'}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <WheelOfFortune
+        initialPlayers={ordered.map((p) => ({ name: p.name, isHuman: p.isHuman }))}
+        isActivePlayer={isActiveHuman}
+        firebaseGameState={gameState}
+        firebaseService={service}
+        onSpin={(data) => {
+          if (isActiveHuman) {
             service.pushSpin(data);
-          }}
-          onLetterGuess={(letter) => {
-            if (currentPlayer?.id) {
-              service.pushLetterGuess(letter, currentPlayer.id);
-            }
-          }}
-          onSolveAttempt={(attempt, correct) => {
-            if (currentPlayer?.id) {
-              service.pushSolveAttempt(attempt, currentPlayer.id);
-            }
-          }}
-          onEndTurn={(nextPlayerIndex) => {
+          }
+        }}
+        onLetterGuess={(letter) => {
+          if (isActiveHuman && currentPlayer?.id) {
+            service.pushLetterGuess(letter, currentPlayer.id);
+          }
+        }}
+        onSolveAttempt={(attempt, correct) => {
+          if (isActiveHuman && currentPlayer?.id) {
+            service.pushSolveAttempt(attempt, currentPlayer.id);
+          }
+        }}
+        onEndTurn={(nextPlayerIndex) => {
+          if (isActiveHuman) {
             // Rotate among human players only – skip computers
             const humanIds = Object.values(gameState.players)
               .filter((p): p is Player => (p as Player).isHuman)
@@ -75,39 +109,32 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
             if (currIdx === -1) return;
             const nextId = humanIds[(currIdx + 1) % humanIds.length];
             service.endTurn(nextId);
-          }}
-        />
+          }
+        }}
+      />
 
-        {/* Manual Pass Turn – lets the active human yield control explicitly */}
+      {/* Manual Pass Turn button - only visible to active human player */}
+      {isActiveHuman && (
         <div className="text-center">
           <button
-            onClick={passTurn}
+            onClick={() => {
+              const humanIds = Object.values(gameState.players)
+                .filter((p): p is Player => (p as Player).isHuman)
+                .map(p => p.id);
+              const currentIdx = humanIds.indexOf(gameState.currentPlayer);
+              if (currentIdx === -1) return;
+              const nextId = humanIds[(currentIdx + 1) % humanIds.length];
+              service.endTurn(nextId);
+            }}
             className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg"
           >
             Pass Turn ➜
           </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  // GUEST / Waiting VIEW – read-only summary
-  return (
-    <div className="max-w-2xl mx-auto text-center space-y-4 p-4 bg-gray-800 bg-opacity-40 rounded-lg">
-      <h2 className="text-lg font-semibold text-yellow-200">Watching the Game…</h2>
-      <p className="text-xl font-bold text-white tracking-wide">
-        {gameState?.puzzle?.text || 'Loading…'}
-      </p>
-      <p className="text-sm uppercase text-gray-300">
-        Category: {gameState?.puzzle?.category || '—'}
-      </p>
-      <p className="text-sm text-gray-400">
-        Current Turn: {gameState?.players?.[gameState?.currentPlayer]?.name || '—'}
-      </p>
-      <p className="text-xs text-gray-500">Waiting for host actions…</p>
-
-      {/* Fallback Claim Turn button — visible only if this human player is not the currentPlayer but the game is active. */}
-      {!isHost && currentPlayer?.id !== gameState.currentPlayer && gameState.status === 'active' && (
+      {/* Fallback Claim Turn button — visible only if this human player is not the currentPlayer but the game is active */}
+      {!isHost && currentPlayer?.id !== gameState.currentPlayer && gameState.status === 'active' && currentPlayer?.isHuman && (
         <div className="text-center mt-4">
           <button
             onClick={() => service.endTurn(currentPlayer!.id)}

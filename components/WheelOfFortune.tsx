@@ -89,6 +89,7 @@ interface GameState {
   isFinalRound: boolean;
   finalRoundLettersRemaining: number;
   finalRoundVowelsRemaining: number;
+  gameHistory?: any[];
 }
 
 // Authentic Wheel of Fortune wheel segments
@@ -366,6 +367,12 @@ interface WheelOfFortuneProps {
   onEndTurn?: (nextPlayerIndex: number) => void;
   /** Optional list of player names (length 3) to seed the local game state. */
   initialPlayers?: { name: string; isHuman: boolean }[];
+  /** In multiplayer mode, controls are disabled when this is false */
+  isActivePlayer?: boolean;
+  /** Firebase game state for multiplayer mode */
+  firebaseGameState?: any;
+  /** Service for Firebase operations */
+  firebaseService?: any;
 }
 
 function WheelOfFortune({
@@ -373,7 +380,10 @@ function WheelOfFortune({
   onLetterGuess,
   onSolveAttempt,
   onEndTurn,
-  initialPlayers
+  initialPlayers,
+  isActivePlayer = true,
+  firebaseGameState,
+  firebaseService
 }: WheelOfFortuneProps = {}) {
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
@@ -403,7 +413,8 @@ function WheelOfFortune({
     message: 'Welcome to Wheel of Fortune!',
     isFinalRound: false,
     finalRoundLettersRemaining: 0,
-    finalRoundVowelsRemaining: 0
+    finalRoundVowelsRemaining: 0,
+    gameHistory: []
   });
 
   // Keep a ref with the latest gameState for use inside async callbacks (avoids stale closures)
@@ -774,7 +785,7 @@ function WheelOfFortune({
           {/* Center hub */}
           <button
             onClick={spinWheel}
-            disabled={gameState.isSpinning || gameState.currentPlayer !== 0 || gameState.isFinalRound}
+                            disabled={gameState.isSpinning || !isActivePlayer || gameState.isFinalRound}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 border-4 border-yellow-500 flex items-center justify-center z-20 transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
           >
             <div className="text-white text-xs sm:text-lg font-bold text-center">
@@ -1857,62 +1868,98 @@ function WheelOfFortune({
     return currentPlayer ? currentPlayer.isHuman : false;
   };
 
-  // On mount, always set a puzzle immediately if not set
+  // Sync with Firebase game state if available
   useEffect(() => {
-    if (!gameState.puzzle.text) {
-      const allPuzzles = getAllPuzzles();
-      const unused = allPuzzles.filter(p => !usedPuzzles.has(p));
-      const pickFrom = unused.length > 0 ? unused : allPuzzles;
-      const randomPuzzle = pickFrom[Math.floor(Math.random() * pickFrom.length)];
-      // Find category and special format
-      let category = '';
-      let specialFormat = null;
-      for (const [cat, templates] of Object.entries(PUZZLE_TEMPLATES)) {
-        const found = templates.find((template: any) => {
-          if (cat === "BEFORE & AFTER") {
-            return template.full === randomPuzzle;
-          } else if (cat === "THEN AND NOW") {
-            return `${template.then} / ${template.now}` === randomPuzzle;
-          } else {
-            return template === randomPuzzle;
-          }
-        });
-        if (found) {
-          category = cat;
-          if (cat === "BEFORE & AFTER" && typeof found === 'object' && 'before' in found) {
-            specialFormat = {
-              type: 'BEFORE_AFTER',
-              before: found.before,
-              shared: found.shared,
-              after: found.after
-            };
-          } else if (cat === "THEN AND NOW" && typeof found === 'object' && 'then' in found) {
-            specialFormat = {
-              type: 'THEN_AND_NOW',
-              then: found.then,
-              now: found.now
-            };
-          } else if (cat === "RHYME TIME") {
-            specialFormat = { type: 'RHYME_TIME' };
-          } else if (cat === "SAME LETTER") {
-            specialFormat = { type: 'SAME_LETTER', letter: randomPuzzle.charAt(0) };
-          } else if (cat === "WHAT ARE YOU DOING?") {
-            specialFormat = { type: 'QUESTION', question: cat };
-          }
-          break;
-        }
+    if (firebaseGameState) {
+      // Convert Firebase game state to local game state format
+      const firebasePuzzle = firebaseGameState.puzzle;
+      if (firebasePuzzle) {
+        setGameState(prev => ({
+          ...prev,
+          puzzle: {
+            text: firebasePuzzle.text || firebasePuzzle.solution || '',
+            category: firebasePuzzle.category || '',
+            revealed: new Set(firebaseGameState.usedLetters || []),
+            specialFormat: firebasePuzzle.specialFormat || null
+          },
+          usedLetters: new Set(firebaseGameState.usedLetters || []),
+          currentPlayer: firebaseGameState.currentPlayer ? 
+            Object.keys(firebaseGameState.players || {}).indexOf(firebaseGameState.currentPlayer) : 0,
+          players: Object.values(firebaseGameState.players || {}).map((p: any, index: number) => ({
+            name: p.name,
+            roundMoney: p.roundMoney || 0,
+            totalMoney: p.totalMoney || 0,
+            isHuman: p.isHuman,
+            prizes: p.prizes || [],
+            specialCards: p.specialCards || []
+          })),
+          currentRound: firebaseGameState.currentRound || 1,
+          message: firebaseGameState.message || '',
+          isSpinning: firebaseGameState.isSpinning || false,
+          wheelValue: firebaseGameState.wheelValue || 0,
+          isFinalRound: firebaseGameState.isFinalRound || false,
+          finalRoundLettersRemaining: firebaseGameState.finalRoundLettersRemaining || 0,
+          finalRoundVowelsRemaining: firebaseGameState.finalRoundVowelsRemaining || 0,
+          gameHistory: firebaseGameState.gameHistory || []
+        }));
       }
-      setGameState(prev => ({
-        ...prev,
-        puzzle: {
-          text: randomPuzzle.toUpperCase(),
-          category,
-          revealed: new Set<string>(),
-          specialFormat
+    } else {
+      // Local mode - generate puzzle if not set
+      if (!gameState.puzzle.text) {
+        const allPuzzles = getAllPuzzles();
+        const unused = allPuzzles.filter(p => !usedPuzzles.has(p));
+        const pickFrom = unused.length > 0 ? unused : allPuzzles;
+        const randomPuzzle = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+        // Find category and special format
+        let category = '';
+        let specialFormat = null;
+        for (const [cat, templates] of Object.entries(PUZZLE_TEMPLATES)) {
+          const found = templates.find((template: any) => {
+            if (cat === "BEFORE & AFTER") {
+              return template.full === randomPuzzle;
+            } else if (cat === "THEN AND NOW") {
+              return `${template.then} / ${template.now}` === randomPuzzle;
+            } else {
+              return template === randomPuzzle;
+            }
+          });
+          if (found) {
+            category = cat;
+            if (cat === "BEFORE & AFTER" && typeof found === 'object' && 'before' in found) {
+              specialFormat = {
+                type: 'BEFORE_AFTER',
+                before: found.before,
+                shared: found.shared,
+                after: found.after
+              };
+            } else if (cat === "THEN AND NOW" && typeof found === 'object' && 'then' in found) {
+              specialFormat = {
+                type: 'THEN_AND_NOW',
+                then: found.then,
+                now: found.now
+              };
+            } else if (cat === "RHYME TIME") {
+              specialFormat = { type: 'RHYME_TIME' };
+            } else if (cat === "SAME LETTER") {
+              specialFormat = { type: 'SAME_LETTER', letter: randomPuzzle.charAt(0) };
+            } else if (cat === "WHAT ARE YOU DOING?") {
+              specialFormat = { type: 'QUESTION', question: cat };
+            }
+            break;
+          }
         }
-      }));
+        setGameState(prev => ({
+          ...prev,
+          puzzle: {
+            text: randomPuzzle.toUpperCase(),
+            category,
+            revealed: new Set<string>(),
+            specialFormat
+          }
+        }));
+      }
     }
-  }, []);
+  }, [firebaseGameState]);
 
   // Keep track of turn changes so we can emit end-turn events
   const prevPlayerRef = useRef<number>(0);
@@ -2066,20 +2113,20 @@ function WheelOfFortune({
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  value={gameState.currentPlayer === 0 ? inputLetter : computerAction}
+                  value={isActivePlayer ? inputLetter : ''}
                   onChange={(e) => setInputLetter(e.target.value)}
-                  disabled={gameState.currentPlayer !== 0}
+                  disabled={!isActivePlayer}
                   className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
-                  placeholder={gameState.currentPlayer === 0 ? 
+                  placeholder={isActivePlayer ? 
                     (gameState.isFinalRound ? 
                       `Call letter (${gameState.finalRoundLettersRemaining} consonants, ${gameState.finalRoundVowelsRemaining} vowel left)` : 
                       "Enter letter...") : 
-                    "Computer is thinking..."}
+                    "Waiting for your turn..."}
                   maxLength={1}
                 />
                 <button
                   onClick={callLetter}
-                  disabled={gameState.currentPlayer !== 0}
+                  disabled={!isActivePlayer}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm min-w-[60px]"
                 >
                   Call
@@ -2097,15 +2144,15 @@ function WheelOfFortune({
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  value={gameState.currentPlayer === 0 ? solveAttempt : computerSolveAttempt}
+                  value={isActivePlayer ? solveAttempt : ''}
                   onChange={(e) => setSolveAttempt(e.target.value)}
-                  disabled={gameState.currentPlayer !== 0}
+                  disabled={!isActivePlayer}
                   className="flex-1 px-3 py-3 sm:px-3 sm:py-2 bg-gray-700 border border-gray-600 rounded text-white text-base sm:text-sm disabled:bg-gray-800 disabled:text-gray-500"
-                  placeholder={gameState.currentPlayer === 0 ? "Your answer..." : "Computer is solving..."}
+                  placeholder={isActivePlayer ? "Your answer..." : "Waiting for your turn..."}
                 />
                 <button
                   onClick={solvePuzzle}
-                  disabled={gameState.currentPlayer !== 0}
+                  disabled={!isActivePlayer}
                   className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm min-w-[60px]"
                 >
                   Solve
@@ -2113,14 +2160,15 @@ function WheelOfFortune({
               </div>
               <button
                 onClick={startNewPuzzle}
-                className="w-full bg-purple-600 hover:bg-purple-700 px-3 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm"
+                disabled={!isActivePlayer}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-3 py-3 sm:px-3 sm:py-2 rounded font-semibold transition-colors text-base sm:text-sm"
               >
                 NEW PUZZLE
               </button>
             </div>
 
             {/* Special Cards */}
-            {gameState.players[0].specialCards.length > 0 && (
+            {gameState.players[0].specialCards.length > 0 && isActivePlayer && (
               <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
                 <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3 text-purple-300">⭐ Special Cards</h3>
                 <div className="space-y-2">
@@ -2143,7 +2191,7 @@ function WheelOfFortune({
                               )
                             }));
                           }}
-                          disabled={gameState.currentPlayer !== 0 || wildCardActive}
+                          disabled={!isActivePlayer || wildCardActive}
                           className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-2 py-1 rounded text-xs font-semibold transition-colors"
                         >
                           Use
@@ -2175,7 +2223,7 @@ function WheelOfFortune({
             >
               📊 {showStats ? 'Hide' : 'Show'} Statistics
             </button>
-            {usedPuzzles.size > 0 && (
+            {usedPuzzles.size > 0 && isActivePlayer && (
               <button
                 onClick={handleResetProgress}
                 className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"

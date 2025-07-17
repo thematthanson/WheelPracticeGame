@@ -61,6 +61,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const [error, setError] = useState('');
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isJoining, setIsJoining] = useState(true);
+  const [selectedTheme, setSelectedTheme] = useState<string>('');
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const cleanupRef = useRef<(() => void) | null>(null);
   const hasJoinedRef = useRef(false);
   const playerIdRef = useRef<string | null>(null);
@@ -202,15 +204,22 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const handleBeginGame = useCallback(async () => {
     if (!gameService || !currentPlayer?.isHost || gameState?.puzzle) return;
 
-    const puzzleData = generateMultiplayerPuzzle();
-    vLog('Host generated puzzle and began game', puzzleData);
+    if (!selectedTheme) {
+      setShowThemeSelector(true);
+      return;
+    }
 
+    vLog('Host generating puzzle with theme:', selectedTheme);
+    await gameService.generateNewPuzzle(selectedTheme);
+    
     await gameService.updateGameState({
-      puzzle: puzzleData,
       message: 'Game started! Good luck.',
       status: 'active'
     });
-  }, [gameService, currentPlayer?.isHost, gameState?.puzzle]);
+    
+    setShowThemeSelector(false);
+    setSelectedTheme('');
+  }, [gameService, currentPlayer?.isHost, gameState?.puzzle, selectedTheme]);
 
   const handleBack = () => {
     if (gameService) {
@@ -327,12 +336,38 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       {/* Host Begin Game button */}
       {currentPlayer?.isHost && !hasPuzzle && gameState.status === 'active' && (
         <div className="text-center my-6">
-          <button
-            onClick={handleBeginGame}
-            className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors duration-200 touch-manipulation"
-          >
-            Begin Game
-          </button>
+          {!showThemeSelector ? (
+            <button
+              onClick={handleBeginGame}
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors duration-200 touch-manipulation"
+            >
+              Begin Game
+            </button>
+          ) : (
+            <div className="bg-blue-800 bg-opacity-50 p-6 rounded-lg max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-yellow-200 mb-4">Choose Puzzle Theme</h3>
+              <div className="space-y-3">
+                {['PHRASE', 'BEFORE & AFTER', 'RHYME TIME'].map((theme) => (
+                  <button
+                    key={theme}
+                    onClick={() => {
+                      setSelectedTheme(theme);
+                      handleBeginGame();
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                  >
+                    {theme}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setShowThemeSelector(false)}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

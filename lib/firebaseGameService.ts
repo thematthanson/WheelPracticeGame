@@ -52,6 +52,16 @@ export interface GameState {
   bonusRoundEnvelopeValue: any;
   maxPlayers: number;
   lastUpdated: number;
+  gameHistory: GameHistoryEntry[];
+}
+
+export interface GameHistoryEntry {
+  type: 'letter' | 'solve';
+  playerId: string;
+  playerName: string;
+  value: string;
+  timestamp: number;
+  result?: 'correct' | 'incorrect';
 }
 
 export class FirebaseGameService {
@@ -105,7 +115,8 @@ export class FirebaseGameService {
       bonusRoundEnvelope: null,
       bonusRoundEnvelopeValue: null,
       maxPlayers: 3,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
+      gameHistory: []
     };
 
     await set(this.gameRef, gameState);
@@ -265,9 +276,22 @@ export class FirebaseGameService {
     if (snapshot.exists()) {
       const game = snapshot.val() as GameState;
       const usedLetters = [...(game.usedLetters || []), letter];
+      const player = game.players[playerId];
+      
+      // Add to game history
+      const historyEntry: GameHistoryEntry = {
+        type: 'letter',
+        playerId,
+        playerName: player?.name || 'Unknown',
+        value: letter.toUpperCase(),
+        timestamp: Date.now()
+      };
+      
+      const gameHistory = [...(game.gameHistory || []), historyEntry];
       
       await update(this.gameRef, {
         usedLetters,
+        gameHistory,
         lastUpdated: Date.now()
       });
     }
@@ -278,13 +302,25 @@ export class FirebaseGameService {
     const snapshot = await get(this.gameRef);
     if (snapshot.exists()) {
       const game = snapshot.val() as GameState;
+      const player = game.players[playerId];
       
       // Check if solution is correct
       const isCorrect = game.puzzle?.solution?.toLowerCase() === solution.toLowerCase();
       
+      // Add to game history
+      const historyEntry: GameHistoryEntry = {
+        type: 'solve',
+        playerId,
+        playerName: player?.name || 'Unknown',
+        value: solution.toUpperCase(),
+        timestamp: Date.now(),
+        result: isCorrect ? 'correct' : 'incorrect'
+      };
+      
+      const gameHistory = [...(game.gameHistory || []), historyEntry];
+      
       if (isCorrect) {
         // Update player money and game state
-        const player = game.players[playerId];
         if (player) {
           const newRoundMoney = player.roundMoney + (game.wheelValue?.value || 0);
           await update(ref(database, `games/${this.gameCode}/players/${playerId}`), {
@@ -296,6 +332,13 @@ export class FirebaseGameService {
         await update(this.gameRef, {
           status: 'finished',
           message: `${player?.name || 'Player'} solved the puzzle!`,
+          gameHistory,
+          lastUpdated: Date.now()
+        });
+      } else {
+        // Update game history for incorrect solve attempt
+        await update(this.gameRef, {
+          gameHistory,
           lastUpdated: Date.now()
         });
       }
@@ -440,5 +483,60 @@ export class FirebaseGameService {
     } catch (error) {
       console.error('Error clearing game:', error);
     }
+  }
+
+  // Generate a new puzzle for the game
+  async generateNewPuzzle(category?: string): Promise<void> {
+    const puzzle = this.generatePuzzle(category);
+    await update(this.gameRef, {
+      puzzle,
+      usedLetters: [],
+      message: 'New puzzle generated!',
+      lastUpdated: Date.now()
+    });
+  }
+
+  // Generate puzzle locally (helper method)
+  private generatePuzzle(category?: string): any {
+    // Simple puzzle generation - in a real app, you'd have a proper puzzle database
+    const puzzles = {
+      'PHRASE': [
+        'BREAK THE ICE', 'GREAT IDEA', 'HAPPY BIRTHDAY', 'GOOD LUCK', 'SWEET DREAMS',
+        'BEST WISHES', 'TRUE LOVE', 'BRIGHT FUTURE', 'PERFECT TIMING', 'FRESH START'
+      ],
+      'BEFORE & AFTER': [
+        { text: 'BLUE MOON WALK', category: 'BEFORE & AFTER', solution: 'BLUE MOON WALK' },
+        { text: 'BIRTHDAY PARTY ANIMAL', category: 'BEFORE & AFTER', solution: 'BIRTHDAY PARTY ANIMAL' },
+        { text: 'COFFEE BREAK DANCING', category: 'BEFORE & AFTER', solution: 'COFFEE BREAK DANCING' }
+      ],
+      'RHYME TIME': [
+        'MAKE A BREAK', 'TIME TO RHYME', 'BEST TEST', 'QUICK TRICK',
+        'BRIGHT LIGHT', 'SWEET TREAT', 'FAIR SHARE', 'TRUE BLUE'
+      ]
+    };
+
+    const categories = category ? [category] : Object.keys(puzzles);
+    const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+    const categoryPuzzles = puzzles[selectedCategory as keyof typeof puzzles];
+    const selectedPuzzle = categoryPuzzles[Math.floor(Math.random() * categoryPuzzles.length)];
+
+    if (typeof selectedPuzzle === 'string') {
+      return {
+        text: selectedPuzzle,
+        category: selectedCategory,
+        solution: selectedPuzzle,
+        revealed: []
+      };
+    } else {
+      return {
+        ...selectedPuzzle,
+        revealed: []
+      };
+    }
+  }
+
+  // Set puzzle theme/category for the game
+  async setPuzzleTheme(category: string): Promise<void> {
+    await this.generateNewPuzzle(category);
   }
 } 
