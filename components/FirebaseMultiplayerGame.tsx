@@ -211,7 +211,9 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     }
 
     vLog('Host generating puzzle with theme:', selectedTheme);
-    await gameService.generateNewPuzzle(selectedTheme);
+    // If selectedTheme is empty string, pass undefined to generate random theme
+    const themeToUse = selectedTheme === '' ? undefined : selectedTheme;
+    await gameService.generateNewPuzzle(themeToUse);
     
     // Ensure host goes first
     await gameService.startGame();
