@@ -1103,10 +1103,35 @@ function WheelOfFortune({
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
         
-        // Determine next player (cycle through all players)
-        const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
-        nextPlayer = nextIdx;
-        message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+        // In multiplayer mode, advance to next human player only
+        if (firebaseGameState) {
+          // Multiplayer mode - advance to next human player
+          const humanPlayers = gsGuess.players.filter(p => p.isHuman && p.id);
+          const currentHumanIndex = humanPlayers.findIndex(p => p.id === gsGuess.currentPlayer);
+          if (currentHumanIndex !== -1) {
+            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+            const nextHumanPlayer = humanPlayers[nextHumanIndex];
+            if (nextHumanPlayer && nextHumanPlayer.id) {
+              nextPlayer = nextHumanPlayer.id;
+              message = `No ${letter}'s. ${nextHumanPlayer.name}'s turn!`;
+            } else {
+              // Fallback - advance to next player in order
+              const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+              nextPlayer = nextIdx;
+              message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+            }
+          } else {
+            // Fallback - advance to next player in order
+            const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+            nextPlayer = nextIdx;
+            message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+          }
+        } else {
+          // Single player mode - advance to next player
+          const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+          nextPlayer = nextIdx;
+          message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+        }
       }
       
       setGameState(prev => ({
