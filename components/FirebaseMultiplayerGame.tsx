@@ -61,8 +61,6 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const [error, setError] = useState('');
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isJoining, setIsJoining] = useState(true);
-  const [selectedTheme, setSelectedTheme] = useState<string>('');
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [customTheme, setCustomTheme] = useState<string>('');
   const cleanupRef = useRef<(() => void) | null>(null);
   const hasJoinedRef = useRef(false);
@@ -205,14 +203,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const handleBeginGame = useCallback(async (theme?: string) => {
     if (!gameService || !currentPlayer?.isHost || gameState?.puzzle) return;
 
-    // If no theme provided and no theme selected, show theme selector
-    if (!theme && !selectedTheme) {
-      setShowThemeSelector(true);
-      return;
-    }
-
-    // Use provided theme, selected theme, or random theme
-    const themeToUse = theme || (selectedTheme === '' ? undefined : selectedTheme);
+    // Use provided theme or random theme (empty string for random)
+    const themeToUse = theme || undefined;
     
     vLog('Host generating puzzle with theme:', themeToUse);
     await gameService.generateNewPuzzle(themeToUse);
@@ -225,10 +217,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       status: 'active'
     });
     
-    setShowThemeSelector(false);
-    setSelectedTheme('');
     setCustomTheme('');
-  }, [gameService, currentPlayer?.isHost, gameState?.puzzle, selectedTheme]);
+  }, [gameService, currentPlayer?.isHost, gameState?.puzzle]);
 
   const handleBack = () => {
     if (gameService) {
@@ -345,65 +335,49 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
       {/* Host Begin Game button */}
       {currentPlayer?.isHost && !hasPuzzle && gameState.status === 'active' && (
         <div className="text-center my-6">
-          {!showThemeSelector ? (
-            <button
-              onClick={() => handleBeginGame()}
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors duration-200 touch-manipulation"
-            >
-              Begin Game
-            </button>
-          ) : (
-            <div className="bg-blue-800 bg-opacity-50 p-6 rounded-lg max-w-md mx-auto">
-              <h3 className="text-lg font-bold text-yellow-200 mb-4">Choose Puzzle Theme</h3>
-              <div className="space-y-3">
-                {/* Custom Theme Input */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-blue-200">
-                    Custom Theme (optional):
-                  </label>
-                  <input
-                    type="text"
-                    value={customTheme}
-                    onChange={(e) => setCustomTheme(e.target.value)}
-                    placeholder="e.g., MOVIES, FOOD, SPORTS, PHRASE, BEFORE & AFTER, RHYME TIME..."
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
-                  />
-                </div>
+          <div className="bg-blue-800 bg-opacity-50 p-6 rounded-lg max-w-md mx-auto">
+            <h3 className="text-lg font-bold text-yellow-200 mb-4">Start the Game!</h3>
+            <div className="space-y-3">
+              {/* Custom Theme Input */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-blue-200">
+                  Custom Theme (optional):
+                </label>
+                <input
+                  type="text"
+                  value={customTheme}
+                  onChange={(e) => setCustomTheme(e.target.value)}
+                  placeholder="e.g., MOVIES, FOOD, SPORTS, PHRASE, BEFORE & AFTER, RHYME TIME..."
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                />
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={() => {
+                    // Start game with random theme (default)
+                    handleBeginGame('');
+                  }}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Start Game
+                </button>
                 
-                {/* Action Buttons */}
-                <div className="space-y-2 pt-2">
-                  <button
-                    onClick={() => {
-                      // Start game with random theme (default)
-                      handleBeginGame('');
-                    }}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Start Game
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      if (customTheme.trim()) {
-                        handleBeginGame(customTheme.toUpperCase());
-                      }
-                    }}
-                    disabled={!customTheme.trim()}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Use Custom Theme
-                  </button>
-                  
-                  <button
-                    onClick={() => setShowThemeSelector(false)}
-                    className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    if (customTheme.trim()) {
+                      handleBeginGame(customTheme.toUpperCase());
+                    }
+                  }}
+                  disabled={!customTheme.trim()}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Use Custom Theme
+                </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -415,6 +389,19 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           </p>
           <p className="text-sm text-yellow-100 mt-2">
             Share this game code with other players: <span className="font-mono bg-yellow-800 px-2 py-1 rounded">{gameCode}</span>
+          </p>
+          {currentPlayer?.isHost && (
+            <p className="text-sm text-yellow-300 mt-2 font-semibold">
+              👑 As the host, you'll see a "Start the Game!" button once players have joined
+            </p>
+          )}
+        </div>
+      )}
+
+      {!hasPuzzle && gameState.status === 'active' && !currentPlayer?.isHost && (
+        <div className="bg-green-600 bg-opacity-30 p-4 text-center">
+          <p className="text-green-200">
+            🎮 Game is ready! Waiting for the host to start the game...
           </p>
         </div>
       )}

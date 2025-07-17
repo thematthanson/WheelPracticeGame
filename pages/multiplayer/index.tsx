@@ -78,22 +78,6 @@ export default function MultiplayerHub() {
     router.push(`/multiplayer/game?code=${gameCode.toUpperCase()}&name=${encodeURIComponent(playerName.trim())}`)
   }
 
-  const handleStartGame = async () => {
-    // Mark lobby as active so waiting players transition immediately
-    try {
-      if (gameServiceRef.current) {
-        await gameServiceRef.current.updateGameState({
-          status: 'active',
-          message: 'Host started the game – loading puzzle...'
-        })
-      }
-    } catch (err) {
-      console.error('Error starting game:', err)
-    }
-    // Redirect host to the gameplay screen
-    router.push(`/multiplayer/game?code=${createdGameCode}&name=${encodeURIComponent(playerName.trim())}`)
-  }
-
   return (
     <>
       <Head>
@@ -143,15 +127,15 @@ export default function MultiplayerHub() {
                   <li>1. Share the game code <strong>{createdGameCode}</strong> with your friend</li>
                   <li>2. Have them go to the multiplayer page and click "Join Game"</li>
                   <li>3. They should enter the code and their name</li>
-                  <li>4. Once everyone has joined, click "Start Game" below</li>
+                  <li>4. Click "Enter Game" below to start playing</li>
                 </ol>
               </div>
 
               <button
-                onClick={handleStartGame}
+                onClick={() => router.push(`/multiplayer/game?code=${createdGameCode}&name=${encodeURIComponent(playerName.trim())}`)}
                 className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-4 px-6 rounded-lg text-xl transition-colors duration-200 touch-manipulation"
               >
-                Start Game →
+                Enter Game →
               </button>
             </div>
           )}
