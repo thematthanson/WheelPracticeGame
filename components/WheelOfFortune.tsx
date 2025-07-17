@@ -809,13 +809,13 @@ function WheelOfFortune({
         
         {/* Pointer */}
         <div 
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 z-30"
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 z-30"
           style={{
             width: 0,
             height: 0,
             borderLeft: '8px solid transparent',
             borderRight: '8px solid transparent',
-            borderBottom: '16px solid #DC143C',
+            borderTop: '16px solid #DC143C',
             filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))'
           }}
         />

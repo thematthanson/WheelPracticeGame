@@ -36,8 +36,32 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
 
   const isActiveHuman = currentPlayer && currentPlayer.isHuman && currentPlayer.id === gameState.currentPlayer;
 
+  // Debug info
+  const debugInfo = (
+    <div className="bg-gray-900 text-gray-200 text-xs p-2 rounded mb-2">
+      <div><b>Debug Info:</b></div>
+      <div>Your playerId: <span className="font-mono">{currentPlayer?.id}</span></div>
+      <div>gameState.currentPlayer: <span className="font-mono">{gameState.currentPlayer}</span></div>
+      <div>Resolved current turn: <span className="font-mono">{gameState?.players?.[gameState?.currentPlayer]?.name || '—'}</span></div>
+      <div>All player IDs: {Object.values(gameState.players).map((p: any) => p.id).join(', ')}</div>
+    </div>
+  );
+
+  // Prominent turn indicator
+  const turnBanner = isActiveHuman ? (
+    <div className="bg-green-600 text-white text-lg font-bold py-2 px-4 rounded-lg text-center mb-2 shadow-lg animate-pulse">
+      YOUR TURN!
+    </div>
+  ) : (
+    <div className="bg-yellow-500 text-yellow-900 text-lg font-bold py-2 px-4 rounded-lg text-center mb-2 shadow-lg">
+      Waiting for {gameState?.players?.[gameState?.currentPlayer]?.name || 'other player'}'s turn…
+    </div>
+  );
+
   return (
     <div className="max-w-4xl mx-auto space-y-4">
+      {debugInfo}
+      {turnBanner}
       {/* Status indicator for non-active players */}
       {!isActiveHuman && currentPlayer?.isHuman && (
         <div className="bg-yellow-600 bg-opacity-20 border border-yellow-500 rounded-lg p-3 text-center mb-4">
