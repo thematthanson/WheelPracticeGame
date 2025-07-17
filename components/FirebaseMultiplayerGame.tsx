@@ -352,50 +352,42 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
             <div className="bg-blue-800 bg-opacity-50 p-6 rounded-lg max-w-md mx-auto">
               <h3 className="text-lg font-bold text-yellow-200 mb-4">Choose Puzzle Theme</h3>
               <div className="space-y-3">
-                {['PHRASE', 'BEFORE & AFTER', 'RHYME TIME'].map((theme) => (
-                  <button
-                    key={theme}
-                    onClick={() => {
-                      setSelectedTheme(theme);
-                      handleBeginGame();
-                    }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
-                  >
-                    {theme}
-                  </button>
-                ))}
-                
                 {/* Custom Theme Input */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-blue-200">
-                    Custom Theme (optional):
+                    Custom Theme:
                   </label>
                   <input
                     type="text"
                     value={customTheme}
                     onChange={(e) => setCustomTheme(e.target.value)}
-                    placeholder="e.g., MOVIES, FOOD, SPORTS..."
+                    placeholder="e.g., MOVIES, FOOD, SPORTS, PHRASE, BEFORE & AFTER, RHYME TIME..."
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
                   />
-                  {customTheme && (
-                    <button
-                      onClick={() => {
-                        setSelectedTheme(customTheme.toUpperCase());
-                        handleBeginGame();
-                      }}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                    >
-                      Use Custom Theme: {customTheme.toUpperCase()}
-                    </button>
-                  )}
                 </div>
                 
-                <button
-                  onClick={() => setShowThemeSelector(false)}
-                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
+                {/* Action Buttons */}
+                <div className="space-y-2 pt-2">
+                  <button
+                    onClick={() => {
+                      if (customTheme.trim()) {
+                        setSelectedTheme(customTheme.toUpperCase());
+                        handleBeginGame();
+                      }
+                    }}
+                    disabled={!customTheme.trim()}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Start Game
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowThemeSelector(false)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           )}
