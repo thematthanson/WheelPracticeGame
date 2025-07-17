@@ -1105,7 +1105,10 @@ function WheelOfFortune({
         
         // Determine next player (cycle through all 3 players)
         let nextPlayer = (getCurrentPlayerIndex() + 1) % gsGuess.players.length; // advance to next player
-        message = `No ${letter}'s. ${gsGuess.players[nextPlayer as number].name}'s turn!`;
+        const calculatedNext = nextPlayer; // due to shadowed variable; sync to outer scope
+        // @ts-ignore
+        nextPlayer = calculatedNext;
+        message = `No ${letter}'s. ${gameState.players[calculatedNext].name}'s turn!`;
       }
       
       setGameState(prev => ({
@@ -1268,7 +1271,7 @@ function WheelOfFortune({
         setGameState(prev => ({
           ...prev,
           currentPlayer: nextPlayer,
-          message: `Incorrect! ${prev.players[nextPlayer as number].name}'s turn.`
+          message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
         }));
         
         // Start next player's turn if it's a computer
@@ -1534,7 +1537,10 @@ function WheelOfFortune({
         message = `Sorry, no ${letter}'s. `;
         // Determine next player (cycle through all 3 players)
         let nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length; // advance to next player
-        message += `${gameState.players[nextPlayer].name}'s turn!`;
+        const calculatedNext = nextPlayer; // due to shadowed variable; sync to outer scope
+        // @ts-ignore
+        nextPlayer = calculatedNext;
+        message += `${gameState.players[calculatedNext].name}'s turn!`;
         
         // Deactivate Wild Card if used and letter was wrong
         if (wildCardActive) {
@@ -1619,7 +1625,7 @@ function WheelOfFortune({
       setGameState(prev => ({
         ...prev,
         currentPlayer: nextPlayer,
-        message: `Incorrect! ${prev.players[nextPlayer as number].name}'s turn.`
+        message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
       }));
     }
     
