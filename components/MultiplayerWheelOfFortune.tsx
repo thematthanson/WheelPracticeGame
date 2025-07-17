@@ -51,18 +51,11 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
             }
           }}
           onEndTurn={(nextPlayerIndex) => {
-            // Map numeric index from local game to actual Firebase player ID order
-            const allPlayers = Object.values(gameState.players) as Player[];
-            // Ensure deterministic ordering: host first, then others by name
-            const ordered = allPlayers.sort((playerA, playerB) => {
-              if (playerA.id === currentPlayer?.id) return -1;
-              if (playerB.id === currentPlayer?.id) return 1;
-              return playerA.name.localeCompare(playerB.name);
-            });
-            const next = ordered[nextPlayerIndex];
-            if (next) {
-              service.endTurn(next.id);
-            }
+            const playerIds = Object.keys(gameState.players);
+            const currentIdx = playerIds.indexOf(gameState.currentPlayer);
+            if (currentIdx === -1) return;
+            const nextId = playerIds[(currentIdx + 1) % playerIds.length];
+            service.endTurn(nextId);
           }}
         />
       </div>
