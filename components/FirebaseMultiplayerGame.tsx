@@ -63,6 +63,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const [isJoining, setIsJoining] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState<string>('');
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [customTheme, setCustomTheme] = useState<string>('');
   const cleanupRef = useRef<(() => void) | null>(null);
   const hasJoinedRef = useRef(false);
   const playerIdRef = useRef<string | null>(null);
@@ -212,13 +213,17 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     vLog('Host generating puzzle with theme:', selectedTheme);
     await gameService.generateNewPuzzle(selectedTheme);
     
+    // Ensure host goes first
+    await gameService.startGame();
+    
     await gameService.updateGameState({
-      message: 'Game started! Good luck.',
+      message: 'Game started! Host goes first!',
       status: 'active'
     });
     
     setShowThemeSelector(false);
     setSelectedTheme('');
+    setCustomTheme('');
   }, [gameService, currentPlayer?.isHost, gameState?.puzzle, selectedTheme]);
 
   const handleBack = () => {
@@ -359,6 +364,32 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                     {theme}
                   </button>
                 ))}
+                
+                {/* Custom Theme Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-blue-200">
+                    Custom Theme (optional):
+                  </label>
+                  <input
+                    type="text"
+                    value={customTheme}
+                    onChange={(e) => setCustomTheme(e.target.value)}
+                    placeholder="e.g., MOVIES, FOOD, SPORTS..."
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                  />
+                  {customTheme && (
+                    <button
+                      onClick={() => {
+                        setSelectedTheme(customTheme.toUpperCase());
+                        handleBeginGame();
+                      }}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Use Custom Theme: {customTheme.toUpperCase()}
+                    </button>
+                  )}
+                </div>
+                
                 <button
                   onClick={() => setShowThemeSelector(false)}
                   className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"

@@ -149,7 +149,7 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
     return () => {
       newSocket.close();
     };
-  }, [gameCode, playerName]);
+  }, [gameCode, playerName, gameState]);
 
   const handleBack = () => {
     if (socket) {

@@ -475,6 +475,161 @@ function WheelOfFortune({
     localStorage.setItem('jenswheelpractice-stats', JSON.stringify(gameStats));
   }, [gameStats]);
 
+  // Computer player logic
+  const computerTurn = useCallback(() => {
+    const currentPlayer = gameState.players[gameState.currentPlayer];
+    if (!currentPlayer || currentPlayer.isHuman) return;
+    
+    // Computers cannot play in the final round - only human can reach final round
+    if (gameState.isFinalRound) {
+      console.log('❌ Computer cannot play in final round');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
+    
+    // Prevent multiple simultaneous computer turns
+    if (gameState.turnInProgress || gameState.isSpinning) {
+      console.log('🔄 Computer turn already in progress, skipping...');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
+    
+    console.log(`🤖 Starting computer turn for: ${currentPlayer.name}`);
+    
+    // Computer spins the wheel
+    setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
+    
+    // Generate realistic spin
+    const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
+    const segmentAngle = 360 / currentWheelSegments.length;
+    const randomSegmentIndex = Math.floor(Math.random() * currentWheelSegments.length);
+    const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
+    const totalRotation = (baseRotations * 360) + finalAngle;
+    
+    const newRotation = gameState.wheelRotation + totalRotation;
+    setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
+    
+    setTimeout(() => {
+      const gs = gameStateRef.current;
+      const landedIndex = getLandedSegmentIndex(newRotation);
+      const segment = currentWheelSegments[landedIndex];
+      let newMessage = '';
+      let newPlayers = [...gs.players];
+      let nextPlayer = gs.currentPlayer; // Default to same player
+      
+      if (typeof segment === 'number') {
+        newMessage = `${gs.players[gs.currentPlayer].name} spun $${segment}!`;
+        // Update game state first, then computer makes a guess
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Computer makes a guess after state is updated
+        setTimeout(() => {
+          computerGuess(segment);
+        }, 1000);
+      } else if (segment === 'BANKRUPT') {
+        newMessage = `${gs.players[gs.currentPlayer].name} went BANKRUPT! `;
+        newPlayers[gs.currentPlayer].roundMoney = 0;
+        // Determine next player (cycle through all 3 players)
+        nextPlayer = (gs.currentPlayer + 1) % gs.players.length; // advance to next player
+        newMessage += `${gs.players[nextPlayer].name}'s turn!`;
+        
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Start next player's turn if it's a computer
+        setTimeout(() => {
+          setComputerTurnInProgress(false);
+          computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
+          
+          const nextPlayerObj = gs.players[nextPlayer];
+          if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            computerTurn();
+          }
+        }, 2000);
+      } else if (segment === 'LOSE A TURN') {
+        newMessage = `${gs.players[gs.currentPlayer].name} lost their turn! `;
+        // Determine next player (cycle through all 3 players)
+        nextPlayer = (gs.currentPlayer + 1) % gs.players.length; // advance to next player
+        newMessage += `${gs.players[nextPlayer].name}'s turn!`;
+        
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Start next player's turn if it's a computer
+        setTimeout(() => {
+          setComputerTurnInProgress(false);
+          computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
+          
+          const nextPlayerObj = gs.players[nextPlayer];
+          if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            computerTurn();
+          }
+        }, 2000);
+      } else if (typeof segment === 'object' && segment && 'type' in segment) {
+        if (segment.type === 'PRIZE') {
+          newMessage = `${gs.players[gs.currentPlayer].name} landed on ${(segment as WheelSegment).displayValue}!`;
+        } else if (segment.type === 'WILD_CARD') {
+          newMessage = `${gs.players[gs.currentPlayer].name} got the WILD CARD!`;
+        } else if (segment.type === 'GIFT_TAG') {
+          newMessage = `${gs.players[gs.currentPlayer].name} got the $1000 GIFT TAG!`;
+        } else if (segment.type === 'MILLION') {
+          newMessage = `${gs.players[gs.currentPlayer].name} got the MILLION DOLLAR WEDGE!`;
+        }
+        // Update game state first, then computer makes a guess
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        
+        // Computer makes a guess after state is updated
+        setTimeout(() => {
+          computerGuess(segment);
+        }, 1000);
+      }
+    }, 1000);
+  }, [gameState, currentWheelSegments, gameStateRef]);
+
   // Trigger computer turn when it's their turn
   useEffect(() => {
     const currentPlayer = gameState.players[gameState.currentPlayer];
@@ -500,7 +655,7 @@ function WheelOfFortune({
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress, gameState.players, computerTurn]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -587,7 +742,7 @@ function WheelOfFortune({
       });
     });
     setAvailablePuzzles(allPuzzles);
-  }, [usedPuzzles]);
+  }, [usedPuzzles, gameState.puzzle.text]);
 
   // Generate puzzle function with guaranteed no duplicates
   const generatePuzzle = (): Puzzle => {
@@ -823,162 +978,6 @@ function WheelOfFortune({
 
       </div>
     );
-  };
-
-  // Authentic wheel spinner with realistic physics
-  // Computer player logic
-  const computerTurn = () => {
-    const currentPlayer = gameState.players[gameState.currentPlayer];
-    if (!currentPlayer || currentPlayer.isHuman) return;
-    
-    // Computers cannot play in the final round - only human can reach final round
-    if (gameState.isFinalRound) {
-      console.log('❌ Computer cannot play in final round');
-      setComputerTurnInProgress(false);
-      computerTurnRef.current = false;
-      computerTurnScheduledRef.current = false;
-      return;
-    }
-    
-    // Prevent multiple simultaneous computer turns
-    if (gameState.turnInProgress || gameState.isSpinning) {
-      console.log('🔄 Computer turn already in progress, skipping...');
-      setComputerTurnInProgress(false);
-      computerTurnRef.current = false;
-      computerTurnScheduledRef.current = false;
-      return;
-    }
-    
-    console.log(`🤖 Starting computer turn for: ${currentPlayer.name}`);
-    
-    // Computer spins the wheel
-    setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
-    
-    // Generate realistic spin
-    const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
-    const segmentAngle = 360 / currentWheelSegments.length;
-    const randomSegmentIndex = Math.floor(Math.random() * currentWheelSegments.length);
-    const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
-    const totalRotation = (baseRotations * 360) + finalAngle;
-    
-    const newRotation = gameState.wheelRotation + totalRotation;
-    setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
-    
-    setTimeout(() => {
-      const gs = gameStateRef.current;
-      const landedIndex = getLandedSegmentIndex(newRotation);
-      const segment = currentWheelSegments[landedIndex];
-      let newMessage = '';
-      let newPlayers = [...gs.players];
-      let nextPlayer = gs.currentPlayer; // Default to same player
-      
-      if (typeof segment === 'number') {
-        newMessage = `${gs.players[gs.currentPlayer].name} spun $${segment}!`;
-        // Update game state first, then computer makes a guess
-        setGameState(prev => ({
-          ...prev,
-          isSpinning: false,
-          wheelValue: segment,
-          lastSpinResult: segment,
-          landedSegmentIndex: landedIndex,
-          message: newMessage,
-          players: newPlayers,
-          currentPlayer: nextPlayer,
-          turnInProgress: false
-        }));
-        
-        // Computer makes a guess after state is updated
-        setTimeout(() => {
-          computerGuess(segment);
-        }, 1000);
-      } else if (segment === 'BANKRUPT') {
-        newMessage = `${gs.players[gs.currentPlayer].name} went BANKRUPT! `;
-        newPlayers[gs.currentPlayer].roundMoney = 0;
-        // Determine next player (cycle through all 3 players)
-        nextPlayer = (gs.currentPlayer + 1) % gs.players.length; // advance to next player
-        newMessage += `${gs.players[nextPlayer].name}'s turn!`;
-        
-        setGameState(prev => ({
-          ...prev,
-          isSpinning: false,
-          wheelValue: segment,
-          lastSpinResult: segment,
-          landedSegmentIndex: landedIndex,
-          message: newMessage,
-          players: newPlayers,
-          currentPlayer: nextPlayer,
-          turnInProgress: false
-        }));
-        
-        // Start next player's turn if it's a computer
-        setTimeout(() => {
-          setComputerTurnInProgress(false);
-          computerTurnRef.current = false;
-          computerTurnScheduledRef.current = false;
-          
-          const nextPlayerObj = gs.players[nextPlayer];
-          if (nextPlayerObj && !nextPlayerObj.isHuman) {
-            computerTurn();
-          }
-        }, 2000);
-      } else if (segment === 'LOSE A TURN') {
-        newMessage = `${gs.players[gs.currentPlayer].name} lost their turn! `;
-        // Determine next player (cycle through all 3 players)
-        nextPlayer = (gs.currentPlayer + 1) % gs.players.length; // advance to next player
-        newMessage += `${gs.players[nextPlayer].name}'s turn!`;
-        
-        setGameState(prev => ({
-          ...prev,
-          isSpinning: false,
-          wheelValue: segment,
-          lastSpinResult: segment,
-          landedSegmentIndex: landedIndex,
-          message: newMessage,
-          players: newPlayers,
-          currentPlayer: nextPlayer,
-          turnInProgress: false
-        }));
-        
-        // Start next player's turn if it's a computer
-        setTimeout(() => {
-          setComputerTurnInProgress(false);
-          computerTurnRef.current = false;
-          computerTurnScheduledRef.current = false;
-          
-          const nextPlayerObj = gs.players[nextPlayer];
-          if (nextPlayerObj && !nextPlayerObj.isHuman) {
-            computerTurn();
-          }
-        }, 2000);
-      } else if (typeof segment === 'object' && segment && 'type' in segment) {
-        if (segment.type === 'PRIZE') {
-          newMessage = `${gs.players[gs.currentPlayer].name} landed on ${(segment as WheelSegment).displayValue}!`;
-        } else if (segment.type === 'WILD_CARD') {
-          newMessage = `${gs.players[gs.currentPlayer].name} got the WILD CARD!`;
-        } else if (segment.type === 'GIFT_TAG') {
-          newMessage = `${gs.players[gs.currentPlayer].name} got the $1000 GIFT TAG!`;
-        } else if (segment.type === 'MILLION') {
-          newMessage = `${gs.players[gs.currentPlayer].name} got the MILLION DOLLAR WEDGE!`;
-        }
-        // Update game state first, then computer makes a guess
-        setGameState(prev => ({
-          ...prev,
-          isSpinning: false,
-          wheelValue: segment,
-          lastSpinResult: segment,
-          landedSegmentIndex: landedIndex,
-          message: newMessage,
-          players: newPlayers,
-          currentPlayer: nextPlayer,
-          turnInProgress: false
-        }));
-        
-        // Computer makes a guess after state is updated
-        setTimeout(() => {
-          computerGuess(segment);
-        }, 1000);
-      }
-    }, 1000);
   };
 
   const computerGuess = (wheelValue: number | string | WheelSegment) => {
@@ -1971,7 +1970,7 @@ function WheelOfFortune({
       }
       prevPlayerRef.current = gameState.currentPlayer;
     }
-  }, [gameState.currentPlayer]);
+  }, [gameState.currentPlayer, onEndTurn]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white p-2 sm:p-4">

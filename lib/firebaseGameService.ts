@@ -488,10 +488,17 @@ export class FirebaseGameService {
   // Generate a new puzzle for the game
   async generateNewPuzzle(category?: string): Promise<void> {
     const puzzle = this.generatePuzzle(category);
+    
+    // Get current game state to find the host
+    const snapshot = await get(this.gameRef);
+    const game = snapshot.val() as GameState;
+    const hostPlayer = Object.values(game.players).find(p => p.isHost);
+    
     await update(this.gameRef, {
       puzzle,
       usedLetters: [],
-      message: 'New puzzle generated!',
+      currentPlayer: hostPlayer?.id || this.playerId, // Ensure host goes first
+      message: 'New puzzle generated! Host goes first!',
       lastUpdated: Date.now()
     });
   }
@@ -512,12 +519,48 @@ export class FirebaseGameService {
       'RHYME TIME': [
         'MAKE A BREAK', 'TIME TO RHYME', 'BEST TEST', 'QUICK TRICK',
         'BRIGHT LIGHT', 'SWEET TREAT', 'FAIR SHARE', 'TRUE BLUE'
+      ],
+      // Custom themes with generated puzzles
+      'MOVIES': [
+        'STAR WARS', 'JURASSIC PARK', 'TITANIC', 'AVATAR', 'FROZEN',
+        'THE LION KING', 'TOY STORY', 'FINDING NEMO', 'SHREK', 'HARRY POTTER'
+      ],
+      'FOOD': [
+        'PIZZA HUT', 'MCDONALDS', 'BURGER KING', 'KFC', 'SUBWAY',
+        'TACO BELL', 'WENDYS', 'DOMINOS', 'PAPA JOHNS', 'LITTLE CAESARS'
+      ],
+      'SPORTS': [
+        'FOOTBALL', 'BASKETBALL', 'BASEBALL', 'SOCCER', 'TENNIS',
+        'GOLF', 'HOCKEY', 'VOLLEYBALL', 'SWIMMING', 'RUNNING'
+      ],
+      'MUSIC': [
+        'ROCK AND ROLL', 'JAZZ MUSIC', 'COUNTRY SONG', 'POP MUSIC', 'RAP MUSIC',
+        'CLASSICAL MUSIC', 'BLUES MUSIC', 'REGGAE MUSIC', 'FOLK MUSIC', 'ELECTRONIC MUSIC'
+      ],
+      'ANIMALS': [
+        'LION KING', 'ELEPHANT', 'GIRAFFE', 'ZEBRA', 'TIGER',
+        'BEAR', 'WOLF', 'FOX', 'DEER', 'RABBIT'
+      ],
+      'CITIES': [
+        'NEW YORK', 'LOS ANGELES', 'CHICAGO', 'HOUSTON', 'PHOENIX',
+        'PHILADELPHIA', 'SAN ANTONIO', 'SAN DIEGO', 'DALLAS', 'SAN JOSE'
       ]
     };
 
     const categories = category ? [category] : Object.keys(puzzles);
     const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
     const categoryPuzzles = puzzles[selectedCategory as keyof typeof puzzles];
+    
+    // If category doesn't exist in puzzles, generate a simple puzzle
+    if (!categoryPuzzles) {
+      return {
+        text: `${selectedCategory.toUpperCase()} PUZZLE`,
+        category: selectedCategory,
+        solution: `${selectedCategory.toUpperCase()} PUZZLE`,
+        revealed: []
+      };
+    }
+    
     const selectedPuzzle = categoryPuzzles[Math.floor(Math.random() * categoryPuzzles.length)];
 
     if (typeof selectedPuzzle === 'string') {
@@ -538,5 +581,20 @@ export class FirebaseGameService {
   // Set puzzle theme/category for the game
   async setPuzzleTheme(category: string): Promise<void> {
     await this.generateNewPuzzle(category);
+  }
+
+  // Start the game and ensure host goes first
+  async startGame(): Promise<void> {
+    const snapshot = await get(this.gameRef);
+    const game = snapshot.val() as GameState;
+    const hostPlayer = Object.values(game.players).find(p => p.isHost);
+    
+    if (hostPlayer) {
+      await update(this.gameRef, {
+        currentPlayer: hostPlayer.id,
+        message: 'Game started! Host goes first!',
+        lastUpdated: Date.now()
+      });
+    }
   }
 } 
