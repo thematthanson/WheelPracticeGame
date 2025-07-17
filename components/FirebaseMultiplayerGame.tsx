@@ -355,7 +355,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                 {/* Custom Theme Input */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-blue-200">
-                    Custom Theme:
+                    Custom Theme (optional):
                   </label>
                   <input
                     type="text"
@@ -370,15 +370,26 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                 <div className="space-y-2 pt-2">
                   <button
                     onClick={() => {
+                      // Start game with random theme (default)
+                      setSelectedTheme('');
+                      handleBeginGame();
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Start Game
+                  </button>
+                  
+                  <button
+                    onClick={() => {
                       if (customTheme.trim()) {
                         setSelectedTheme(customTheme.toUpperCase());
                         handleBeginGame();
                       }
                     }}
                     disabled={!customTheme.trim()}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
-                    Start Game
+                    Use Custom Theme
                   </button>
                   
                   <button
