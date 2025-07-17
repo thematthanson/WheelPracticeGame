@@ -33,8 +33,16 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
 
   // HOST VIEW – full controls
   if (isHost) {
+    const passTurn = () => {
+      const playerIds = Object.keys(gameState.players);
+      const currentIdx = playerIds.indexOf(gameState.currentPlayer);
+      if (currentIdx === -1) return;
+      const nextId = playerIds[(currentIdx + 1) % playerIds.length];
+      service.endTurn(nextId);
+    };
+
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-4">
         <WheelOfFortune
           initialPlayers={ordered.map((p) => ({ name: p.name, isHuman: p.isHuman }))}
           onSpin={(data) => {
@@ -58,6 +66,16 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
             service.endTurn(nextId);
           }}
         />
+
+        {/* Manual Pass Turn – helps when host wants to yield control explicitly */}
+        <div className="text-center">
+          <button
+            onClick={passTurn}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg"
+          >
+            Pass Turn ➜
+          </button>
+        </div>
       </div>
     );
   }
