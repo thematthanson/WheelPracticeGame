@@ -76,6 +76,18 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
         Current Turn: {gameState?.players?.[gameState?.currentPlayer]?.name || '—'}
       </p>
       <p className="text-xs text-gray-500">Waiting for host actions…</p>
+
+      {/* Fallback Claim Turn button — visible only if this human player is not the currentPlayer but the game is active. */}
+      {!isHost && currentPlayer?.id !== gameState.currentPlayer && gameState.status === 'active' && (
+        <div className="text-center mt-4">
+          <button
+            onClick={() => service.endTurn(currentPlayer!.id)}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg"
+          >
+            Ready – take my turn
+          </button>
+        </div>
+      )}
     </div>
   );
 };
