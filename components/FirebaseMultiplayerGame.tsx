@@ -43,7 +43,7 @@ const generateMultiplayerPuzzle = () => {
   return {
     text: randomPuzzle.toUpperCase(),
     category: randomCategory,
-    revealed: new Set<string>(),
+    revealed: [],
     specialFormat: null
   };
 };
