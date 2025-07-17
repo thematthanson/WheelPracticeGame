@@ -81,7 +81,7 @@ interface GameState {
   isSpinning: boolean;
   wheelRotation: number;
   players: Player[];
-  currentPlayer: number;
+  currentPlayer: number | string; // Can be numeric index (single-player) or string ID (multiplayer)
   turnInProgress: boolean;
   lastSpinResult: number | string | WheelSegment | null;
   landedSegmentIndex: number;
@@ -477,10 +477,25 @@ function WheelOfFortune({
 
   // Helper function to get current player (handles both single-player and multiplayer)
   const getCurrentPlayer = () => {
-    if (Array.isArray(gameState.players)) {
-      return gameState.players[gameState.currentPlayer];
+    // In multiplayer mode, currentPlayer is a string ID
+    // In single-player mode, currentPlayer is a numeric index
+    if (typeof gameState.currentPlayer === 'string') {
+      // Multiplayer mode - currentPlayer is a string ID
+      return (gameState.players as any)[gameState.currentPlayer];
     } else {
-      return gameState.players[gameState.currentPlayer];
+      // Single-player mode - currentPlayer is a numeric index
+      return gameState.players[gameState.currentPlayer as number];
+    }
+  };
+
+  // Helper function to get current player index (for turn advancement)
+  const getCurrentPlayerIndex = () => {
+    if (typeof gameState.currentPlayer === 'string') {
+      // Multiplayer mode - find the index of the current player
+      return Object.keys(gameState.players).indexOf(gameState.currentPlayer);
+    } else {
+      // Single-player mode - currentPlayer is already the index
+      return gameState.currentPlayer;
     }
   };
 
@@ -510,7 +525,7 @@ function WheelOfFortune({
     console.log(`🤖 Starting computer turn for: ${currentPlayer.name}`);
     
     // Computer spins the wheel
-    setGameState(prev => ({ ...prev, isSpinning: true, message: `${prev.players[prev.currentPlayer].name} is spinning...`, turnInProgress: true }));
+    setGameState(prev => ({ ...prev, isSpinning: true, message: `${getCurrentPlayer()?.name} is spinning...`, turnInProgress: true }));
     
     // Generate realistic spin
     const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
@@ -1891,8 +1906,7 @@ function WheelOfFortune({
             specialFormat: firebasePuzzle.specialFormat || null
           },
           usedLetters: new Set(firebaseGameState.usedLetters || []),
-          currentPlayer: firebaseGameState.currentPlayer ? 
-            Object.keys(firebaseGameState.players || {}).indexOf(firebaseGameState.currentPlayer) : 0,
+          currentPlayer: firebaseGameState.currentPlayer || 0,
           players: Object.values(firebaseGameState.players || {}).map((p: any, index: number) => ({
             name: p.name,
             roundMoney: p.roundMoney || 0,
