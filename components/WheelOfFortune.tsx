@@ -990,7 +990,7 @@ function WheelOfFortune({
         
         {/* Pointer */}
         <div 
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 z-30"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 rotate-180 z-30"
           style={{
             width: 0,
             height: 0,
@@ -1162,7 +1162,16 @@ function WheelOfFortune({
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         
-        const nextPlayerObj = gameStateRef.current.players[nextPlayer as number];
+        // Check if next player is a computer (for multiplayer mode)
+        let nextPlayerObj;
+        if (firebaseGameState && typeof nextPlayer === 'string') {
+          // Multiplayer mode - find player by ID
+          nextPlayerObj = gameStateRef.current.players.find(p => p.id === nextPlayer);
+        } else {
+          // Single player mode - use numeric index
+          nextPlayerObj = gameStateRef.current.players[nextPlayer as number];
+        }
+        
         if (nextPlayerObj && !nextPlayerObj.isHuman) {
           setTimeout(() => {
             computerTurn();
@@ -1288,17 +1297,50 @@ function WheelOfFortune({
           timestamp: new Date().toISOString()
         });
         
-        // Determine next player (cycle through all players)
-        const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+        // Determine next player (cycle through human players in multiplayer)
+        let nextPlayer: number | string;
+        let nextPlayerName: string;
+        
+        if (firebaseGameState) {
+          // Multiplayer mode - advance to next human player
+          const humanPlayers = gameState.players.filter(p => p.isHuman && p.id);
+          const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
+          if (currentHumanIndex !== -1) {
+            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+            const nextHumanPlayer = humanPlayers[nextHumanIndex];
+            if (nextHumanPlayer && nextHumanPlayer.id) {
+              nextPlayer = nextHumanPlayer.id;
+              nextPlayerName = nextHumanPlayer.name;
+            } else {
+              // Fallback
+              const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+              nextPlayer = nextIdx;
+              nextPlayerName = gameState.players[nextIdx].name;
+            }
+          } else {
+            // Fallback
+            const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+            nextPlayer = nextIdx;
+            nextPlayerName = gameState.players[nextIdx].name;
+          }
+        } else {
+          // Single player mode - advance to next player
+          const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+          nextPlayer = nextIdx;
+          nextPlayerName = gameState.players[nextIdx].name;
+        }
+        
         setGameState(prev => ({
           ...prev,
-          currentPlayer: nextIdx,
-          message: `Incorrect! ${prev.players[nextIdx].name}'s turn.`
+          currentPlayer: nextPlayer,
+          message: `Incorrect! ${nextPlayerName}'s turn.`
         }));
         
         // Multiplayer: notify turn change
         if (onEndTurn) {
-          onEndTurn(nextIdx as number);
+          if (typeof nextPlayer === 'number') {
+            onEndTurn(nextPlayer);
+          }
         }
       }
       
