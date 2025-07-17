@@ -475,6 +475,12 @@ export class FirebaseGameService {
       const game = snapshot.val() as GameState;
       const player = game.players[playerId];
       
+      // Validate player exists
+      if (!player) {
+        console.error(`Player ${playerId} not found in game`);
+        return;
+      }
+      
       // Check if solution is correct
       const isCorrect = game.puzzle?.solution?.toLowerCase() === solution.toLowerCase();
       
@@ -507,9 +513,45 @@ export class FirebaseGameService {
           lastUpdated: Date.now()
         });
       } else {
-        // Update game history for incorrect solve attempt
+        // Handle incorrect solve attempt - advance to next human player
+        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        
+        // Validate we have human players
+        if (humanPlayers.length === 0) {
+          console.error('No human players found for solve attempt turn advancement');
+          return;
+        }
+        
+        let nextPlayerId = game.currentPlayer;
+        
+        // If only one human player, they keep their turn
+        if (humanPlayers.length === 1) {
+          nextPlayerId = humanPlayers[0].id;
+        } else {
+          // Find current player in human players list
+          const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+            nextPlayerId = humanPlayers[nextIndex].id;
+          } else {
+            // Current player not found in human players, default to first human
+            nextPlayerId = humanPlayers[0].id;
+          }
+        }
+        
+        // Validate the next player is different from current
+        if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
+          console.warn('Solve attempt turn advancement would result in same player, forcing advancement');
+          const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          const nextIndex = (currentIndex + 1) % humanPlayers.length;
+          nextPlayerId = humanPlayers[nextIndex].id;
+        }
+        
+        // Update game history and turn for incorrect solve attempt
         await update(this.gameRef, {
           gameHistory,
+          currentPlayer: nextPlayerId,
+          message: `Incorrect solve attempt! ${game.players[nextPlayerId]?.name || 'Next player'}'s turn.`,
           lastUpdated: Date.now()
         });
       }
