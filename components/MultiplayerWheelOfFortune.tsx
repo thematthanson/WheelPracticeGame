@@ -35,8 +35,10 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
     return a.name.localeCompare(b.name);
   });
 
+  const isActiveHuman = currentPlayer && currentPlayer.isHuman && currentPlayer.id === gameState.currentPlayer;
+
   // HOST VIEW – full controls
-  if (isHost) {
+  if (isActiveHuman) {
     const passTurn = () => {
       const humanIds = Object.values(gameState.players)
         .filter((p): p is Player => (p as Player).isHuman)
@@ -76,7 +78,7 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
           }}
         />
 
-        {/* Manual Pass Turn – helps when host wants to yield control explicitly */}
+        {/* Manual Pass Turn – lets the active human yield control explicitly */}
         <div className="text-center">
           <button
             onClick={passTurn}
@@ -89,7 +91,7 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
     );
   }
 
-  // GUEST VIEW – read-only summary
+  // GUEST / Waiting VIEW – read-only summary
   return (
     <div className="max-w-2xl mx-auto text-center space-y-4 p-4 bg-gray-800 bg-opacity-40 rounded-lg">
       <h2 className="text-lg font-semibold text-yellow-200">Watching the Game…</h2>
