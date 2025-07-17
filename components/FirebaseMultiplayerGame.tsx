@@ -199,20 +199,22 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   }, [gameCode, playerName]);
 
   /* ------------------------------------------------------------------
-   * Host “Begin Game” button – generates puzzle explicitly so guests
+   * Host "Begin Game" button – generates puzzle explicitly so guests
    * leave the lobby only when the host decides to start.
    * ------------------------------------------------------------------ */
-  const handleBeginGame = useCallback(async () => {
+  const handleBeginGame = useCallback(async (theme?: string) => {
     if (!gameService || !currentPlayer?.isHost || gameState?.puzzle) return;
 
-    if (!selectedTheme) {
+    // If no theme provided and no theme selected, show theme selector
+    if (!theme && !selectedTheme) {
       setShowThemeSelector(true);
       return;
     }
 
-    vLog('Host generating puzzle with theme:', selectedTheme);
-    // If selectedTheme is empty string, pass undefined to generate random theme
-    const themeToUse = selectedTheme === '' ? undefined : selectedTheme;
+    // Use provided theme, selected theme, or random theme
+    const themeToUse = theme || (selectedTheme === '' ? undefined : selectedTheme);
+    
+    vLog('Host generating puzzle with theme:', themeToUse);
     await gameService.generateNewPuzzle(themeToUse);
     
     // Ensure host goes first
@@ -345,7 +347,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
         <div className="text-center my-6">
           {!showThemeSelector ? (
             <button
-              onClick={handleBeginGame}
+              onClick={() => handleBeginGame()}
               className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors duration-200 touch-manipulation"
             >
               Begin Game
@@ -373,8 +375,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                   <button
                     onClick={() => {
                       // Start game with random theme (default)
-                      setSelectedTheme('');
-                      handleBeginGame();
+                      handleBeginGame('');
                     }}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
@@ -384,8 +385,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                   <button
                     onClick={() => {
                       if (customTheme.trim()) {
-                        setSelectedTheme(customTheme.toUpperCase());
-                        handleBeginGame();
+                        handleBeginGame(customTheme.toUpperCase());
                       }
                     }}
                     disabled={!customTheme.trim()}
