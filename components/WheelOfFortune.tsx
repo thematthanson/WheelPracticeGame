@@ -597,9 +597,35 @@ function WheelOfFortune({
       } else if (segment === 'LOSE A TURN') {
         const currentPlayer = getCurrentPlayer();
         newMessage = `${currentPlayer?.name} lost their turn! `;
-        // Determine next player (cycle through all 3 players)
-        let nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length; // advance to next player
-        const nextPlayerObj = gs.players[nextPlayer as number];
+        // Determine next player (cycle through human players in multiplayer)
+        let nextPlayer: number | string;
+        let nextPlayerObj;
+        
+        if (firebaseGameState) {
+          // Multiplayer mode - advance to next human player
+          const humanPlayers = gs.players.filter(p => p.isHuman && p.id);
+          const currentHumanIndex = humanPlayers.findIndex(p => p.id === gs.currentPlayer);
+          if (currentHumanIndex !== -1) {
+            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+            nextPlayerObj = humanPlayers[nextHumanIndex];
+            if (nextPlayerObj && nextPlayerObj.id) {
+              nextPlayer = nextPlayerObj.id;
+            } else {
+              // Fallback - advance to next player in order
+              nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length;
+              nextPlayerObj = gs.players[nextPlayer as number];
+            }
+          } else {
+            // Fallback - advance to next player in order
+            nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length;
+            nextPlayerObj = gs.players[nextPlayer as number];
+          }
+        } else {
+          // Single player mode - advance to next player
+          nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length;
+          nextPlayerObj = gs.players[nextPlayer as number];
+        }
+        
         newMessage += `${nextPlayerObj?.name}'s turn!`;
         
         setGameState(prev => ({
@@ -681,7 +707,7 @@ function WheelOfFortune({
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress, gameState.players, computerTurn, getCurrentPlayer]);
+  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress, gameState.players]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
