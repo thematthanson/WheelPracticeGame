@@ -117,9 +117,36 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
             const humanIds = Object.values(gameState.players)
               .filter((p): p is Player => (p as Player).isHuman)
               .map(p => p.id);
+            
+            // Validate we have human players
+            if (humanIds.length === 0) {
+              console.error('No human players found for turn advancement');
+              return;
+            }
+            
+            // If only one human player, they keep their turn
+            if (humanIds.length === 1) {
+              service.endTurn(humanIds[0]);
+              return;
+            }
+            
             const currIdx = humanIds.indexOf(gameState.currentPlayer);
-            if (currIdx === -1) return;
+            if (currIdx === -1) {
+              // Current player not found in human players, default to first human
+              service.endTurn(humanIds[0]);
+              return;
+            }
+            
             const nextId = humanIds[(currIdx + 1) % humanIds.length];
+            
+            // Validate the next player is different from current
+            if (nextId === gameState.currentPlayer && humanIds.length > 1) {
+              console.warn('Turn advancement would result in same player, forcing advancement');
+              const forcedNextId = humanIds[(currIdx + 1) % humanIds.length];
+              service.endTurn(forcedNextId);
+              return;
+            }
+            
             service.endTurn(nextId);
           }
         }}
@@ -133,9 +160,36 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
               const humanIds = Object.values(gameState.players)
                 .filter((p): p is Player => (p as Player).isHuman)
                 .map(p => p.id);
+              
+              // Validate we have human players
+              if (humanIds.length === 0) {
+                console.error('No human players found for manual turn advancement');
+                return;
+              }
+              
+              // If only one human player, they keep their turn
+              if (humanIds.length === 1) {
+                service.endTurn(humanIds[0]);
+                return;
+              }
+              
               const currentIdx = humanIds.indexOf(gameState.currentPlayer);
-              if (currentIdx === -1) return;
+              if (currentIdx === -1) {
+                // Current player not found in human players, default to first human
+                service.endTurn(humanIds[0]);
+                return;
+              }
+              
               const nextId = humanIds[(currentIdx + 1) % humanIds.length];
+              
+              // Validate the next player is different from current
+              if (nextId === gameState.currentPlayer && humanIds.length > 1) {
+                console.warn('Manual turn advancement would result in same player, forcing advancement');
+                const forcedNextId = humanIds[(currentIdx + 1) % humanIds.length];
+                service.endTurn(forcedNextId);
+                return;
+              }
+              
               service.endTurn(nextId);
             }}
             className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg"

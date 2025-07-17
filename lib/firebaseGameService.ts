@@ -281,20 +281,70 @@ export class FirebaseGameService {
         
         // Find next human player
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
-        const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-        if (currentPlayerIndex !== -1) {
-          const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+        
+        // Validate we have human players
+        if (humanPlayers.length === 0) {
+          console.error('No human players found for BANKRUPT turn advancement');
+          return;
+        }
+        
+        // If only one human player, they keep their turn
+        if (humanPlayers.length === 1) {
+          nextPlayerId = humanPlayers[0].id;
+        } else {
+          // Find current player in human players list
+          const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+            nextPlayerId = humanPlayers[nextIndex].id;
+          } else {
+            // Current player not found in human players, default to first human
+            nextPlayerId = humanPlayers[0].id;
+          }
+        }
+        
+        // Validate the next player is different from current
+        if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
+          console.warn('BANKRUPT turn advancement would result in same player, forcing advancement');
+          const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
         }
+        
         message = 'BANKRUPT! You lose your round money and any prizes from this round.';
       } else if (spinData.value === 'LOSE A TURN' || (typeof spinData.value === 'object' && spinData.value && spinData.value.type === 'LOSE A TURN')) {
         // Find next human player
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
-        const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-        if (currentPlayerIndex !== -1) {
-          const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+        
+        // Validate we have human players
+        if (humanPlayers.length === 0) {
+          console.error('No human players found for LOSE A TURN advancement');
+          return;
+        }
+        
+        // If only one human player, they keep their turn
+        if (humanPlayers.length === 1) {
+          nextPlayerId = humanPlayers[0].id;
+        } else {
+          // Find current player in human players list
+          const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+            nextPlayerId = humanPlayers[nextIndex].id;
+          } else {
+            // Current player not found in human players, default to first human
+            nextPlayerId = humanPlayers[0].id;
+          }
+        }
+        
+        // Validate the next player is different from current
+        if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
+          console.warn('LOSE A TURN advancement would result in same player, forcing advancement');
+          const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
         }
+        
         message = 'LOSE A TURN!';
       }
       
@@ -338,7 +388,7 @@ export class FirebaseGameService {
       // Update player score if letter is correct
       if (letterInPuzzle && player && game.wheelValue) {
         let earned = 0;
-              if (typeof game.wheelValue === 'number') {
+        if (typeof game.wheelValue === 'number') {
           earned = game.wheelValue * letterCount;
         } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'PRIZE') {
           earned = 500 * letterCount; // Base value for consonants with prizes
@@ -377,9 +427,33 @@ export class FirebaseGameService {
       if (!letterInPuzzle) {
         // Find next human player for turn advancement
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
-        const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-        if (currentPlayerIndex !== -1) {
-          const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+        
+        // Validate we have human players
+        if (humanPlayers.length === 0) {
+          console.error('No human players found for turn advancement');
+          return;
+        }
+        
+        // If only one human player, they keep their turn
+        if (humanPlayers.length === 1) {
+          nextPlayerId = humanPlayers[0].id;
+        } else {
+          // Find current player in human players list
+          const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+            nextPlayerId = humanPlayers[nextIndex].id;
+          } else {
+            // Current player not found in human players, default to first human
+            nextPlayerId = humanPlayers[0].id;
+          }
+        }
+        
+        // Validate the next player is different from current
+        if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
+          console.warn('Turn advancement would result in same player, forcing advancement');
+          const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
         }
       }

@@ -682,32 +682,43 @@ function WheelOfFortune({
     }, 1000);
   }, [gameState, currentWheelSegments, gameStateRef]);
 
-  // Trigger computer turn when it's their turn
+  // Trigger computer turn when it's their turn - SIMPLIFIED LOGIC
   useEffect(() => {
     const currentPlayer = getCurrentPlayer();
-    const isComputerTurn = currentPlayer && !currentPlayer.isHuman && !gameState.isSpinning && !gameState.turnInProgress && !computerTurnInProgress && !computerTurnRef.current && !computerTurnScheduledRef.current;
+    
+    // Only trigger if:
+    // 1. Current player is a computer
+    // 2. Game is not in final round (computers can't play final round)
+    // 3. No turn is currently in progress
+    // 4. Wheel is not spinning
+    // 5. Computer turn is not already scheduled
+    const isComputerTurn = currentPlayer && 
+                          !currentPlayer.isHuman && 
+                          !gameState.isFinalRound &&
+                          !gameState.turnInProgress && 
+                          !gameState.isSpinning && 
+                          !computerTurnScheduledRef.current;
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
       playerName: currentPlayer?.name,
       isHuman: currentPlayer?.isHuman,
+      isFinalRound: gameState.isFinalRound,
       isSpinning: gameState.isSpinning,
       turnInProgress: gameState.turnInProgress,
-      computerTurnInProgress,
       computerTurnScheduled: computerTurnScheduledRef.current,
       shouldTrigger: isComputerTurn
     });
     
     if (isComputerTurn) {
       console.log('🤖 Triggering computer turn for:', currentPlayer.name);
-      computerTurnRef.current = true;
       computerTurnScheduledRef.current = true;
       setComputerTurnInProgress(true);
       setTimeout(() => {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isSpinning, gameState.turnInProgress, computerTurnInProgress, gameState.players]);
+  }, [gameState.currentPlayer, gameState.isFinalRound, gameState.isSpinning, gameState.turnInProgress, computerTurn]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
