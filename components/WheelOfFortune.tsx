@@ -1375,7 +1375,7 @@ function WheelOfFortune({
         onSpin({ value: spinVal, rotation: newRotation });
       }
       if (nextPlayer !== gameState.currentPlayer && onEndTurn) {
-        onEndTurn(nextPlayer);
+        onEndTurn(nextPlayer as number);
       }
     }, 1000);
   };
@@ -1988,12 +1988,12 @@ function WheelOfFortune({
   }, [firebaseGameState]);
 
   // Keep track of turn changes so we can emit end-turn events
-  const prevPlayerRef = useRef<number>(0);
+  const prevPlayerRef = useRef<number | string>(0);
 
   useEffect(() => {
     if (prevPlayerRef.current !== gameState.currentPlayer) {
       if (onEndTurn) {
-        onEndTurn(gameState.currentPlayer);
+        onEndTurn(getCurrentPlayerIndex());
       }
       prevPlayerRef.current = gameState.currentPlayer;
     }
