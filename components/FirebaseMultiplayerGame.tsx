@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import WheelOfFortune from './WheelOfFortune';
 import MultiplayerWheelOfFortune from './MultiplayerWheelOfFortune';
 import { FirebaseGameService, Player, GameState } from '../lib/firebaseGameService';
+import { vLog } from '../lib/logger';
 
 // Simplified puzzle templates for multiplayer
 const SIMPLE_PUZZLES = {
@@ -67,7 +68,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   useEffect(() => {
     // Prevent duplicate joins - check and set atomically
     if (hasJoinedRef.current) {
-      console.log('Duplicate join attempt prevented');
+      vLog('Duplicate join attempt prevented');
       return;
     }
     hasJoinedRef.current = true;
@@ -122,18 +123,18 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
         // Check if game exists
         const gameExists = await service.gameExists();
-        console.log(`Game ${gameCode} exists:`, gameExists);
-        console.log(`Checking for game with code: ${gameCode}`);
+        vLog(`Game ${gameCode} exists:`, gameExists);
+        vLog(`Checking for game with code: ${gameCode}`);
         
         if (gameExists) {
           // Game exists - join it
-          console.log(`Player ${player.name} joining existing game ${gameCode}`);
+          vLog(`Player ${player.name} joining existing game ${gameCode}`);
           const result = await service.joinGame(player);
           setGameState(result.game);
           setCurrentPlayer(result.player);
         } else {
           // Game doesn't exist - create it (this player becomes host)
-          console.log(`Player ${player.name} creating new game ${gameCode}`);
+          vLog(`Player ${player.name} creating new game ${gameCode}`);
           const newGame = await service.createGame({
             ...player,
             isHost: true
@@ -149,8 +150,8 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
 
         // Set up real-time listener
         const cleanup = service.onGameStateChange((updatedGameState) => {
-          console.log(`Real-time update for game ${gameCode}:`, updatedGameState);
-          console.log(`Players in updated game:`, Object.keys(updatedGameState.players));
+          vLog(`Real-time update for game ${gameCode}:`, updatedGameState);
+          vLog(`Players in updated game:`, Object.keys(updatedGameState.players));
           setGameState(updatedGameState);
           
           // Find current player – primary by ID, fallback by name (handles rare ID mismatch)
@@ -158,7 +159,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           if (!player) {
             player = Object.values(updatedGameState.players).find(p => p.name === playerName) || null;
             if (player) {
-              console.warn('Player ID mismatch – recovered player by name');
+              vLog('Player ID mismatch – recovered player by name');
               // Persist recovered ID to localStorage for future look-ups
               const storageKey = `wheel_playerId_${gameCode}_${playerName}`;
               if (typeof window !== 'undefined') {
@@ -197,7 +198,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   // Auto-generate puzzle when game starts and host is present
   useEffect(() => {
     if (gameState?.status === 'active' && currentPlayer?.isHost && !gameState.puzzle && gameService) {
-      console.log('Auto-generating puzzle for host');
+      vLog('Auto-generating puzzle for host');
       const puzzleData = generateMultiplayerPuzzle();
       
       gameService.updateGameState({
@@ -259,9 +260,9 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
   const playerCount = players.length;
   const humanPlayerCount = players.filter(p => p.isHuman).length;
   
-  console.log(`UI: Game ${gameCode} has ${playerCount} total players:`, players.map(p => p.name));
-  console.log(`UI: ${humanPlayerCount} humans, ${playerCount - humanPlayerCount} computers`);
-  console.log(`UI: Current player is:`, currentPlayer?.name);
+  vLog(`UI: Game ${gameCode} has ${playerCount} total players:`, players.map(p => p.name));
+  vLog(`UI: ${humanPlayerCount} humans, ${playerCount - humanPlayerCount} computers`);
+  vLog(`UI: Current player is:`, currentPlayer?.name);
 
   const hasPuzzle = Boolean(gameState.puzzle);
 

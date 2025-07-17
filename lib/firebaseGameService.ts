@@ -10,6 +10,7 @@ import {
   serverTimestamp 
 } from 'firebase/database';
 import { database } from './firebase';
+import { vLog } from './logger';
 
 export interface Player {
   id: string;
@@ -65,13 +66,13 @@ export class FirebaseGameService {
     this.playerId = playerId;
     this.gameRef = ref(database, `games/${gameCode}`);
     this.playerRef = ref(database, `games/${gameCode}/players/${playerId}`);
-    console.log(`Firebase: Game reference created for ${gameCode}, player ${playerId}`);
-    console.log(`Firebase: Game path: games/${gameCode}`);
+    vLog(`Firebase: Game reference created for ${gameCode}, player ${playerId}`);
+    vLog(`Firebase: Game path: games/${gameCode}`);
   }
 
   // Create a new game
   async createGame(hostPlayer: Player): Promise<GameState> {
-    console.log(`Firebase: Creating new game ${this.gameCode} with host ${hostPlayer.name}`);
+    vLog(`Firebase: Creating new game ${this.gameCode} with host ${hostPlayer.name}`);
     const gameState: GameState = {
       id: Date.now().toString(),
       code: this.gameCode,
@@ -128,7 +129,7 @@ export class FirebaseGameService {
 
   // Join an existing game
   async joinGame(player: Player): Promise<{ game: GameState; player: Player }> {
-    console.log(`Firebase: Attempting to join game ${this.gameCode} as ${player.name}`);
+    vLog(`Firebase: Attempting to join game ${this.gameCode} as ${player.name}`);
     const snapshot = await get(this.gameRef);
     
     if (!snapshot.exists()) {
@@ -137,18 +138,18 @@ export class FirebaseGameService {
     }
 
     const game = snapshot.val() as GameState;
-    console.log(`Firebase: Found game ${this.gameCode}, current players:`, Object.keys(game.players));
+    vLog(`Firebase: Found game ${this.gameCode}, current players:`, Object.keys(game.players));
     
     // Check if this player is already in the game (by ID)
     if (game.players[player.id]) {
-      console.log(`Firebase: Player ${player.name} already in game, returning existing player`);
+      vLog(`Firebase: Player ${player.name} already in game, returning existing player`);
       return { game, player: game.players[player.id] };
     }
     
     // Check if a player with the same name is already in the game
     const existingPlayerWithName = Object.values(game.players).find(p => p.name === player.name);
     if (existingPlayerWithName) {
-      console.log(`Firebase: Player with name ${player.name} already exists, returning existing player`);
+      vLog(`Firebase: Player with name ${player.name} already exists, returning existing player`);
       return { game, player: existingPlayerWithName };
     }
     
@@ -356,8 +357,8 @@ export class FirebaseGameService {
     const computersNeeded = Math.max(0, totalPlayersNeeded - humanPlayerCount);
     const computersToRemove = Math.max(0, computerPlayerCount - computersNeeded);
 
-    console.log(`Firebase: Player counts - ${humanPlayerCount} humans, ${computerPlayerCount} computers`);
-    console.log(`Firebase: Need ${computersNeeded} computers, removing ${computersToRemove} excess computers`);
+    vLog(`Firebase: Player counts - ${humanPlayerCount} humans, ${computerPlayerCount} computers`);
+    vLog(`Firebase: Need ${computersNeeded} computers, removing ${computersToRemove} excess computers`);
 
     // --- 1. Always REMOVE excess computer players -------------------------
     if (computersToRemove > 0) {
@@ -369,7 +370,7 @@ export class FirebaseGameService {
       }
 
       await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
-      console.log(`Firebase: Removed ${computersToRemove} excess computer players`);
+      vLog(`Firebase: Removed ${computersToRemove} excess computer players`);
     }
 
     // --- 2. Only ADD computer players while the lobby is still "waiting" --
@@ -399,10 +400,10 @@ export class FirebaseGameService {
 
       if (Object.keys(newComputerPlayers).length > 0) {
         await update(ref(database, `games/${this.gameCode}/players`), newComputerPlayers);
-        console.log(`Firebase: Added ${newComputersNeeded} computer players:`, Object.keys(newComputerPlayers));
+        vLog(`Firebase: Added ${newComputersNeeded} computer players:`, Object.keys(newComputerPlayers));
       }
     } else if (newComputersNeeded > 0) {
-      console.log(`Firebase: Game is ${game.status}; not adding computers mid-game.`);
+      vLog(`Firebase: Game is ${game.status}; not adding computers mid-game.`);
     }
   }
 
