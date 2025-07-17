@@ -990,13 +990,13 @@ function WheelOfFortune({
         
         {/* Pointer */}
         <div 
-          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 z-30"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 z-30"
           style={{
             width: 0,
             height: 0,
             borderLeft: '8px solid transparent',
             borderRight: '8px solid transparent',
-            borderTop: '16px solid #DC143C',
+            borderBottom: '16px solid #DC143C',
             filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))'
           }}
         />
@@ -1297,8 +1297,8 @@ function WheelOfFortune({
     // The wheel rotates clockwise, so we need to find which segment is at the top
     // Since segments start at -90 degrees (top), we need to calculate which segment
     // is now at the top after the rotation
-    // We need to invert the calculation because the wheel rotates clockwise
-    let index = currentWheelSegments.length - 1 - Math.floor(normalizedRotation / segmentAngle);
+    // The wheel rotates clockwise, so we need to find which segment is at the top
+    let index = Math.floor(normalizedRotation / segmentAngle);
     
     // Ensure index is within bounds
     if (index < 0) index += currentWheelSegments.length;
@@ -1361,7 +1361,7 @@ function WheelOfFortune({
       }));
 
       // ---- Multiplayer callbacks ----
-      const spinVal = typeof segment === 'object' ? (segment as any).type || 'PRIZE' : segment;
+      const spinVal = typeof segment === 'object' ? segment : segment;
       if (onSpin) {
         onSpin({ value: spinVal, rotation: newRotation });
       }

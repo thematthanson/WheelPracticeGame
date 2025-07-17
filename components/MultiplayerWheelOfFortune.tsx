@@ -22,18 +22,6 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
   isHost,
   service
 }) => {
-  // Derive deterministic order: all humans (host first) then computers — keeps human turns contiguous
-  const ordered: Player[] = [...Object.values(gameState.players)] as Player[];
-  ordered.sort((a, b) => {
-    // Humans before computers
-    if (a.isHuman && !b.isHuman) return -1;
-    if (!a.isHuman && b.isHuman) return 1;
-    // Within humans, host (current player) first
-    if (a.id === currentPlayer?.id) return -1;
-    if (b.id === currentPlayer?.id) return 1;
-    return a.name.localeCompare(b.name);
-  });
-
   const isActiveHuman = currentPlayer && currentPlayer.isHuman && currentPlayer.id === gameState.currentPlayer;
 
   // Debug info
@@ -104,7 +92,7 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
       )}
 
       <WheelOfFortune
-        initialPlayers={ordered.map((p) => ({ name: p.name, isHuman: p.isHuman }))}
+        initialPlayers={Object.values(gameState.players)}
         isActivePlayer={isActiveHuman}
         firebaseGameState={gameState}
         firebaseService={service}

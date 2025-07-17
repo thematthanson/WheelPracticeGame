@@ -262,14 +262,53 @@ export class FirebaseGameService {
 
   // Handle wheel spin
   async handleWheelSpin(spinData: any): Promise<void> {
-    // Persist spin result and immediately mark the wheel as stopped so all clients stay in sync
-    await update(this.gameRef, {
-      isSpinning: false,
-      wheelValue: spinData.value,
-      wheelRotation: spinData.rotation,
-      lastSpinResult: spinData.value,
-      lastUpdated: Date.now()
-    });
+    const snapshot = await get(this.gameRef);
+    if (snapshot.exists()) {
+      const game = snapshot.val() as GameState;
+      
+      // Handle special wheel segments
+      let nextPlayerId = game.currentPlayer;
+      let message = '';
+      
+      if (spinData.value === 'BANKRUPT' || (typeof spinData.value === 'object' && spinData.value && spinData.value.type === 'BANKRUPT')) {
+        // Reset current player's round money
+        if (game.players[game.currentPlayer]) {
+          await update(ref(database, `games/${this.gameCode}/players/${game.currentPlayer}`), {
+            roundMoney: 0,
+            lastSeen: Date.now()
+          });
+        }
+        
+        // Find next human player
+        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+        if (currentPlayerIndex !== -1) {
+          const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+          nextPlayerId = humanPlayers[nextIndex].id;
+        }
+        message = 'BANKRUPT! You lose your round money and any prizes from this round.';
+      } else if (spinData.value === 'LOSE A TURN' || (typeof spinData.value === 'object' && spinData.value && spinData.value.type === 'LOSE A TURN')) {
+        // Find next human player
+        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+        if (currentPlayerIndex !== -1) {
+          const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+          nextPlayerId = humanPlayers[nextIndex].id;
+        }
+        message = 'LOSE A TURN!';
+      }
+      
+      // Persist spin result and immediately mark the wheel as stopped so all clients stay in sync
+      await update(this.gameRef, {
+        isSpinning: false,
+        wheelValue: spinData.value,
+        wheelRotation: spinData.rotation,
+        lastSpinResult: spinData.value,
+        currentPlayer: nextPlayerId,
+        message: message || game.message,
+        lastUpdated: Date.now()
+      });
+    }
   }
 
   // Handle letter guess
@@ -280,20 +319,76 @@ export class FirebaseGameService {
       const usedLetters = [...(game.usedLetters || []), letter];
       const player = game.players[playerId];
       
+      // Check if letter is in the puzzle
+      const letterInPuzzle = game.puzzle?.text?.includes(letter.toUpperCase());
+      const letterCount = letterInPuzzle ? (game.puzzle.text.match(new RegExp(letter.toUpperCase(), 'g')) || []).length : 0;
+      
       // Add to game history
       const historyEntry: GameHistoryEntry = {
         type: 'letter',
         playerId,
         playerName: player?.name || 'Unknown',
         value: letter.toUpperCase(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        result: letterInPuzzle ? 'correct' : 'incorrect'
       };
       
       const gameHistory = [...(game.gameHistory || []), historyEntry];
       
+      // Update player score if letter is correct
+      if (letterInPuzzle && player && game.wheelValue) {
+        let earned = 0;
+              if (typeof game.wheelValue === 'number') {
+          earned = game.wheelValue * letterCount;
+        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'PRIZE') {
+          earned = 500 * letterCount; // Base value for consonants with prizes
+        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'WILD_CARD') {
+          earned = 500 * letterCount;
+        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'GIFT_TAG') {
+          earned = 500 * letterCount;
+        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'MILLION') {
+          earned = 500 * letterCount;
+        } else if (typeof game.wheelValue === 'string') {
+          // Handle string wheel values (like "BANKRUPT", "LOSE A TURN")
+          if (game.wheelValue === 'BANKRUPT' || game.wheelValue === 'LOSE A TURN') {
+            earned = 0; // No money for these segments
+          } else {
+            // Try to parse as number
+            const numValue = parseInt(game.wheelValue);
+            if (!isNaN(numValue)) {
+              earned = numValue * letterCount;
+            }
+          }
+        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.value) {
+          // Handle object wheel values with a numeric value property
+          earned = game.wheelValue.value * letterCount;
+        }
+        
+        if (earned > 0) {
+          await update(ref(database, `games/${this.gameCode}/players/${playerId}`), {
+            roundMoney: player.roundMoney + earned,
+            lastSeen: Date.now()
+          });
+        }
+      }
+      
+      // Handle turn advancement for incorrect guesses
+      let nextPlayerId = game.currentPlayer;
+      if (!letterInPuzzle) {
+        // Find next human player for turn advancement
+        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+        if (currentPlayerIndex !== -1) {
+          const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
+          nextPlayerId = humanPlayers[nextIndex].id;
+        }
+      }
+      
       await update(this.gameRef, {
         usedLetters,
         gameHistory,
+        currentPlayer: nextPlayerId,
+        wheelValue: letterInPuzzle ? game.wheelValue : null, // Reset wheel value for incorrect guesses
         lastUpdated: Date.now()
       });
     }
