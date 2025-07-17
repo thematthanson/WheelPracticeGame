@@ -1265,25 +1265,16 @@ function WheelOfFortune({
         
         // Determine next player (cycle through all players)
         const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-        nextPlayer = nextIdx;
         setGameState(prev => ({
           ...prev,
-          currentPlayer: nextPlayer,
-          message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
+          currentPlayer: nextIdx,
+          message: `Incorrect! ${prev.players[nextIdx].name}'s turn.`
         }));
         
-        // Start next player's turn if it's a computer
-        setTimeout(() => {
-          const nextPlayerObj = gameStateRef.current.players[nextPlayer as number];
-          if (nextPlayerObj && !nextPlayerObj.isHuman) {
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurn();
-          } else {
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-          }
-        }, 2000);
+        // Multiplayer: notify turn change
+        if (onEndTurn) {
+          onEndTurn(nextIdx as number);
+        }
       }
       
       // Clear computer solve attempt
@@ -1538,9 +1529,8 @@ function WheelOfFortune({
         message = `Sorry, no ${letter}'s. `;
         // Determine next player (cycle through all players)
         const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
-        nextPlayer = nextIdx;
-        message += `${prev.players[nextIdx].name}'s turn!`;
         nextPlayerOut = nextIdx;
+        message += `${prev.players[nextIdx].name}'s turn!`;
       }
       
       return {
@@ -1548,7 +1538,7 @@ function WheelOfFortune({
         usedLetters: newUsedLetters,
         puzzle: { ...prev.puzzle, revealed: newRevealed },
         players: newPlayers,
-        currentPlayer: nextPlayer,
+        currentPlayer: nextPlayerOut,
         message,
         wheelValue: 0,
         landedSegmentIndex: -1,
@@ -1621,12 +1611,16 @@ function WheelOfFortune({
       
       // Determine next player (cycle through all players)
       const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-      nextPlayer = nextIdx;
       setGameState(prev => ({
         ...prev,
-        currentPlayer: nextPlayer,
-        message: `Incorrect! ${prev.players[nextPlayer].name}'s turn.`
+        currentPlayer: nextIdx,
+        message: `Incorrect! ${prev.players[nextIdx].name}'s turn.`
       }));
+      
+      // Multiplayer: notify turn change
+      if (onEndTurn) {
+        onEndTurn(nextIdx as number);
+      }
     }
     
     setSolveAttempt('');
