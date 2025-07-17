@@ -51,6 +51,7 @@ interface Prize {
 }
 
 interface Player {
+  id?: string; // Added for multiplayer identification
   name: string;
   roundMoney: number;
   totalMoney: number;
@@ -477,13 +478,10 @@ function WheelOfFortune({
 
   // Helper function to get current player (handles both single-player and multiplayer)
   const getCurrentPlayer = () => {
-    // In multiplayer mode, currentPlayer is a string ID
-    // In single-player mode, currentPlayer is a numeric index
+    // Handle both multiplayer (string ID) and single-player (numeric index)
     if (typeof gameState.currentPlayer === 'string') {
-      // Multiplayer mode - currentPlayer is a string ID
-      return (gameState.players as any)[gameState.currentPlayer];
+      return gameState.players.find((p: any) => p.id === gameState.currentPlayer);
     } else {
-      // Single-player mode - currentPlayer is a numeric index
       return gameState.players[gameState.currentPlayer as number];
     }
   };
@@ -491,11 +489,9 @@ function WheelOfFortune({
   // Helper function to get current player index (for turn advancement)
   const getCurrentPlayerIndex = () => {
     if (typeof gameState.currentPlayer === 'string') {
-      // Multiplayer mode - find the index of the current player
-      return Object.keys(gameState.players).indexOf(gameState.currentPlayer);
+      return gameState.players.findIndex((p: any) => p.id === gameState.currentPlayer);
     } else {
-      // Single-player mode - currentPlayer is already the index
-      return gameState.currentPlayer;
+      return gameState.currentPlayer as number;
     }
   };
 
@@ -1916,7 +1912,8 @@ function WheelOfFortune({
           },
           usedLetters: new Set(firebaseGameState.usedLetters || []),
           currentPlayer: firebaseGameState.currentPlayer || 0,
-          players: Object.values(firebaseGameState.players || {}).map((p: any, index: number) => ({
+          players: Object.values(firebaseGameState.players || {}).map((p: any) => ({
+            id: p.id,
             name: p.name,
             roundMoney: p.roundMoney || 0,
             totalMoney: p.totalMoney || 0,
@@ -1995,14 +1992,17 @@ function WheelOfFortune({
   // Keep track of turn changes so we can emit end-turn events
   const prevPlayerRef = useRef<number | string>(0);
 
+  // Emit end-turn events only in single-player mode (firebaseGameState undefined)
   useEffect(() => {
+    if (firebaseGameState) return; // avoid duplicate turn events in multiplayer
+
     if (prevPlayerRef.current !== gameState.currentPlayer) {
       if (onEndTurn) {
         onEndTurn(getCurrentPlayerIndex());
       }
       prevPlayerRef.current = gameState.currentPlayer;
     }
-  }, [gameState.currentPlayer, onEndTurn]);
+  }, [gameState.currentPlayer, onEndTurn, firebaseGameState]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white p-2 sm:p-4">
