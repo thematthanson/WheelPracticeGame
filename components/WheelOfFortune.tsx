@@ -1320,7 +1320,13 @@ function WheelOfFortune({
   };
 
   const spinWheel = () => {
-    if (gameState.isSpinning || gameState.currentPlayer !== 0) return;
+    // In multiplayer mode, check if this player is the current player
+    const isCurrentPlayer = firebaseGameState ? 
+      (firebaseGameState.currentPlayer === gameState.currentPlayer) : 
+      (gameState.currentPlayer === 0);
+    
+    if (gameState.isSpinning || !isCurrentPlayer) return;
+    
     setGameState(prev => ({ ...prev, isSpinning: true, message: 'Spinning...', turnInProgress: true }));
     const baseRotations = 3 + Math.random() * 4;
     const segmentAngle = 360 / currentWheelSegments.length;
@@ -1334,6 +1340,7 @@ function WheelOfFortune({
       let newMessage = '';
       let newPlayers = [...gameState.players];
       let nextPlayer = gameState.currentPlayer;
+      
       if (typeof segment === 'number') {
         newMessage = `You spun $${segment}! Call a consonant.`;
       } else if (segment === 'BANKRUPT') {
@@ -1381,7 +1388,12 @@ function WheelOfFortune({
   };
 
   const callLetter = () => {
-    if (gameState.currentPlayer !== 0) return;
+    // In multiplayer mode, check if this player is the current player
+    const isCurrentPlayer = firebaseGameState ? 
+      (firebaseGameState.currentPlayer === gameState.currentPlayer) : 
+      (gameState.currentPlayer === 0);
+    
+    if (!isCurrentPlayer) return;
     
     const letter = inputLetter.toUpperCase().trim();
     if (!letter || gameState.usedLetters.has(letter) || !/[A-Z]/.test(letter)) {
@@ -1565,7 +1577,12 @@ function WheelOfFortune({
   };
 
   const solvePuzzle = () => {
-    if (gameState.currentPlayer !== 0) return;
+    // In multiplayer mode, check if this player is the current player
+    const isCurrentPlayer = firebaseGameState ? 
+      (firebaseGameState.currentPlayer === gameState.currentPlayer) : 
+      (gameState.currentPlayer === 0);
+    
+    if (!isCurrentPlayer) return;
     
     const attempt = solveAttempt.toUpperCase().trim();
     const correct = attempt === gameState.puzzle.text;
@@ -1605,7 +1622,7 @@ function WheelOfFortune({
     } else {
       // Log wrong solve attempt
       console.log('❌ Wrong solve attempt:', {
-        player: gameState.players[gameState.currentPlayer].name,
+        player: getCurrentPlayer()?.name || 'Unknown',
         attempt: attempt,
         correctAnswer: gameState.puzzle.text,
         puzzleCategory: gameState.puzzle.category,
