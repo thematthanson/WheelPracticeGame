@@ -1103,12 +1103,10 @@ function WheelOfFortune({
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
         
-        // Determine next player (cycle through all 3 players)
-        let nextPlayer = (getCurrentPlayerIndex() + 1) % gsGuess.players.length; // advance to next player
-        const calculatedNext = nextPlayer; // due to shadowed variable; sync to outer scope
-        // @ts-ignore
-        nextPlayer = calculatedNext;
-        message = `No ${letter}'s. ${gameState.players[calculatedNext].name}'s turn!`;
+        // Determine next player (cycle through all players)
+        const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+        nextPlayer = nextIdx;
+        message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
       }
       
       setGameState(prev => ({
@@ -1265,9 +1263,9 @@ function WheelOfFortune({
           timestamp: new Date().toISOString()
         });
         
-        // Determine next player (cycle through all 3 players)
-        let nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length; // advance to next player
-        
+        // Determine next player (cycle through all players)
+        const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+        nextPlayer = nextIdx;
         setGameState(prev => ({
           ...prev,
           currentPlayer: nextPlayer,
@@ -1421,6 +1419,9 @@ function WheelOfFortune({
     const letterInPuzzle = gameState.puzzle.text.includes(letter);
     const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
     
+    // We'll determine if the turn changes so we can notify multiplayer layer
+    let nextPlayerOut: number | string = gameState.currentPlayer;
+
     setGameState(prev => {
       const newUsedLetters = new Set([...prev.usedLetters, letter]);
       const newRevealed = new Set([...prev.puzzle.revealed, letter]);
@@ -1535,17 +1536,11 @@ function WheelOfFortune({
           newPlayers[0].roundMoney -= 250;
         }
         message = `Sorry, no ${letter}'s. `;
-        // Determine next player (cycle through all 3 players)
-        let nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length; // advance to next player
-        const calculatedNext = nextPlayer; // due to shadowed variable; sync to outer scope
-        // @ts-ignore
-        nextPlayer = calculatedNext;
-        message += `${gameState.players[calculatedNext].name}'s turn!`;
-        
-        // Deactivate Wild Card if used and letter was wrong
-        if (wildCardActive) {
-          setWildCardActive(false);
-        }
+        // Determine next player (cycle through all players)
+        const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
+        nextPlayer = nextIdx;
+        message += `${prev.players[nextIdx].name}'s turn!`;
+        nextPlayerOut = nextIdx;
       }
       
       return {
@@ -1567,6 +1562,11 @@ function WheelOfFortune({
     // Broadcast letter guess immediately
     if (onLetterGuess) {
       onLetterGuess(letter);
+    }
+
+    // ---- Multiplayer: emit endTurn if ownership changed ----
+    if (onEndTurn && nextPlayerOut !== gameState.currentPlayer) {
+      onEndTurn(nextPlayerOut as number);
     }
   };
 
@@ -1619,9 +1619,9 @@ function WheelOfFortune({
         timestamp: new Date().toISOString()
       });
       
-      // Determine next player (cycle through all 3 players)
-      let nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length; // advance to next player
-      
+      // Determine next player (cycle through all players)
+      const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+      nextPlayer = nextIdx;
       setGameState(prev => ({
         ...prev,
         currentPlayer: nextPlayer,
