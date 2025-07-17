@@ -1320,12 +1320,8 @@ function WheelOfFortune({
   };
 
   const spinWheel = () => {
-    // In multiplayer mode, check if this player is the current player
-    const isCurrentPlayer = firebaseGameState ? 
-      (firebaseGameState.currentPlayer === gameState.currentPlayer) : 
-      (gameState.currentPlayer === 0);
-    
-    if (gameState.isSpinning || !isCurrentPlayer) return;
+    // Multiplayer: rely on isActivePlayer prop (passed from parent) instead of comparing IDs
+    if (gameState.isSpinning || !isActivePlayer) return;
     
     setGameState(prev => ({ ...prev, isSpinning: true, message: 'Spinning...', turnInProgress: true }));
     const baseRotations = 3 + Math.random() * 4;
@@ -1388,12 +1384,8 @@ function WheelOfFortune({
   };
 
   const callLetter = () => {
-    // In multiplayer mode, check if this player is the current player
-    const isCurrentPlayer = firebaseGameState ? 
-      (firebaseGameState.currentPlayer === gameState.currentPlayer) : 
-      (gameState.currentPlayer === 0);
-    
-    if (!isCurrentPlayer) return;
+    // Multiplayer: rely on isActivePlayer prop to determine turn ownership
+    if (!isActivePlayer) return;
     
     const letter = inputLetter.toUpperCase().trim();
     if (!letter || gameState.usedLetters.has(letter) || !/[A-Z]/.test(letter)) {
@@ -1577,12 +1569,8 @@ function WheelOfFortune({
   };
 
   const solvePuzzle = () => {
-    // In multiplayer mode, check if this player is the current player
-    const isCurrentPlayer = firebaseGameState ? 
-      (firebaseGameState.currentPlayer === gameState.currentPlayer) : 
-      (gameState.currentPlayer === 0);
-    
-    if (!isCurrentPlayer) return;
+    // Multiplayer: rely on isActivePlayer prop
+    if (!isActivePlayer) return;
     
     const attempt = solveAttempt.toUpperCase().trim();
     const correct = attempt === gameState.puzzle.text;
