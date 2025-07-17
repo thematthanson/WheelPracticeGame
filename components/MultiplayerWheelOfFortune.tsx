@@ -23,9 +23,13 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
   isHost,
   service
 }) => {
-  // Derive deterministic order: host first (current), then remaining by name
+  // Derive deterministic order: all humans (host first) then computers — keeps human turns contiguous
   const ordered: Player[] = [...Object.values(gameState.players)] as Player[];
   ordered.sort((a, b) => {
+    // Humans before computers
+    if (a.isHuman && !b.isHuman) return -1;
+    if (!a.isHuman && b.isHuman) return 1;
+    // Within humans, host (current player) first
     if (a.id === currentPlayer?.id) return -1;
     if (b.id === currentPlayer?.id) return 1;
     return a.name.localeCompare(b.name);
@@ -34,10 +38,12 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
   // HOST VIEW – full controls
   if (isHost) {
     const passTurn = () => {
-      const playerIds = Object.keys(gameState.players);
-      const currentIdx = playerIds.indexOf(gameState.currentPlayer);
+      const humanIds = Object.values(gameState.players)
+        .filter((p): p is Player => (p as Player).isHuman)
+        .map(p => p.id);
+      const currentIdx = humanIds.indexOf(gameState.currentPlayer);
       if (currentIdx === -1) return;
-      const nextId = playerIds[(currentIdx + 1) % playerIds.length];
+      const nextId = humanIds[(currentIdx + 1) % humanIds.length];
       service.endTurn(nextId);
     };
 
@@ -59,10 +65,13 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
             }
           }}
           onEndTurn={(nextPlayerIndex) => {
-            const playerIds = Object.keys(gameState.players);
-            const currentIdx = playerIds.indexOf(gameState.currentPlayer);
-            if (currentIdx === -1) return;
-            const nextId = playerIds[(currentIdx + 1) % playerIds.length];
+            // Rotate among human players only – skip computers
+            const humanIds = Object.values(gameState.players)
+              .filter((p): p is Player => (p as Player).isHuman)
+              .map(p => p.id);
+            const currIdx = humanIds.indexOf(gameState.currentPlayer);
+            if (currIdx === -1) return;
+            const nextId = humanIds[(currIdx + 1) % humanIds.length];
             service.endTurn(nextId);
           }}
         />
