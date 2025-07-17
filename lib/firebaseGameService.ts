@@ -262,10 +262,12 @@ export class FirebaseGameService {
 
   // Handle wheel spin
   async handleWheelSpin(spinData: any): Promise<void> {
+    // Persist spin result and immediately mark the wheel as stopped so all clients stay in sync
     await update(this.gameRef, {
-      isSpinning: true,
+      isSpinning: false,
       wheelValue: spinData.value,
       wheelRotation: spinData.rotation,
+      lastSpinResult: spinData.value,
       lastUpdated: Date.now()
     });
   }
