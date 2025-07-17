@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import WheelOfFortune from './WheelOfFortune';
 import MultiplayerWheelOfFortune from './MultiplayerWheelOfFortune';
@@ -195,19 +195,22 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     };
   }, [gameCode, playerName]);
 
-  // Auto-generate puzzle when game starts and host is present
-  useEffect(() => {
-    if (gameState?.status === 'active' && currentPlayer?.isHost && !gameState.puzzle && gameService) {
-      vLog('Auto-generating puzzle for host');
-      const puzzleData = generateMultiplayerPuzzle();
-      
-      gameService.updateGameState({
-        puzzle: puzzleData,
-        message: 'Puzzle generated! Game ready to start.',
-        status: 'active'
-      });
-    }
-  }, [gameState?.status, currentPlayer?.isHost, gameState?.puzzle, gameService]);
+  /* ------------------------------------------------------------------
+   * Host “Begin Game” button – generates puzzle explicitly so guests
+   * leave the lobby only when the host decides to start.
+   * ------------------------------------------------------------------ */
+  const handleBeginGame = useCallback(async () => {
+    if (!gameService || !currentPlayer?.isHost || gameState?.puzzle) return;
+
+    const puzzleData = generateMultiplayerPuzzle();
+    vLog('Host generated puzzle and began game', puzzleData);
+
+    await gameService.updateGameState({
+      puzzle: puzzleData,
+      message: 'Game started! Good luck.',
+      status: 'active'
+    });
+  }, [gameService, currentPlayer?.isHost, gameState?.puzzle]);
 
   const handleBack = () => {
     if (gameService) {
@@ -319,6 +322,18 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
           </div>
         </div>
       </div>
+      )}
+
+      {/* Host Begin Game button */}
+      {currentPlayer?.isHost && !hasPuzzle && gameState.status === 'active' && (
+        <div className="text-center my-6">
+          <button
+            onClick={handleBeginGame}
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors duration-200 touch-manipulation"
+          >
+            Begin Game
+          </button>
+        </div>
       )}
 
       {/* Game Status */}
