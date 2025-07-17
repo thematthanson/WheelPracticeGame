@@ -1398,18 +1398,19 @@ function WheelOfFortune({
   };
 
   const getLandedSegmentIndex = (rotation: number) => {
-    // The pointer is at 12 o'clock (top center)
+    // The pointer is at 6 o'clock (bottom center) - positioned at top-0 with rotate-180
     // The wheel segments start at -90 degrees (top center) and go clockwise
-    // We need to find which segment is at the top after the wheel rotates
+    // We need to find which segment is at the bottom after the wheel rotates
     
     const normalizedRotation = ((rotation % 360) + 360) % 360;
     const segmentAngle = 360 / currentWheelSegments.length;
     
-    // The wheel rotates clockwise, so we need to find which segment is at the top
-    // Since segments start at -90 degrees (top), we need to calculate which segment
-    // is now at the top after the rotation
-    // The wheel rotates clockwise, so we need to find which segment is at the top
-    let index = Math.floor(normalizedRotation / segmentAngle);
+    // Since the pointer is at 6 o'clock (180 degrees from top), we need to offset by 180 degrees
+    // to find which segment is at the bottom after rotation
+    const bottomAngle = (normalizedRotation + 180) % 360;
+    
+    // Calculate which segment is at the bottom
+    let index = Math.floor(bottomAngle / segmentAngle);
     
     // Ensure index is within bounds
     if (index < 0) index += currentWheelSegments.length;
