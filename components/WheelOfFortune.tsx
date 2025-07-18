@@ -480,8 +480,15 @@ function WheelOfFortune({
   const getCurrentPlayer = () => {
     // Handle both multiplayer (string ID) and single-player (numeric index)
     if (typeof gameState.currentPlayer === 'string') {
-      return gameState.players.find((p: any) => p.id === gameState.currentPlayer);
+      // Firebase multiplayer: players is an object with player IDs as keys
+      if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
+        return gameState.players[gameState.currentPlayer];
+      } else {
+        // Local multiplayer: players is an array
+        return gameState.players.find((p: any) => p.id === gameState.currentPlayer);
+      }
     } else {
+      // Single player: players is an array with numeric indices
       return gameState.players[gameState.currentPlayer as number];
     }
   };
@@ -489,8 +496,16 @@ function WheelOfFortune({
   // Helper function to get current player index (for turn advancement)
   const getCurrentPlayerIndex = () => {
     if (typeof gameState.currentPlayer === 'string') {
-      return gameState.players.findIndex((p: any) => p.id === gameState.currentPlayer);
+      // Firebase multiplayer: find index in object keys
+      if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
+        const playerIds = Object.keys(gameState.players);
+        return playerIds.indexOf(gameState.currentPlayer);
+      } else {
+        // Local multiplayer: find index in array
+        return gameState.players.findIndex((p: any) => p.id === gameState.currentPlayer);
+      }
     } else {
+      // Single player: numeric index
       return gameState.currentPlayer as number;
     }
   };
@@ -498,9 +513,27 @@ function WheelOfFortune({
   // Enhanced player identification for multiplayer
   const getPlayerById = (playerId: string | number) => {
     if (typeof playerId === 'string') {
-      return gameState.players.find((p: any) => p.id === playerId);
+      // Firebase multiplayer: players is an object
+      if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
+        return gameState.players[playerId];
+      } else {
+        // Local multiplayer: players is an array
+        return gameState.players.find((p: any) => p.id === playerId);
+      }
     } else {
+      // Single player: numeric index
       return gameState.players[playerId];
+    }
+  };
+
+  // Get all players as array (works for both formats)
+  const getAllPlayers = (): Player[] => {
+    if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
+      // Firebase multiplayer: convert object to array
+      return Object.values(gameState.players) as Player[];
+    } else {
+      // Single player or local multiplayer: already an array
+      return gameState.players as Player[];
     }
   };
 
@@ -596,8 +629,9 @@ function WheelOfFortune({
           currentPlayer.roundMoney = 0;
         }
         // Determine next player (cycle through all 3 players)
-        let nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length; // advance to next player
-        const nextPlayerObj = gs.players[nextPlayer as number];
+        const allPlayers = getAllPlayers();
+        let nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length; // advance to next player
+        const nextPlayerObj = allPlayers[nextPlayer as number];
         newMessage += `${nextPlayerObj?.name}'s turn!`;
         
         setGameState(prev => ({
@@ -631,7 +665,8 @@ function WheelOfFortune({
         
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
-          const humanPlayers = gs.players.filter(p => p.isHuman && p.id);
+          const allPlayers = getAllPlayers();
+          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === gs.currentPlayer);
           if (currentHumanIndex !== -1) {
             const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
@@ -640,18 +675,19 @@ function WheelOfFortune({
               nextPlayer = nextPlayerObj.id;
             } else {
               // Fallback - advance to next player in order
-              nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length;
-              nextPlayerObj = gs.players[nextPlayer as number];
+              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
+              nextPlayerObj = allPlayers[nextPlayer as number];
             }
           } else {
             // Fallback - advance to next player in order
-            nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length;
-            nextPlayerObj = gs.players[nextPlayer as number];
+            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
+            nextPlayerObj = allPlayers[nextPlayer as number];
           }
         } else {
           // Single player mode - advance to next player
-          nextPlayer = (getCurrentPlayerIndex() + 1) % gs.players.length;
-          nextPlayerObj = gs.players[nextPlayer as number];
+          const allPlayers = getAllPlayers();
+          nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
+          nextPlayerObj = allPlayers[nextPlayer as number];
         }
         
         newMessage += `${nextPlayerObj?.name}'s turn!`;
@@ -1186,7 +1222,8 @@ function WheelOfFortune({
         // In multiplayer mode, advance to next human player only
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
-          const humanPlayers = gsGuess.players.filter(p => p.isHuman && p.id);
+          const allPlayers = getAllPlayers();
+          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === gsGuess.currentPlayer);
           if (currentHumanIndex !== -1) {
             const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
@@ -1196,21 +1233,22 @@ function WheelOfFortune({
               message = `No ${letter}'s. ${nextHumanPlayer.name}'s turn!`;
             } else {
               // Fallback - advance to next player in order
-              const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+              const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
               nextPlayer = nextIdx;
-              message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+              message = `No ${letter}'s. ${allPlayers[nextIdx].name}'s turn!`;
             }
           } else {
             // Fallback - advance to next player in order
-            const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+            const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
             nextPlayer = nextIdx;
-            message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+            message = `No ${letter}'s. ${allPlayers[nextIdx].name}'s turn!`;
           }
         } else {
           // Single player mode - advance to next player
-          const nextIdx = (getCurrentPlayerIndex() + 1) % gsGuess.players.length;
+          const allPlayers = getAllPlayers();
+          const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
           nextPlayer = nextIdx;
-          message = `No ${letter}'s. ${gsGuess.players[nextIdx].name}'s turn!`;
+          message = `No ${letter}'s. ${allPlayers[nextIdx].name}'s turn!`;
         }
       }
       
@@ -1395,7 +1433,8 @@ function WheelOfFortune({
         
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
-          const humanPlayers = gameState.players.filter(p => p.isHuman && p.id);
+          const allPlayers = getAllPlayers();
+          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
           if (currentHumanIndex !== -1) {
             const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
@@ -1405,21 +1444,22 @@ function WheelOfFortune({
               nextPlayerName = nextHumanPlayer.name;
             } else {
               // Fallback
-              const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+              const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
               nextPlayer = nextIdx;
-              nextPlayerName = gameState.players[nextIdx].name;
+              nextPlayerName = allPlayers[nextIdx].name;
             }
           } else {
             // Fallback
-            const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+            const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
             nextPlayer = nextIdx;
-            nextPlayerName = gameState.players[nextIdx].name;
+            nextPlayerName = allPlayers[nextIdx].name;
           }
         } else {
           // Single player mode - advance to next player
-          const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+          const allPlayers = getAllPlayers();
+          const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
           nextPlayer = nextIdx;
-          nextPlayerName = gameState.players[nextIdx].name;
+          nextPlayerName = allPlayers[nextIdx].name;
         }
         
         setGameState(prev => ({
@@ -1503,7 +1543,8 @@ function WheelOfFortune({
         // Determine next player based on game mode
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
-          const humanPlayers = gameState.players.filter(p => p.isHuman && p.id);
+          const allPlayers = getAllPlayers();
+          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
           if (currentHumanIndex !== -1) {
             const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
@@ -1532,7 +1573,8 @@ function WheelOfFortune({
         // Determine next player based on game mode
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
-          const humanPlayers = gameState.players.filter(p => p.isHuman && p.id);
+          const allPlayers = getAllPlayers();
+          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
           if (currentHumanIndex !== -1) {
             const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
@@ -1880,11 +1922,12 @@ function WheelOfFortune({
       });
       
       // Determine next player (cycle through all players)
-      const nextIdx = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+      const allPlayers = getAllPlayers();
+      const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
       setGameState(prev => ({
         ...prev,
         currentPlayer: nextIdx,
-        message: `Incorrect! ${prev.players[nextIdx].name}'s turn.`
+        message: `Incorrect! ${allPlayers[nextIdx].name}'s turn.`
       }));
       
       // Multiplayer: notify turn change
@@ -2382,7 +2425,7 @@ function WheelOfFortune({
         firebaseCurrentPlayer: firebaseGameState.currentPlayer,
         firebasePlayerCount: Object.keys(firebaseGameState.players).length,
         localCurrentPlayer: gameState.currentPlayer,
-        localPlayerCount: gameState.players.length,
+        localPlayerCount: getAllPlayers().length,
         timestamp: new Date().toISOString()
       });
     }
@@ -2392,7 +2435,8 @@ function WheelOfFortune({
   useEffect(() => {
     if (firebaseGameState) {
       const currentPlayer = getCurrentPlayer();
-      const humanPlayers = gameState.players.filter(p => p.isHuman);
+      const allPlayers = getAllPlayers();
+      const humanPlayers = allPlayers.filter(p => p.isHuman);
       
       console.log('🔍 MULTIPLAYER TURN VALIDATION:', {
         currentPlayerId: gameState.currentPlayer,
@@ -2419,7 +2463,7 @@ function WheelOfFortune({
       }
       
       // Validate player count consistency
-      if (Object.keys(firebaseGameState.players).length !== gameState.players.length) {
+      if (Object.keys(firebaseGameState.players).length !== allPlayers.length) {
         console.warn('⚠️ Player count mismatch between Firebase and local state');
       }
     }
