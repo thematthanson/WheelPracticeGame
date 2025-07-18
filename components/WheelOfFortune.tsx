@@ -386,6 +386,7 @@ function WheelOfFortune({
   firebaseGameState,
   firebaseService
 }: WheelOfFortuneProps = {}) {
+  const wheelRef = useRef<SVGSVGElement>(null);
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
     puzzle: { text: '', category: '', revealed: new Set<string>(), specialFormat: null },
@@ -986,11 +987,12 @@ function WheelOfFortune({
           
           {/* Individual wheel segments */}
           <svg 
+            ref={wheelRef}
             className="absolute inset-0 w-full h-full" 
             viewBox="0 0 200 200"
             style={{ 
               transform: `rotate(${gameState.wheelRotation}deg)`, 
-              transition: gameState.isSpinning ? 'transform 3s ease-out' : 'none',
+              transition: gameState.isSpinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
               transformOrigin: 'center'
             }}
           >
@@ -1526,7 +1528,16 @@ function WheelOfFortune({
     const totalRotation = (baseRotations * 360) + randomOffset;
     const newRotation = gameState.wheelRotation + totalRotation;
     setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
-    setTimeout(() => {
+    
+        // Store timeout ID for cleanup
+    const spinTimeout = setTimeout(() => {
+      // Force stop any ongoing animation
+      if (wheelRef.current) {
+        wheelRef.current.style.transition = 'none';
+        // Force a reflow to ensure the transition is removed
+        wheelRef.current.getBoundingClientRect();
+      }
+      
       const landedIndex = getLandedSegmentIndex(newRotation);
       const segment = currentWheelSegments[landedIndex];
       let newMessage = '';
@@ -1638,6 +1649,9 @@ function WheelOfFortune({
         onEndTurn(nextPlayer as number);
       }
     }, 1000);
+    
+    // Return cleanup function
+    return () => clearTimeout(spinTimeout);
   };
 
   const callLetter = () => {
@@ -2502,6 +2516,15 @@ function WheelOfFortune({
       });
     }
   }, [firebaseGameState, firebaseService]);
+
+  // Clean up wheel animation when spinning stops
+  useEffect(() => {
+    if (!gameState.isSpinning && wheelRef.current) {
+      // Ensure animation is completely stopped
+      wheelRef.current.style.transition = 'none';
+      wheelRef.current.getBoundingClientRect();
+    }
+  }, [gameState.isSpinning]);
 
   // Enhanced turn validation for multiplayer
   useEffect(() => {
