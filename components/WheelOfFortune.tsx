@@ -1091,6 +1091,17 @@ function WheelOfFortune({
               const endAngle = ((index + 1) * segmentAngle - 90) * (Math.PI / 180);
               const isLanded = gameState.landedSegmentIndex === index && !gameState.isSpinning;
               
+              // Debug logging for wheel segments
+              if (index === 0) {
+                console.log('🎯 WHEEL RENDER DEBUG:', {
+                  landedSegmentIndex: gameState.landedSegmentIndex,
+                  isSpinning: gameState.isSpinning,
+                  totalSegments: currentWheelSegments.length,
+                  wheelRotation: gameState.wheelRotation,
+                  timestamp: new Date().toISOString()
+                });
+              }
+              
               // Calculate path for segment
               const radius = 90; // Radius in viewBox coordinates
               const centerX = 100;
@@ -1806,7 +1817,11 @@ function WheelOfFortune({
         newMessage,
         nextPlayer,
         isSpinning: false,
-        turnInProgress: false
+        turnInProgress: false,
+        wheelValue: segment,
+        segmentType: typeof segment,
+        isObject: typeof segment === 'object',
+        hasValue: segment && typeof segment === 'object' && 'value' in segment
       });
       
       // ---- Multiplayer callbacks BEFORE state update ----
@@ -1866,19 +1881,26 @@ function WheelOfFortune({
       }
     }
     
-    if (isVowel && (gameState.players[0].roundMoney < 250 || gameState.players[0].roundMoney === 0) && !gameState.isFinalRound) {
+    // Check if current player has enough money for vowel
+    const currentPlayer = getCurrentPlayer();
+    if (isVowel && currentPlayer && (currentPlayer.roundMoney < 250 || currentPlayer.roundMoney === 0) && !gameState.isFinalRound) {
       setGameState(prev => ({ ...prev, message: 'Not enough money to buy a vowel! ($250 required)' }));
       return;
     }
 
     // Only allow consonant guess if wheelValue is set (not 0), unless using Wild Card or in final round
-    if (isConsonant && !hasWheelValue() && !wildCardActive && !gameState.isFinalRound) {
+    const wheelValueCheck = hasWheelValue();
+    if (isConsonant && !wheelValueCheck && !wildCardActive && !gameState.isFinalRound) {
       console.log('❌ Cannot call consonant - no wheel value:', {
         wheelValue: gameState.wheelValue,
-        hasWheelValue: hasWheelValue(),
+        hasWheelValue: wheelValueCheck,
         isSpinning: gameState.isSpinning,
         turnInProgress: gameState.turnInProgress,
-        isActivePlayer
+        isActivePlayer,
+        wheelValueType: typeof gameState.wheelValue,
+        isNumber: typeof gameState.wheelValue === 'number',
+        isObject: typeof gameState.wheelValue === 'object',
+        hasValueProperty: gameState.wheelValue && typeof gameState.wheelValue === 'object' && 'value' in gameState.wheelValue
       });
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
