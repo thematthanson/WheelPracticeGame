@@ -556,6 +556,29 @@ export class FirebaseGameService {
         to: nextPlayerId
       });
       
+      // Update player money if correct guess
+      if (letterInPuzzle && game.wheelValue) {
+        const currentPlayer = game.players[game.currentPlayer];
+        if (currentPlayer) {
+          const wheelValue = typeof game.wheelValue === 'number' ? game.wheelValue : 
+                           (game.wheelValue && typeof game.wheelValue === 'object' && 'value' in game.wheelValue) ? game.wheelValue.value : 0;
+          
+          const newRoundMoney = currentPlayer.roundMoney + wheelValue;
+          console.log('💰 Updating player money for correct letter:', {
+            playerName: currentPlayer.name,
+            oldMoney: currentPlayer.roundMoney,
+            wheelValue,
+            newMoney: newRoundMoney
+          });
+          
+          // Update player money in Firebase
+          await update(ref(database, `games/${this.gameCode}/players/${game.currentPlayer}`), {
+            roundMoney: newRoundMoney,
+            lastSeen: Date.now()
+          });
+        }
+      }
+      
       await update(this.gameRef, {
         usedLetters,
         gameHistory,

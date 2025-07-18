@@ -2740,9 +2740,17 @@ function WheelOfFortune({
       return false;
     }
     
-    // Force initialize revealed if it doesn't exist - but don't trigger state update during render
+    // Force initialize revealed if it doesn't exist
     if (!gameState.puzzle.revealed) {
       console.log('🔍 isCharacterRevealed: No revealed property found for char:', char);
+      // Force initialize the revealed property to prevent future failures
+      setGameState(prev => ({
+        ...prev,
+        puzzle: {
+          ...prev.puzzle,
+          revealed: new Set()
+        }
+      }));
       return false;
     }
     
@@ -3170,23 +3178,58 @@ function WheelOfFortune({
   useEffect(() => {
     if (firebaseGameState && firebaseService) {
       // Update local state to match Firebase state
-      setGameState(prev => ({
-        ...prev,
-        currentPlayer: firebaseGameState.currentPlayer,
-        players: firebaseGameState.players,
-        puzzle: firebaseGameState.puzzle,
-        usedLetters: new Set(firebaseGameState.usedLetters || []),
-        wheelValue: firebaseGameState.wheelValue,
-        isSpinning: firebaseGameState.isSpinning,
-        wheelRotation: firebaseGameState.wheelRotation,
-        turnInProgress: firebaseGameState.turnInProgress,
-        lastSpinResult: firebaseGameState.lastSpinResult,
-        landedSegmentIndex: firebaseGameState.landedSegmentIndex,
-        message: firebaseGameState.message,
-        isFinalRound: firebaseGameState.isFinalRound,
-        finalRoundLettersRemaining: firebaseGameState.finalRoundLettersRemaining,
-        finalRoundVowelsRemaining: firebaseGameState.finalRoundVowelsRemaining
-      }));
+      setGameState(prev => {
+        // Properly convert Firebase puzzle data to local format
+        const firebasePuzzle = firebaseGameState.puzzle;
+        let localPuzzle = firebasePuzzle;
+        
+        if (firebasePuzzle) {
+          // Convert revealed from array to Set if needed
+          let revealedSet: Set<string>;
+          if (firebasePuzzle.revealed) {
+            if (Array.isArray(firebasePuzzle.revealed)) {
+              revealedSet = new Set(firebasePuzzle.revealed);
+            } else if (firebasePuzzle.revealed instanceof Set) {
+              revealedSet = firebasePuzzle.revealed;
+            } else {
+              // Handle case where revealed might be an object or other format
+              revealedSet = new Set();
+            }
+          } else {
+            // Initialize empty Set if no revealed property
+            revealedSet = new Set();
+          }
+          
+          localPuzzle = {
+            ...firebasePuzzle,
+            revealed: revealedSet
+          };
+          
+          console.log('🔄 Firebase sync puzzle revealed:', {
+            firebaseRevealed: firebasePuzzle.revealed,
+            localRevealed: Array.from(revealedSet),
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        return {
+          ...prev,
+          currentPlayer: firebaseGameState.currentPlayer,
+          players: firebaseGameState.players,
+          puzzle: localPuzzle,
+          usedLetters: new Set(firebaseGameState.usedLetters || []),
+          wheelValue: firebaseGameState.wheelValue,
+          isSpinning: firebaseGameState.isSpinning,
+          wheelRotation: firebaseGameState.wheelRotation,
+          turnInProgress: firebaseGameState.turnInProgress,
+          lastSpinResult: firebaseGameState.lastSpinResult,
+          landedSegmentIndex: firebaseGameState.landedSegmentIndex,
+          message: firebaseGameState.message,
+          isFinalRound: firebaseGameState.isFinalRound,
+          finalRoundLettersRemaining: firebaseGameState.finalRoundLettersRemaining,
+          finalRoundVowelsRemaining: firebaseGameState.finalRoundVowelsRemaining
+        };
+      });
       
       console.log('🔄 SYNCHRONIZING WITH FIREBASE:', {
         firebaseCurrentPlayer: firebaseGameState.currentPlayer,
