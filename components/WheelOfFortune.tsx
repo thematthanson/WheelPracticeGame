@@ -1651,7 +1651,7 @@ function WheelOfFortune({
     }
     
     const letter = inputLetter.toUpperCase().trim();
-    if (!letter || gameState.usedLetters.has(letter) || !/[A-Z]/.test(letter)) {
+    if (!letter || isLetterUsed(letter) || !/[A-Z]/.test(letter)) {
       setGameState(prev => ({ ...prev, message: 'Invalid or already used letter!' }));
       return;
     }
@@ -1677,7 +1677,7 @@ function WheelOfFortune({
     }
 
     // Only allow consonant guess if wheelValue is set (not 0), unless using Wild Card or in final round
-    if (isConsonant && !gameState.wheelValue && !wildCardActive && !gameState.isFinalRound) {
+    if (isConsonant && !hasWheelValue() && !wildCardActive && !gameState.isFinalRound) {
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
     }
@@ -1687,6 +1687,9 @@ function WheelOfFortune({
       currentPlayer: gameState.currentPlayer,
       currentPlayerName: getCurrentPlayer()?.name,
       isMultiplayer: !!firebaseGameState,
+      wheelValue: gameState.wheelValue,
+      hasWheelValue: hasWheelValue(),
+      isActivePlayer,
       timestamp: new Date().toISOString()
     });
     
@@ -1697,8 +1700,17 @@ function WheelOfFortune({
     let nextPlayerOut: number | string = gameState.currentPlayer;
 
     setGameState(prev => {
-      const newUsedLetters = new Set([...prev.usedLetters, letter]);
-      const newRevealed = new Set([...prev.puzzle.revealed, letter]);
+      // Handle usedLetters - could be Set or Array
+      const currentUsedLetters = prev.usedLetters instanceof Set 
+        ? Array.from(prev.usedLetters) 
+        : (Array.isArray(prev.usedLetters) ? prev.usedLetters : []);
+      const newUsedLetters = new Set([...currentUsedLetters, letter]);
+      
+      // Handle revealed - could be Set or Array
+      const currentRevealed = prev.puzzle.revealed instanceof Set 
+        ? Array.from(prev.puzzle.revealed) 
+        : (Array.isArray(prev.puzzle.revealed) ? prev.puzzle.revealed : []);
+      const newRevealed = new Set([...currentRevealed, letter]);
       
       let newPlayers = [...prev.players];
       let message = '';
@@ -2129,6 +2141,37 @@ function WheelOfFortune({
       return gameState.puzzle.revealed.has(char);
     } else if (Array.isArray(gameState.puzzle.revealed)) {
       return (gameState.puzzle.revealed as string[]).includes(char);
+    }
+    
+    return false;
+  };
+
+  // Helper function to safely check if a letter is used (works with both Set and Array)
+  const isLetterUsed = (letter: string): boolean => {
+    if (!gameState.usedLetters) return false;
+    
+    // Handle both Set and Array formats
+    if (gameState.usedLetters instanceof Set) {
+      return gameState.usedLetters.has(letter);
+    } else if (Array.isArray(gameState.usedLetters)) {
+      return (gameState.usedLetters as string[]).includes(letter);
+    }
+    
+    return false;
+  };
+
+  // Helper function to safely check if wheel has a valid value
+  const hasWheelValue = (): boolean => {
+    if (!gameState.wheelValue) return false;
+    
+    // Check if wheelValue is a number greater than 0
+    if (typeof gameState.wheelValue === 'number') {
+      return gameState.wheelValue > 0;
+    }
+    
+    // Check if wheelValue is an object with a value property
+    if (typeof gameState.wheelValue === 'object' && gameState.wheelValue && 'value' in gameState.wheelValue) {
+      return (gameState.wheelValue as any).value > 0;
     }
     
     return false;
