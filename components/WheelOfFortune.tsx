@@ -568,7 +568,13 @@ function WheelOfFortune({
   // Computer player logic
   const computerTurn = useCallback(() => {
     const currentPlayer = getCurrentPlayer();
-    if (!currentPlayer || currentPlayer.isHuman) return;
+    if (!currentPlayer || currentPlayer.isHuman) {
+      console.log('🤖 Computer turn skipped - invalid player:', currentPlayer);
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
     
     // Check if computer turns are allowed in this multiplayer scenario
     if (firebaseGameState) {
@@ -606,28 +612,49 @@ function WheelOfFortune({
       return;
     }
     
+    // Ensure we have valid players before proceeding
+    const allPlayers = getAllPlayers();
+    if (allPlayers.length === 0) {
+      console.error('❌ No players available for computer turn');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
+    
     console.log(`🤖 Starting computer turn for: ${currentPlayer.name}`);
     
     // Computer spins the wheel
     setGameState(prev => ({ ...prev, isSpinning: true, message: `${getCurrentPlayer()?.name} is spinning...`, turnInProgress: true }));
     
-    // Generate realistic spin
-    const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
-    const segmentAngle = 360 / currentWheelSegments.length;
-    const randomSegmentIndex = Math.floor(Math.random() * currentWheelSegments.length);
-    const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
-    const totalRotation = (baseRotations * 360) + finalAngle;
-    
-    const newRotation = gameState.wheelRotation + totalRotation;
-    setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
-    
-    setTimeout(() => {
+    // Add error handling for computer turn
+    try {
+      // Generate realistic spin
+      const baseRotations = 2 + Math.random() * 3; // 2-5 full rotations for computer
+      const segmentAngle = 360 / currentWheelSegments.length;
+      const randomSegmentIndex = Math.floor(Math.random() * currentWheelSegments.length);
+      const finalAngle = randomSegmentIndex * segmentAngle + (Math.random() * segmentAngle);
+      const totalRotation = (baseRotations * 360) + finalAngle;
+      
+      const newRotation = gameState.wheelRotation + totalRotation;
+      setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
+      
+      setTimeout(() => {
       const gs = gameStateRef.current;
       const landedIndex = getLandedSegmentIndex(newRotation);
       const segment = currentWheelSegments[landedIndex];
       let newMessage = '';
-      let newPlayers = [...gs.players];
+      let newPlayers = [...getAllPlayers()];
       let nextPlayer = gs.currentPlayer; // Default to same player
+      
+      // Ensure we have valid players before proceeding
+      if (newPlayers.length === 0) {
+        console.error('❌ No players available for computer wheel spin result');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
       
       if (typeof segment === 'number') {
         const currentPlayer = getCurrentPlayer();
@@ -657,6 +684,13 @@ function WheelOfFortune({
         }
         // Determine next player (cycle through all 3 players)
         const allPlayers = getAllPlayers();
+        if (allPlayers.length === 0) {
+          console.error('❌ No players available for computer BANKRUPT handling');
+          setComputerTurnInProgress(false);
+          computerTurnRef.current = false;
+          computerTurnScheduledRef.current = false;
+          return;
+        }
         let nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length; // advance to next player
         const nextPlayerObj = allPlayers[nextPlayer as number];
         newMessage += `${nextPlayerObj?.name}'s turn!`;
@@ -693,6 +727,13 @@ function WheelOfFortune({
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
           const allPlayers = getAllPlayers();
+          if (allPlayers.length === 0) {
+            console.error('❌ No players available for computer LOSE A TURN handling');
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
+            return;
+          }
           const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === gs.currentPlayer);
           if (currentHumanIndex !== -1) {
@@ -713,6 +754,13 @@ function WheelOfFortune({
         } else {
           // Single player mode - advance to next player
           const allPlayers = getAllPlayers();
+          if (allPlayers.length === 0) {
+            console.error('❌ No players available for computer LOSE A TURN handling');
+            setComputerTurnInProgress(false);
+            computerTurnRef.current = false;
+            computerTurnScheduledRef.current = false;
+            return;
+          }
           nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
           nextPlayerObj = allPlayers[nextPlayer as number];
         }
@@ -771,6 +819,12 @@ function WheelOfFortune({
         }, 1000);
       }
     }, 1000);
+    } catch (error) {
+      console.error('❌ Error in computer turn:', error);
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+    }
   }, [gameState, currentWheelSegments, gameStateRef]);
 
   // Trigger computer turn when it's their turn - SIMPLIFIED LOGIC
@@ -1592,12 +1646,20 @@ function WheelOfFortune({
       let newPlayers = [...getAllPlayers()];
       let nextPlayer = gameState.currentPlayer;
       
+      // Ensure we have valid players before proceeding
+      if (newPlayers.length === 0) {
+        console.error('❌ No players available for wheel spin result');
+        return;
+      }
+      
       if (typeof segment === 'number') {
         newMessage = `You spun $${segment}! Call a consonant.`;
       } else if (segment === 'BANKRUPT') {
         newMessage = 'BANKRUPT! You lose your round money and any prizes from this round. ';
-        newPlayers[0].roundMoney = 0;
-        newPlayers[0].prizes = newPlayers[0].prizes.filter(p => p.round !== gameState.currentRound);
+        if (newPlayers[0]) {
+          newPlayers[0].roundMoney = 0;
+          newPlayers[0].prizes = newPlayers[0].prizes.filter(p => p.round !== gameState.currentRound);
+        }
         
         // Determine next player based on game mode
         if (firebaseGameState) {
