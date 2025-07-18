@@ -495,6 +495,25 @@ function WheelOfFortune({
     }
   };
 
+  // Enhanced player identification for multiplayer
+  const getPlayerById = (playerId: string | number) => {
+    if (typeof playerId === 'string') {
+      return gameState.players.find((p: any) => p.id === playerId);
+    } else {
+      return gameState.players[playerId];
+    }
+  };
+
+  // Validate current player is valid
+  const validateCurrentPlayer = () => {
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer) {
+      console.error('❌ Invalid current player:', gameState.currentPlayer);
+      return false;
+    }
+    return true;
+  };
+
   // Computer player logic
   const computerTurn = useCallback(() => {
     const currentPlayer = getCurrentPlayer();
@@ -1440,13 +1459,20 @@ function WheelOfFortune({
     const bottomAngle = (normalizedRotation + 180) % 360;
     
     // Calculate which segment is at the bottom
-    let index = Math.floor(bottomAngle / segmentAngle);
+    const segmentIndex = Math.floor(bottomAngle / segmentAngle) % currentWheelSegments.length;
     
-    // Ensure index is within bounds
-    if (index < 0) index += currentWheelSegments.length;
-    if (index >= currentWheelSegments.length) index -= currentWheelSegments.length;
+    console.log('🎯 WHEEL LANDING CALCULATION:', {
+      rotation,
+      normalizedRotation,
+      bottomAngle,
+      segmentAngle,
+      segmentIndex,
+      landedSegment: currentWheelSegments[segmentIndex],
+      totalSegments: currentWheelSegments.length,
+      timestamp: new Date().toISOString()
+    });
     
-    return index;
+    return segmentIndex;
   };
 
   const spinWheel = () => {
@@ -1573,15 +1599,21 @@ function WheelOfFortune({
   };
 
   const callLetter = () => {
-    // Multiplayer: rely on isActivePlayer prop to determine turn ownership
+    // Multiplayer: rely on isActivePlayer prop
     if (!isActivePlayer) return;
+    
+    // Validate current player before proceeding
+    if (!validateCurrentPlayer()) {
+      console.error('❌ Cannot call letter - invalid current player');
+      return;
+    }
     
     const letter = inputLetter.toUpperCase().trim();
     if (!letter || gameState.usedLetters.has(letter) || !/[A-Z]/.test(letter)) {
       setGameState(prev => ({ ...prev, message: 'Invalid or already used letter!' }));
       return;
     }
-
+    
     const isVowel = 'AEIOU'.includes(letter);
     const isConsonant = 'BCDFGHJKLMNPQRSTVWXYZ'.includes(letter);
     
@@ -1607,7 +1639,15 @@ function WheelOfFortune({
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
     }
-
+    
+    console.log('🔤 LETTER GUESS:', {
+      letter,
+      currentPlayer: gameState.currentPlayer,
+      currentPlayerName: getCurrentPlayer()?.name,
+      isMultiplayer: !!firebaseGameState,
+      timestamp: new Date().toISOString()
+    });
+    
     const letterInPuzzle = gameState.puzzle.text.includes(letter);
     const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
     
@@ -1706,6 +1746,7 @@ function WheelOfFortune({
             // Final round consonant
             message = `Yes! ${letterCount} ${letter}'s. Consonant revealed!`;
           }
+          
           // After a correct consonant, require spin again (reset wheelValue)
           return {
             ...prev,
@@ -1728,10 +1769,38 @@ function WheelOfFortune({
           newPlayers[0].roundMoney -= 250;
         }
         message = `Sorry, no ${letter}'s. `;
-        // Determine next player (cycle through all players)
-        const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
-        nextPlayerOut = nextIdx;
-        message += `${prev.players[nextIdx].name}'s turn!`;
+        
+        // Determine next player based on game mode
+        if (firebaseGameState) {
+          // Multiplayer mode - advance to next human player
+          const humanPlayers = prev.players.filter(p => p.isHuman && p.id);
+          const currentHumanIndex = humanPlayers.findIndex(p => p.id === prev.currentPlayer);
+          if (currentHumanIndex !== -1) {
+            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+            const nextHumanPlayer = humanPlayers[nextHumanIndex];
+            if (nextHumanPlayer && nextHumanPlayer.id) {
+              nextPlayer = nextHumanPlayer.id;
+              message += `${nextHumanPlayer.name}'s turn!`;
+            } else {
+              // Fallback
+              const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
+              nextPlayer = nextIdx;
+              message += `${prev.players[nextIdx].name}'s turn!`;
+            }
+          } else {
+            // Fallback
+            const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
+            nextPlayer = nextIdx;
+            message += `${prev.players[nextIdx].name}'s turn!`;
+          }
+        } else {
+          // Single player mode - advance to next player
+          const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
+          nextPlayer = nextIdx;
+          message += `${prev.players[nextIdx].name}'s turn!`;
+        }
+        
+        nextPlayerOut = nextPlayer;
       }
       
       return {
@@ -2287,6 +2356,38 @@ function WheelOfFortune({
     checkForStuckTurn();
   }, [gameState.turnInProgress, gameState.isSpinning]);
 
+  // Synchronize with Firebase game state when available
+  useEffect(() => {
+    if (firebaseGameState && firebaseService) {
+      // Update local state to match Firebase state
+      setGameState(prev => ({
+        ...prev,
+        currentPlayer: firebaseGameState.currentPlayer,
+        players: firebaseGameState.players,
+        puzzle: firebaseGameState.puzzle,
+        usedLetters: new Set(firebaseGameState.usedLetters || []),
+        wheelValue: firebaseGameState.wheelValue,
+        isSpinning: firebaseGameState.isSpinning,
+        wheelRotation: firebaseGameState.wheelRotation,
+        turnInProgress: firebaseGameState.turnInProgress,
+        lastSpinResult: firebaseGameState.lastSpinResult,
+        landedSegmentIndex: firebaseGameState.landedSegmentIndex,
+        message: firebaseGameState.message,
+        isFinalRound: firebaseGameState.isFinalRound,
+        finalRoundLettersRemaining: firebaseGameState.finalRoundLettersRemaining,
+        finalRoundVowelsRemaining: firebaseGameState.finalRoundVowelsRemaining
+      }));
+      
+      console.log('🔄 SYNCHRONIZING WITH FIREBASE:', {
+        firebaseCurrentPlayer: firebaseGameState.currentPlayer,
+        firebasePlayerCount: Object.keys(firebaseGameState.players).length,
+        localCurrentPlayer: gameState.currentPlayer,
+        localPlayerCount: gameState.players.length,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [firebaseGameState, firebaseService]);
+
   // Enhanced turn validation for multiplayer
   useEffect(() => {
     if (firebaseGameState) {
@@ -2315,6 +2416,11 @@ function WheelOfFortune({
         if (!playerInHumanList) {
           console.warn('⚠️ Current human player not found in human players list');
         }
+      }
+      
+      // Validate player count consistency
+      if (Object.keys(firebaseGameState.players).length !== gameState.players.length) {
+        console.warn('⚠️ Player count mismatch between Firebase and local state');
       }
     }
   }, [gameState.currentPlayer, firebaseGameState, isActivePlayer]);
