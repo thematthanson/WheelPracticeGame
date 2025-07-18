@@ -558,13 +558,22 @@ function WheelOfFortune({
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
-    // Don't allow computer turns in multiplayer mode
+    // Check if computer turns are allowed in this multiplayer scenario
     if (firebaseGameState) {
-      console.log('❌ Computer turns not allowed in multiplayer mode');
-      setComputerTurnInProgress(false);
-      computerTurnRef.current = false;
-      computerTurnScheduledRef.current = false;
-      return;
+      const allPlayers = getAllPlayers();
+      const humanPlayers = allPlayers.filter(p => p.isHuman);
+      const computerPlayers = allPlayers.filter(p => !p.isHuman);
+      
+      // Only allow computer turns if we have exactly 2 humans and 1 computer
+      if (humanPlayers.length !== 2 || computerPlayers.length !== 1) {
+        console.log('❌ Computer turns not allowed in this multiplayer configuration');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
+      
+      console.log('🤖 Computer turns allowed in 2-human + 1-computer multiplayer mode');
     }
     
     // Computers cannot play in the final round - only human can reach final round
@@ -1128,13 +1137,22 @@ function WheelOfFortune({
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
-    // Don't allow computer actions in multiplayer mode
+    // Check if computer actions are allowed in this multiplayer scenario
     if (firebaseGameState) {
-      console.log('❌ Computer actions not allowed in multiplayer mode');
-      setComputerTurnInProgress(false);
-      computerTurnRef.current = false;
-      computerTurnScheduledRef.current = false;
-      return;
+      const allPlayers = getAllPlayers();
+      const humanPlayers = allPlayers.filter(p => p.isHuman);
+      const computerPlayers = allPlayers.filter(p => !p.isHuman);
+      
+      // Only allow computer actions if we have exactly 2 humans and 1 computer
+      if (humanPlayers.length !== 2 || computerPlayers.length !== 1) {
+        console.log('❌ Computer actions not allowed in this multiplayer configuration');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
+      
+      console.log('🤖 Computer actions allowed in 2-human + 1-computer multiplayer mode');
     }
     
     // Computers cannot play in the final round - only human can reach final round

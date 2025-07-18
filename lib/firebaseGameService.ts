@@ -748,16 +748,58 @@ export class FirebaseGameService {
     const humanPlayerCount = humanPlayers.length;
     const computerPlayerCount = computerPlayers.length;
     
-    // For multiplayer, we only want human players - no computers
-    if (humanPlayerCount > 1) {
-      // Remove all computer players in multiplayer mode
+    // For multiplayer with 3+ humans, we only want human players - no computers
+    if (humanPlayerCount >= 3) {
+      // Remove all computer players when we have 3+ humans
       if (computerPlayerCount > 0) {
         const deleteUpdates: { [key: string]: any } = {};
         for (const computer of computerPlayers) {
           deleteUpdates[computer.id] = null;
         }
         await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
-        vLog(`Firebase: Removed ${computerPlayerCount} computer players for multiplayer mode`);
+        vLog(`Firebase: Removed ${computerPlayerCount} computer players for 3+ human multiplayer mode`);
+      }
+      return;
+    }
+    
+    // For 2 humans, allow 1 computer player to fill the 3rd slot
+    if (humanPlayerCount === 2) {
+      const computersNeeded = 1;
+      const computersToRemove = Math.max(0, computerPlayerCount - computersNeeded);
+      
+      // Remove excess computer players (keep only 1)
+      if (computersToRemove > 0) {
+        const computersToDelete = computerPlayers.slice(0, computersToRemove);
+        const deleteUpdates: { [key: string]: any } = {};
+        for (const computer of computersToDelete) {
+          deleteUpdates[computer.id] = null;
+        }
+        await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
+        vLog(`Firebase: Removed ${computersToRemove} excess computer players, keeping 1 for 2-human game`);
+      }
+      
+      // Add 1 computer player if none exist
+      if (computerPlayerCount === 0) {
+        const computerId = `computer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const computerName = 'Computer Player';
+        
+        const computerPlayer: Player = {
+          id: computerId,
+          name: computerName,
+          isHost: false,
+          isHuman: false,
+          roundMoney: 0,
+          totalMoney: 0,
+          prizes: [],
+          specialCards: [],
+          freeSpins: 0,
+          lastSeen: Date.now()
+        };
+        
+        await update(ref(database, `games/${this.gameCode}/players`), {
+          [computerId]: computerPlayer
+        });
+        vLog(`Firebase: Added computer player for 2-human game`);
       }
       return;
     }
@@ -1019,8 +1061,39 @@ export class FirebaseGameService {
     const game = snapshot.val() as GameState;
     const hostPlayer = Object.values(game.players).find(p => p.isHost);
     
+    // Check if we need to add a computer player
+    const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+    const computerPlayers = Object.values(game.players).filter(p => !p.isHuman);
+    
+    // If we have exactly 2 human players and no computer players, add one computer player
+    if (humanPlayers.length === 2 && computerPlayers.length === 0) {
+      const computerId = `computer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const computerName = 'Computer Player';
+      
+      const computerPlayer: Player = {
+        id: computerId,
+        name: computerName,
+        isHost: false,
+        isHuman: false,
+        roundMoney: 0,
+        totalMoney: 0,
+        prizes: [],
+        specialCards: [],
+        freeSpins: 0,
+        lastSeen: Date.now()
+      };
+      
+      // Add the computer player to the game
+      await update(ref(database, `games/${this.gameCode}/players`), {
+        [computerId]: computerPlayer
+      });
+      
+      console.log(`🤖 Added computer player "${computerName}" to fill the 3rd slot`);
+    }
+    
     if (hostPlayer) {
       await update(this.gameRef, {
+        status: 'active',
         currentPlayer: hostPlayer.id,
         message: 'Game started! Host goes first!',
         lastUpdated: Date.now()
