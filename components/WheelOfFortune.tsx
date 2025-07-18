@@ -1361,13 +1361,20 @@ function WheelOfFortune({
         // Update statistics for computer's correct guess
         updateStats(letter, true);
         
-        if (typeof wheelValue === 'number') {
-          const earned = wheelValue * letterCount;
-          currentPlayer.roundMoney += earned;
-          message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} earned $${earned}.`;
-        } else {
-          message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} continues!`;
-        }
+                    if (typeof wheelValue === 'number') {
+              const earned = wheelValue * letterCount;
+              currentPlayer.roundMoney += earned;
+              message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} earned $${earned}.`;
+              
+              // Update Firebase player money in multiplayer
+              if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                firebaseService.updatePlayer({
+                  roundMoney: currentPlayer.roundMoney
+                });
+              }
+            } else {
+              message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} continues!`;
+            }
         
         // Computer continues their turn, but limit consecutive turns to prevent infinite loops
         // After 2 consecutive correct guesses, force advancement to next player
@@ -2212,6 +2219,13 @@ function WheelOfFortune({
         if (isVowel) {
           if (!prev.isFinalRound) {
             currentPlayer.roundMoney -= 250;
+            
+            // Update Firebase player money in multiplayer
+            if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+              firebaseService.updatePlayer({
+                roundMoney: currentPlayer.roundMoney
+              });
+            }
           }
           message = `Yes! ${letterCount} ${letter}'s. ${prev.isFinalRound ? 'Vowel revealed!' : 'You bought a vowel.'}`;
           // Player can continue turn (buy another vowel or spin again)
@@ -2250,6 +2264,13 @@ function WheelOfFortune({
               const earned = wheelValue * letterCount;
               currentPlayer.roundMoney += earned;
               message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}. Spin again or buy a vowel.`;
+              
+              // Update Firebase player money in multiplayer
+              if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                firebaseService.updatePlayer({
+                  roundMoney: currentPlayer.roundMoney
+                });
+              }
             } else if (typeof wheelValue === 'object' && wheelValue && 'type' in wheelValue) {
               const wheelSegment = wheelValue as WheelSegment;
               if (wheelSegment.type === 'PRIZE') {
@@ -2261,10 +2282,26 @@ function WheelOfFortune({
                   description: (wheelSegment.name && PRIZE_DESCRIPTIONS[wheelSegment.name as keyof typeof PRIZE_DESCRIPTIONS]) || 'A fabulous prize!'
                 });
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}! Spin again or buy a vowel.`;
+                
+                // Update Firebase player in multiplayer
+                if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                  firebaseService.updatePlayer({
+                    roundMoney: currentPlayer.roundMoney,
+                    prizes: currentPlayer.prizes
+                  });
+                }
               } else if (wheelSegment.type === 'WILD_CARD') {
                 currentPlayer.roundMoney += 500 * letterCount;
                 currentPlayer.specialCards.push('WILD_CARD');
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD! Spin again or buy a vowel.`;
+                
+                // Update Firebase player in multiplayer
+                if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                  firebaseService.updatePlayer({
+                    roundMoney: currentPlayer.roundMoney,
+                    specialCards: currentPlayer.specialCards
+                  });
+                }
               } else if (wheelSegment.type === 'GIFT_TAG') {
                 currentPlayer.roundMoney += 500 * letterCount;
                 currentPlayer.prizes.push({
@@ -2274,16 +2311,40 @@ function WheelOfFortune({
                   description: PRIZE_DESCRIPTIONS['$1000 GIFT TAG']
                 });
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG! Spin again or buy a vowel.`;
+                
+                // Update Firebase player in multiplayer
+                if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                  firebaseService.updatePlayer({
+                    roundMoney: currentPlayer.roundMoney,
+                    prizes: currentPlayer.prizes
+                  });
+                }
               } else if (wheelSegment.type === 'MILLION') {
                 currentPlayer.roundMoney += 900 * letterCount;
                 currentPlayer.specialCards.push('MILLION_DOLLAR_WEDGE');
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE! Spin again or buy a vowel.`;
+                
+                // Update Firebase player in multiplayer
+                if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                  firebaseService.updatePlayer({
+                    roundMoney: currentPlayer.roundMoney,
+                    specialCards: currentPlayer.specialCards
+                  });
+                }
               }
             } else if (wildCardActive) {
               // Wild Card usage - give base value for consonant
               const earned = 500 * letterCount;
               currentPlayer.roundMoney += earned;
               message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}. Spin again or buy a vowel.`;
+              
+              // Update Firebase player in multiplayer
+              if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+                firebaseService.updatePlayer({
+                  roundMoney: currentPlayer.roundMoney
+                });
+              }
+              
               // Deactivate Wild Card after use
               setWildCardActive(false);
             }
@@ -2324,6 +2385,13 @@ function WheelOfFortune({
         
         if (isVowel && !prev.isFinalRound) {
           currentPlayer.roundMoney -= 250;
+          
+          // Update Firebase player money in multiplayer
+          if (firebaseGameState && firebaseService && typeof currentPlayer.id === 'string') {
+            firebaseService.updatePlayer({
+              roundMoney: currentPlayer.roundMoney
+            });
+          }
         }
         message = `Sorry, no ${letter}'s. `;
         
@@ -3344,6 +3412,17 @@ function WheelOfFortune({
                   ? Array.from(gameState.usedLetters).join(', ')
                   : (Array.isArray(gameState.usedLetters) ? (gameState.usedLetters as string[]).join(', ') : '')}</div>
                 <div className="text-gray-400">Vowels cost $250</div>
+                {firebaseGameState?.gameHistory && (
+                  <div className="mt-1 text-gray-300">
+                    <div className="text-xs font-semibold">Recent Activity:</div>
+                    {firebaseGameState.gameHistory.slice(-3).map((entry: any, index: number) => (
+                      <div key={index} className="text-xs text-gray-400">
+                        {entry.playerName}: {entry.type === 'letter' ? `"${entry.value}"` : `"${entry.value}"`} 
+                        ({entry.result})
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -3374,6 +3453,21 @@ function WheelOfFortune({
               >
                 NEW PUZZLE
               </button>
+              
+              {/* Solve Attempts History */}
+              {firebaseGameState?.gameHistory && (
+                <div className="mt-3 text-xs">
+                  <div className="text-gray-300 font-semibold mb-1">Recent Solve Attempts:</div>
+                  {firebaseGameState.gameHistory
+                    .filter((entry: any) => entry.type === 'solve')
+                    .slice(-3)
+                    .map((entry: any, index: number) => (
+                      <div key={index} className="text-gray-400 mb-1">
+                        {entry.playerName}: "{entry.value}" ({entry.result})
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
 
             {/* Special Cards */}
