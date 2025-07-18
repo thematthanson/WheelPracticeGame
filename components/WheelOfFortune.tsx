@@ -1662,6 +1662,15 @@ function WheelOfFortune({
         nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
       }
       
+      console.log('🎯 Wheel landed:', {
+        segment,
+        landedIndex,
+        newMessage,
+        nextPlayer,
+        isSpinning: false,
+        turnInProgress: false
+      });
+      
       setGameState(prev => ({
         ...prev,
         isSpinning: false,
@@ -1726,6 +1735,13 @@ function WheelOfFortune({
 
     // Only allow consonant guess if wheelValue is set (not 0), unless using Wild Card or in final round
     if (isConsonant && !hasWheelValue() && !wildCardActive && !gameState.isFinalRound) {
+      console.log('❌ Cannot call consonant - no wheel value:', {
+        wheelValue: gameState.wheelValue,
+        hasWheelValue: hasWheelValue(),
+        isSpinning: gameState.isSpinning,
+        turnInProgress: gameState.turnInProgress,
+        isActivePlayer
+      });
       setGameState(prev => ({ ...prev, message: 'Spin the wheel first!' }));
       return;
     }
@@ -2210,6 +2226,14 @@ function WheelOfFortune({
 
   // Helper function to safely check if wheel has a valid value
   const hasWheelValue = (): boolean => {
+    console.log('🔍 hasWheelValue check:', {
+      wheelValue: gameState.wheelValue,
+      type: typeof gameState.wheelValue,
+      isNumber: typeof gameState.wheelValue === 'number',
+      isObject: typeof gameState.wheelValue === 'object',
+      hasValue: gameState.wheelValue && typeof gameState.wheelValue === 'object' && 'value' in gameState.wheelValue
+    });
+    
     if (!gameState.wheelValue) return false;
     
     // Check if wheelValue is a number greater than 0
