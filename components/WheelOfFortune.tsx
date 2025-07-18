@@ -727,42 +727,39 @@ function WheelOfFortune({
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
           const allPlayers = getAllPlayers();
-          if (allPlayers.length === 0) {
-            console.error('❌ No players available for computer LOSE A TURN handling');
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
-            return;
-          }
-          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
-          const currentHumanIndex = humanPlayers.findIndex(p => p.id === gs.currentPlayer);
-          if (currentHumanIndex !== -1) {
-            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
-            nextPlayerObj = humanPlayers[nextHumanIndex];
-            if (nextPlayerObj && nextPlayerObj.id) {
-              nextPlayer = nextPlayerObj.id;
+          if (allPlayers && allPlayers.length > 0) {
+            const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
+            const currentHumanIndex = humanPlayers.findIndex(p => p.id === gs.currentPlayer);
+            if (currentHumanIndex !== -1) {
+              const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+              const nextHumanPlayer = humanPlayers[nextHumanIndex];
+              if (nextHumanPlayer && nextHumanPlayer.id) {
+                nextPlayer = nextHumanPlayer.id;
+                newMessage += `${nextHumanPlayer.name}'s turn!`;
+              } else {
+                // Fallback
+                const allPlayersFallback = getAllPlayers();
+                if (allPlayersFallback && allPlayersFallback.length > 0) {
+                  nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+                  newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+                }
+              }
             } else {
-              // Fallback - advance to next player in order
-              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
-              nextPlayerObj = allPlayers[nextPlayer as number];
+              // Fallback
+              const allPlayersFallback = getAllPlayers();
+              if (allPlayersFallback && allPlayersFallback.length > 0) {
+                nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+                newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+              }
             }
-          } else {
-            // Fallback - advance to next player in order
-            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
-            nextPlayerObj = allPlayers[nextPlayer as number];
           }
         } else {
           // Single player mode - advance to next player
-          const allPlayers = getAllPlayers();
-          if (allPlayers.length === 0) {
-            console.error('❌ No players available for computer LOSE A TURN handling');
-            setComputerTurnInProgress(false);
-            computerTurnRef.current = false;
-            computerTurnScheduledRef.current = false;
-            return;
+          const allPlayersSingle = getAllPlayers();
+          if (allPlayersSingle && allPlayersSingle.length > 0) {
+            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
+            newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
           }
-          nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayers.length;
-          nextPlayerObj = allPlayers[nextPlayer as number];
         }
         
         newMessage += `${nextPlayerObj?.name}'s turn!`;
@@ -1705,152 +1702,188 @@ function WheelOfFortune({
     const newRotation = gameState.wheelRotation + totalRotation;
     setGameState(prev => ({ ...prev, wheelRotation: newRotation }));
     
-        // Store timeout ID for cleanup
+    // Store timeout ID for cleanup
     const spinTimeout = setTimeout(() => {
-      // Force stop any ongoing animation
-      if (wheelRef.current) {
-        wheelRef.current.style.transition = 'none';
-        // Force a reflow to ensure the transition is removed
-        wheelRef.current.getBoundingClientRect();
-      }
-      
-      const landedIndex = getLandedSegmentIndex(newRotation);
-      const segment = currentWheelSegments[landedIndex];
-      let newMessage = '';
-      let newPlayers = [...getAllPlayers()];
-      let nextPlayer = gameState.currentPlayer;
-      
-      // Ensure we have valid players before proceeding
-      if (newPlayers.length === 0) {
-        console.error('❌ No players available for wheel spin result');
-        return;
-      }
-      
-      if (typeof segment === 'number') {
-        newMessage = `You spun $${segment}! Call a consonant.`;
-      } else if (segment === 'BANKRUPT') {
-        newMessage = 'BANKRUPT! You lose your round money and any prizes from this round. ';
-        if (newPlayers[0]) {
-          newPlayers[0].roundMoney = 0;
-          newPlayers[0].prizes = newPlayers[0].prizes.filter(p => p.round !== gameState.currentRound);
+      try {
+        // Force stop any ongoing animation
+        if (wheelRef.current) {
+          wheelRef.current.style.transition = 'none';
+          // Force a reflow to ensure the transition is removed
+          wheelRef.current.getBoundingClientRect();
         }
         
-        // Determine next player based on game mode
-        if (firebaseGameState) {
-          // Multiplayer mode - advance to next human player
-          const allPlayers = getAllPlayers();
-          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
-          const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
-          if (currentHumanIndex !== -1) {
-            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
-            const nextHumanPlayer = humanPlayers[nextHumanIndex];
-            if (nextHumanPlayer && nextHumanPlayer.id) {
-              nextPlayer = nextHumanPlayer.id;
-              newMessage += `${nextHumanPlayer.name}'s turn!`;
-            } else {
-              // Fallback
-              const allPlayersFallback = getAllPlayers();
-              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
-              newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
-            }
-          } else {
-            // Fallback
-            const allPlayersFallback = getAllPlayers();
-            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
-            newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
-          }
-        } else {
-          // Single player mode - advance to next player
-          const allPlayersSingle = getAllPlayers();
-          nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
-          newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
-        }
-      } else if (segment === 'LOSE A TURN') {
-        newMessage = 'LOSE A TURN! ';
+        const landedIndex = getLandedSegmentIndex(newRotation);
+        const segment = currentWheelSegments[landedIndex];
+        let newMessage = '';
+        let newPlayers = [...getAllPlayers()];
+        let nextPlayer = gameState.currentPlayer;
         
-        // Determine next player based on game mode
-        if (firebaseGameState) {
-          // Multiplayer mode - advance to next human player
-          const allPlayers = getAllPlayers();
-          const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
-          const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
-          if (currentHumanIndex !== -1) {
-            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
-            const nextHumanPlayer = humanPlayers[nextHumanIndex];
-            if (nextHumanPlayer && nextHumanPlayer.id) {
-              nextPlayer = nextHumanPlayer.id;
-              newMessage += `${nextHumanPlayer.name}'s turn!`;
-            } else {
-              // Fallback
-              const allPlayersFallback = getAllPlayers();
-              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
-              newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+        // Ensure we have valid players before proceeding
+        if (!newPlayers || newPlayers.length === 0) {
+          console.error('❌ No players available for wheel spin result');
+          // Reset spinning state even if there's an error
+          setGameState(prev => ({
+            ...prev,
+            isSpinning: false,
+            turnInProgress: false,
+            message: 'Error: No players available'
+          }));
+          return;
+        }
+        
+        if (typeof segment === 'number') {
+          newMessage = `You spun $${segment}! Call a consonant.`;
+        } else if (segment === 'BANKRUPT') {
+          newMessage = 'BANKRUPT! You lose your round money and any prizes from this round. ';
+          if (newPlayers[0]) {
+            newPlayers[0].roundMoney = 0;
+            newPlayers[0].prizes = newPlayers[0].prizes.filter(p => p.round !== gameState.currentRound);
+          }
+          
+          // Determine next player based on game mode
+          if (firebaseGameState) {
+            // Multiplayer mode - advance to next human player
+            const allPlayers = getAllPlayers();
+            if (allPlayers && allPlayers.length > 0) {
+              const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
+              const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
+              if (currentHumanIndex !== -1) {
+                const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+                const nextHumanPlayer = humanPlayers[nextHumanIndex];
+                if (nextHumanPlayer && nextHumanPlayer.id) {
+                  nextPlayer = nextHumanPlayer.id;
+                  newMessage += `${nextHumanPlayer.name}'s turn!`;
+                } else {
+                  // Fallback
+                  const allPlayersFallback = getAllPlayers();
+                  if (allPlayersFallback && allPlayersFallback.length > 0) {
+                    nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+                    newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+                  }
+                }
+              } else {
+                // Fallback
+                const allPlayersFallback = getAllPlayers();
+                if (allPlayersFallback && allPlayersFallback.length > 0) {
+                  nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+                  newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+                }
+              }
             }
           } else {
-            // Fallback
-            const allPlayersFallback = getAllPlayers();
-            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
-            newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+            // Single player mode - advance to next player
+            const allPlayersSingle = getAllPlayers();
+            if (allPlayersSingle && allPlayersSingle.length > 0) {
+              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
+              newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
+            }
           }
-        } else {
-          // Single player mode - advance to next player
-          const allPlayersSingle = getAllPlayers();
-          nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
-          newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
+        } else if (segment === 'LOSE A TURN') {
+          newMessage = 'LOSE A TURN! ';
+          
+          // Determine next player based on game mode
+          if (firebaseGameState) {
+            // Multiplayer mode - advance to next human player
+            const allPlayers = getAllPlayers();
+            if (allPlayers && allPlayers.length > 0) {
+              const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
+              const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
+              if (currentHumanIndex !== -1) {
+                const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+                const nextHumanPlayer = humanPlayers[nextHumanIndex];
+                if (nextHumanPlayer && nextHumanPlayer.id) {
+                  nextPlayer = nextHumanPlayer.id;
+                  newMessage += `${nextHumanPlayer.name}'s turn!`;
+                } else {
+                  // Fallback
+                  const allPlayersFallback = getAllPlayers();
+                  if (allPlayersFallback && allPlayersFallback.length > 0) {
+                    nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+                    newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+                  }
+                }
+              } else {
+                // Fallback
+                const allPlayersFallback = getAllPlayers();
+                if (allPlayersFallback && allPlayersFallback.length > 0) {
+                  nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+                  newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
+                }
+              }
+            }
+          } else {
+            // Single player mode - advance to next player
+            const allPlayersSingle = getAllPlayers();
+            if (allPlayersSingle && allPlayersSingle.length > 0) {
+              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
+              newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
+            }
+          }
+        } else if (typeof segment === 'object' && segment && 'type' in segment) {
+          if (segment.type === 'PRIZE') {
+            newMessage = `You landed on ${(segment as WheelSegment).displayValue}! Call a consonant to claim it.`;
+          } else if (segment.type === 'WILD_CARD') {
+            newMessage = `You got the WILD CARD! Call a consonant.`;
+          } else if (segment.type === 'GIFT_TAG') {
+            newMessage = `You got the $1000 GIFT TAG! Call a consonant.`;
+          } else if (segment.type === 'MILLION') {
+            newMessage = `You got the MILLION DOLLAR WEDGE! Call a consonant and keep this for the bonus round!`;
+          }
         }
-      } else if (typeof segment === 'object' && segment && 'type' in segment) {
-        if (segment.type === 'PRIZE') {
-          newMessage = `You landed on ${(segment as WheelSegment).displayValue}! Call a consonant to claim it.`;
-        } else if (segment.type === 'WILD_CARD') {
-          newMessage = `You got the WILD CARD! Call a consonant.`;
-        } else if (segment.type === 'GIFT_TAG') {
-          newMessage = `You got the $1000 GIFT TAG! Call a consonant.`;
-        } else if (segment.type === 'MILLION') {
-          newMessage = `You got the MILLION DOLLAR WEDGE! Call a consonant and keep this for the bonus round!`;
+        
+        // Validate turn state before updating
+        const currentPlayer = getCurrentPlayer();
+        if (!validateTurnState(currentPlayer, nextPlayer)) {
+          console.error('❌ Invalid turn state detected, using fallback');
+          // Use fallback turn advancement
+          const allPlayersFallback = getAllPlayers();
+          if (allPlayersFallback && allPlayersFallback.length > 0) {
+            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+          }
         }
-      }
-      
-      // Validate turn state before updating
-      const currentPlayer = getCurrentPlayer();
-      if (!validateTurnState(currentPlayer, nextPlayer)) {
-        console.error('❌ Invalid turn state detected, using fallback');
-        // Use fallback turn advancement
-        const allPlayersFallback = getAllPlayers();
-        nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
-      }
-      
-      console.log('🎯 Wheel landed:', {
-        segment,
-        landedIndex,
-        newMessage,
-        nextPlayer,
-        isSpinning: false,
-        turnInProgress: false,
-        wheelValue: segment,
-        segmentType: typeof segment,
-        isObject: typeof segment === 'object',
-        hasValue: segment && typeof segment === 'object' && 'value' in segment
-      });
-      
-      // ---- Multiplayer callbacks BEFORE state update ----
-      const spinVal = typeof segment === 'object' ? segment : segment;
-      if (onSpin) {
-        onSpin({ value: spinVal, rotation: newRotation });
-      }
+        
+        console.log('🎯 Wheel landed:', {
+          segment,
+          landedIndex,
+          newMessage,
+          nextPlayer,
+          isSpinning: false,
+          turnInProgress: false,
+          wheelValue: segment,
+          segmentType: typeof segment,
+          isObject: typeof segment === 'object',
+          hasValue: segment && typeof segment === 'object' && 'value' in segment
+        });
+        
+        // ---- Multiplayer callbacks BEFORE state update ----
+        const spinVal = typeof segment === 'object' ? segment : segment;
+        if (onSpin) {
+          onSpin({ value: spinVal, rotation: newRotation });
+        }
 
-      setGameState(prev => ({
-        ...prev,
-        isSpinning: false,
-        wheelValue: segment,
-        lastSpinResult: segment,
-        landedSegmentIndex: landedIndex,
-        message: newMessage,
-        players: newPlayers,
-        currentPlayer: nextPlayer,
-        turnInProgress: false
-      }));
-      if (nextPlayer !== gameState.currentPlayer && onEndTurn) {
-        onEndTurn(nextPlayer as number);
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          wheelValue: segment,
+          lastSpinResult: segment,
+          landedSegmentIndex: landedIndex,
+          message: newMessage,
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          turnInProgress: false
+        }));
+        if (nextPlayer !== gameState.currentPlayer && onEndTurn) {
+          onEndTurn(nextPlayer as number);
+        }
+      } catch (error) {
+        console.error('❌ Error in wheel spin logic:', error);
+        // Always reset spinning state even if there's an error
+        setGameState(prev => ({
+          ...prev,
+          isSpinning: false,
+          turnInProgress: false,
+          message: 'Error occurred during wheel spin'
+        }));
       }
     }, 1000);
     
