@@ -452,6 +452,7 @@ function WheelOfFortune({
   const [computerTurnInProgress, setComputerTurnInProgress] = useState(false);
   const computerTurnRef = useRef(false);
   const computerTurnScheduledRef = useRef(false);
+  const lastComputerTurnTimeRef = useRef(0);
 
   // Load used puzzles and stats from localStorage
   useEffect(() => {
@@ -851,14 +852,18 @@ function WheelOfFortune({
     // 4. Wheel is not spinning
     // 5. Computer turn is not already scheduled
     // 6. We have valid players
+    // 7. Computer turn was not recently completed (prevent immediate re-triggering)
     const allPlayers = getAllPlayers();
+    const currentTime = Date.now();
+    const timeSinceLastComputerTurn = currentTime - lastComputerTurnTimeRef.current;
     const isComputerTurn = currentPlayer && 
                           !currentPlayer.isHuman && 
                           !gameState.isFinalRound &&
                           !gameState.turnInProgress && 
                           !gameState.isSpinning && 
                           !computerTurnScheduledRef.current &&
-                          allPlayers.length > 0; // Ensure we have valid players
+                          allPlayers.length > 0 && // Ensure we have valid players
+                          timeSinceLastComputerTurn > 3000; // At least 3 seconds since last computer turn
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -868,6 +873,7 @@ function WheelOfFortune({
       isSpinning: gameState.isSpinning,
       turnInProgress: gameState.turnInProgress,
       computerTurnScheduled: computerTurnScheduledRef.current,
+      timeSinceLastComputerTurn,
       isMultiplayer: !!firebaseGameState,
       shouldTrigger: isComputerTurn
     });
@@ -879,7 +885,26 @@ function WheelOfFortune({
       setTimeout(() => {
         computerTurn();
       }, 1000); // 1 second delay before computer starts
+    } else {
+      // Reset computer turn flags when it's not a computer turn
+      if (computerTurnScheduledRef.current) {
+        console.log('🔄 Resetting computer turn flags - not a computer turn');
+        computerTurnScheduledRef.current = false;
+        setComputerTurnInProgress(false);
+      }
     }
+    
+    // Add a timeout mechanism to prevent infinite computer turn loops
+    const computerTurnTimeout = setTimeout(() => {
+      if (computerTurnScheduledRef.current) {
+        console.log('⚠️ Computer turn timeout - forcing reset to prevent infinite loop');
+        computerTurnScheduledRef.current = false;
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+      }
+    }, 30000); // 30 second timeout
+    
+    return () => clearTimeout(computerTurnTimeout);
   }, [gameState.currentPlayer, gameState.isFinalRound, gameState.isSpinning, gameState.turnInProgress, computerTurn, firebaseGameState]);
 
   // Function to update statistics
@@ -1509,6 +1534,7 @@ function WheelOfFortune({
           setComputerTurnInProgress(false);
           computerTurnRef.current = false;
           computerTurnScheduledRef.current = false;
+          lastComputerTurnTimeRef.current = Date.now(); // Record completion time
           computerTurn();
         }, 2000);
       } else {
@@ -1516,24 +1542,29 @@ function WheelOfFortune({
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
+        lastComputerTurnTimeRef.current = Date.now(); // Record completion time
         
-        // Check if next player is a computer (for multiplayer mode)
-        let nextPlayerObj;
-        if (firebaseGameState && typeof nextPlayer === 'string') {
-          // Multiplayer mode - use helper to safely retrieve player by ID (works for object or array)
-          nextPlayerObj = getPlayerById(nextPlayer);
-        } else {
-          // Single-player or local multiplayer – numeric index
-          nextPlayerObj = Array.isArray(gameStateRef.current.players)
-            ? gameStateRef.current.players[nextPlayer as number]
-            : getPlayerById(nextPlayer);
-        }
-        
-        if (nextPlayerObj && !nextPlayerObj.isHuman) {
-          setTimeout(() => {
-            computerTurn();
-          }, 2000);
-        }
+        // Add a delay before checking if next player is computer to prevent immediate triggering
+        setTimeout(() => {
+          // Check if next player is a computer (for multiplayer mode)
+          let nextPlayerObj;
+          if (firebaseGameState && typeof nextPlayer === 'string') {
+            // Multiplayer mode - use helper to safely retrieve player by ID (works for object or array)
+            nextPlayerObj = getPlayerById(nextPlayer);
+          } else {
+            // Single-player or local multiplayer – numeric index
+            nextPlayerObj = Array.isArray(gameStateRef.current.players)
+              ? gameStateRef.current.players[nextPlayer as number]
+              : getPlayerById(nextPlayer);
+          }
+          
+          if (nextPlayerObj && !nextPlayerObj.isHuman) {
+            console.log('🤖 Next player is computer, scheduling computer turn after delay');
+            setTimeout(() => {
+              computerTurn();
+            }, 1000);
+          }
+        }, 1000); // Add 1 second delay before checking next player
       }
     }, 1000);
   };
