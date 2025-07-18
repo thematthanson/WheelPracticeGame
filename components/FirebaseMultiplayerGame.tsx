@@ -319,7 +319,7 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
                 }`}
               >
                 {player.name} {player.isHost ? '👑' : ''} {!player.isHuman && '🤖'}
-                {player.roundMoney > 0 && ` - $${player.roundMoney}`}
+                {(player.roundMoney || 0) > 0 && ` - $${player.roundMoney || 0}`}
               </div>
             ))}
           </div>

@@ -1952,8 +1952,10 @@ function WheelOfFortune({
     // Only human player can advance to final round
     if (isFinalRound) {
       // Check if the human player won the previous round
-      const humanPlayer = gameState.players[0];
-      if (humanPlayer.roundMoney === 0) {
+      const humanPlayer = Array.isArray(gameState.players) 
+        ? gameState.players[0] 
+        : Object.values(gameState.players as Record<string, any>)[0] as any;
+      if ((humanPlayer?.roundMoney || 0) === 0) {
         // Human didn't win the round - game over, start new game
         setGameState(prev => ({
           ...prev,
@@ -2539,11 +2541,11 @@ function WheelOfFortune({
                   <span className="ml-1 text-yellow-200">★</span>
                 )}
               </div>
-              <div className="text-xs sm:text-sm">Round: ${player.roundMoney}</div>
-              <div className="text-xs sm:text-sm font-bold">Total: ${player.totalMoney}</div>
+              <div className="text-xs sm:text-sm">Round: ${player.roundMoney || 0}</div>
+              <div className="text-xs sm:text-sm font-bold">Total: ${player.totalMoney || 0}</div>
               
               {/* Show prizes and special cards */}
-              {player.prizes.length > 0 && (
+              {player.prizes?.length > 0 && (
                 <div className="text-xs mt-1">
                   <div className="text-green-300 font-semibold">
                     🏆 Prizes ({player.prizes.length}):
@@ -2555,7 +2557,7 @@ function WheelOfFortune({
                   ))}
                 </div>
               )}
-              {player.specialCards.length > 0 && (
+              {player.specialCards?.length > 0 && (
                 <div className="text-xs mt-1">
                   <div className="text-purple-300 font-semibold">
                     ⭐ Special Cards:
