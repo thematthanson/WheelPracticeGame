@@ -2517,7 +2517,7 @@ function WheelOfFortune({
     
     // Validate turn advancement is different (unless single player scenario)
     if (nextPlayer === gameState.currentPlayer) {
-      const humanPlayers = gameState.players.filter(p => p.isHuman);
+      const humanPlayers = getAllPlayers().filter(p => p.isHuman);
       if (humanPlayers.length > 1) {
         console.warn('⚠️ Turn advancement would result in same player');
         return false;
