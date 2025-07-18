@@ -58,6 +58,7 @@ interface Player {
   isHuman: boolean;
   prizes: Prize[];
   specialCards: string[];
+  consecutiveCorrectGuesses?: number; // Track consecutive correct guesses for computer players
 }
 
 interface GameStats {
@@ -1312,7 +1313,7 @@ function WheelOfFortune({
     setTimeout(() => {
       const gsGuess = gameStateRef.current;
       // Computer's letter guesses are randomly correct or incorrect
-      const letterInPuzzle = Math.random() < 0.3; // 30% chance of being correct
+      const letterInPuzzle = Math.random() < 0.1; // 10% chance of being correct (reduced from 30%)
       const letterCount = letterInPuzzle ? (gsGuess.puzzle.text.match(new RegExp(letter, 'g')) || []).length : 0;
       
       console.log('🤖 COMPUTER GUESS HANDLER:', {
@@ -1367,11 +1368,58 @@ function WheelOfFortune({
         } else {
           message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} continues!`;
         }
-        // Computer continues their turn - keep same player
-        nextPlayer = gsGuess.currentPlayer;
+        
+        // Computer continues their turn, but limit consecutive turns to prevent infinite loops
+        // After 2 consecutive correct guesses, force advancement to next player
+        const consecutiveCorrectGuesses = currentPlayer.consecutiveCorrectGuesses || 0;
+        if (consecutiveCorrectGuesses >= 2) {
+          // Force advancement to next player after 2 consecutive correct guesses
+          console.log('🤖 Computer had 2 consecutive correct guesses, forcing turn advancement');
+          if (firebaseGameState) {
+            // Multiplayer mode - advance to next human player
+            const allPlayers = getAllPlayers();
+            const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
+            const currentHumanIndex = humanPlayers.findIndex(p => p.id === gsGuess.currentPlayer);
+            if (currentHumanIndex !== -1) {
+              const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
+              const nextHumanPlayer = humanPlayers[nextHumanIndex];
+              if (nextHumanPlayer && nextHumanPlayer.id) {
+                nextPlayer = nextHumanPlayer.id;
+                message = `Computer had 2 consecutive correct guesses. ${nextHumanPlayer.name}'s turn!`;
+              } else {
+                // Fallback - advance to next player in order
+                const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
+                nextPlayer = nextIdx;
+                message = `Computer had 2 consecutive correct guesses. ${allPlayers[nextIdx].name}'s turn!`;
+              }
+            } else {
+              // Fallback - advance to next player in order
+              const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
+              nextPlayer = nextIdx;
+              message = `Computer had 2 consecutive correct guesses. ${allPlayers[nextIdx].name}'s turn!`;
+            }
+          } else {
+            // Single player mode - advance to next player
+            const allPlayers = getAllPlayers();
+            const nextIdx = (getCurrentPlayerIndex() + 1) % allPlayers.length;
+            nextPlayer = nextIdx;
+            message = `Computer had 2 consecutive correct guesses. ${allPlayers[nextIdx].name}'s turn!`;
+          }
+          // Reset consecutive correct guesses
+          currentPlayer.consecutiveCorrectGuesses = 0;
+        } else {
+          // Computer continues their turn - keep same player
+          nextPlayer = gsGuess.currentPlayer;
+          currentPlayer.consecutiveCorrectGuesses = (currentPlayer.consecutiveCorrectGuesses || 0) + 1;
+        }
       } else {
         // Update statistics for computer's incorrect guess
         updateStats(letter, false);
+        
+        // Reset consecutive correct guesses when computer gets an incorrect letter
+        if (currentPlayer.consecutiveCorrectGuesses) {
+          currentPlayer.consecutiveCorrectGuesses = 0;
+        }
         
         // In multiplayer mode, advance to next human player only
         if (firebaseGameState) {
