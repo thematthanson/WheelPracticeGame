@@ -1998,13 +1998,26 @@ function WheelOfFortune({
       currentRound: prev.currentRound + 1,
       puzzle: newPuzzle,
       usedLetters: new Set(),
-      players: prev.players.map(p => ({ 
-        ...p, 
-        roundMoney: 0,
-        // Keep prizes and special cards across rounds
-        prizes: p.prizes,
-        specialCards: p.specialCards
-      })),
+      players: Array.isArray(prev.players) 
+        ? prev.players.map(p => ({ 
+            ...p, 
+            roundMoney: 0,
+            // Keep prizes and special cards across rounds
+            prizes: p.prizes,
+            specialCards: p.specialCards
+          }))
+        : Object.fromEntries(
+            Object.entries(prev.players as Record<string, any>).map(([id, p]) => [
+              id, 
+              { 
+                ...p, 
+                roundMoney: 0,
+                // Keep prizes and special cards across rounds
+                prizes: p.prizes,
+                specialCards: p.specialCards
+              }
+            ])
+          ) as any,
       currentPlayer: 0,
       wheelValue: 0,
       lastSpinResult: null,
@@ -2512,17 +2525,17 @@ function WheelOfFortune({
 
         {/* Game Status */}
         <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-2 sm:mb-4 text-xs sm:text-base">
-          {gameState.players.map((player, index) => (
-            <div key={index} className={`rounded-lg p-2 sm:p-4 ${
-              gameState.currentPlayer === index 
+          {Object.values(gameState.players).map((player, index) => (
+            <div key={player.id} className={`rounded-lg p-2 sm:p-4 ${
+              gameState.currentPlayer === player.id 
                 ? 'bg-yellow-600 bg-opacity-70 border-2 border-yellow-400' 
                 : 'bg-blue-800 bg-opacity-50'
             }`}>
               <div className="flex items-center mb-1 sm:mb-2">
-                <span className={`font-semibold ${gameState.currentPlayer === index ? 'text-yellow-100' : 'text-white'}`}>
+                <span className={`font-semibold ${gameState.currentPlayer === player.id ? 'text-yellow-100' : 'text-white'}`}>
                   {player.name}
                 </span>
-                {gameState.currentPlayer === index && (
+                {gameState.currentPlayer === player.id && (
                   <span className="ml-1 text-yellow-200">★</span>
                 )}
               </div>
@@ -2664,40 +2677,54 @@ function WheelOfFortune({
             </div>
 
             {/* Special Cards */}
-            {gameState.players[0].specialCards.length > 0 && isActivePlayer && (
-              <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
-                <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3 text-purple-300">⭐ Special Cards</h3>
-                <div className="space-y-2">
-                  {gameState.players[0].specialCards.map((card, index) => (
-                    <div key={index} className="flex items-center justify-between bg-purple-700 bg-opacity-30 rounded p-2">
-                      <span className="text-purple-200 text-sm">
-                        {card === 'WILD_CARD' ? '🃏 Wild Card' : 
-                         card === 'MILLION_DOLLAR_WEDGE' ? '💎 Million Dollar Wedge' : card}
-                      </span>
-                      {card === 'WILD_CARD' && (
-                        <button
-                          onClick={() => {
-                            // Activate Wild Card for extra consonant call
-                            setWildCardActive(true);
-                            setGameState(prev => ({
-                              ...prev,
-                              message: 'Wild Card activated! You can call an extra consonant.',
-                              players: prev.players.map((p, i) => 
-                                i === 0 ? { ...p, specialCards: p.specialCards.filter(c => c !== 'WILD_CARD') } : p
-                              )
-                            }));
-                          }}
-                          disabled={!isActivePlayer || wildCardActive}
-                          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-2 py-1 rounded text-xs font-semibold transition-colors"
-                        >
-                          Use
-                        </button>
-                      )}
-                    </div>
-                  ))}
+            {(() => {
+              const currentPlayer = Array.isArray(gameState.players) 
+                ? gameState.players[0] 
+                : Object.values(gameState.players as Record<string, any>)[0] as any;
+              return currentPlayer?.specialCards?.length > 0 && isActivePlayer && (
+                <div className="bg-gray-800 bg-opacity-50 rounded-lg p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-3 text-purple-300">⭐ Special Cards</h3>
+                  <div className="space-y-2">
+                    {currentPlayer.specialCards.map((card: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between bg-purple-700 bg-opacity-30 rounded p-2">
+                        <span className="text-purple-200 text-sm">
+                          {card === 'WILD_CARD' ? '🃏 Wild Card' : 
+                           card === 'MILLION_DOLLAR_WEDGE' ? '💎 Million Dollar Wedge' : card}
+                        </span>
+                        {card === 'WILD_CARD' && (
+                          <button
+                            onClick={() => {
+                              // Activate Wild Card for extra consonant call
+                              setWildCardActive(true);
+                              setGameState(prev => ({
+                                ...prev,
+                                message: 'Wild Card activated! You can call an extra consonant.',
+                                players: Array.isArray(prev.players)
+                                  ? prev.players.map((p, i) => 
+                                      i === 0 ? { ...p, specialCards: p.specialCards.filter(c => c !== 'WILD_CARD') } : p
+                                    )
+                                  : Object.fromEntries(
+                                      Object.entries(prev.players as Record<string, any>).map(([id, p]) => [
+                                        id,
+                                        id === Object.keys(prev.players)[0] 
+                                          ? { ...p, specialCards: p.specialCards.filter((c: any) => c !== 'WILD_CARD') }
+                                          : p
+                                      ])
+                                    ) as any
+                              }));
+                            }}
+                            disabled={!isActivePlayer || wildCardActive}
+                            className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-2 py-1 rounded text-xs font-semibold transition-colors"
+                          >
+                            Use
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
 

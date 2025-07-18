@@ -211,7 +211,7 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
           <div>
             <h1 className="text-xl font-bold">Game Code: {gameCode}</h1>
             <p className="text-sm text-purple-200">
-              {gameState.players.length} players joined
+              {Object.keys(gameState.players).length} players joined
             </p>
             <p className="text-xs text-green-300">
               {connected ? '🟢 Connected' : '🔴 Disconnected'}
@@ -226,7 +226,7 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
         <div className="max-w-4xl mx-auto">
           <h3 className="text-lg font-semibold text-yellow-200 mb-2">Players:</h3>
           <div className="flex flex-wrap gap-2">
-            {gameState.players.map((player, index) => (
+            {Object.values(gameState.players).map((player, index) => (
               <div
                 key={player.id}
                 className={`px-3 py-1 rounded-full text-sm ${
@@ -246,7 +246,7 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
       {gameState.status === 'waiting' && (
         <div className="bg-yellow-600 bg-opacity-30 p-4 text-center">
           <p className="text-yellow-200">
-            Waiting for players to join... ({gameState.players.length}/{gameState.maxPlayers})
+            Waiting for players to join... ({Object.keys(gameState.players).length}/{gameState.maxPlayers})
           </p>
         </div>
       )}
