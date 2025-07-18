@@ -582,19 +582,30 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Allow computer turns if there are any computer players
-      if (computerPlayers.length === 0) {
-        console.log('❌ No computer players found in multiplayer configuration');
+      // Allow computer turns if there are 2 or fewer humans (computer players are critical)
+      // Block computer turns if there are 3 humans (full human game)
+      if (humanPlayers.length >= 3) {
+        console.log('❌ Computer turns not allowed - full human game (3 humans)');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         return;
       }
       
-      console.log('🤖 Computer turns allowed in multiplayer mode with computer players:', {
+      // Ensure we have computer players when humans < 3
+      if (computerPlayers.length === 0) {
+        console.log('❌ No computer players found but humans < 3 - computer players are critical');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
+      
+      console.log('🤖 Computer turns allowed in multiplayer mode:', {
         humanCount: humanPlayers.length,
         computerCount: computerPlayers.length,
-        totalPlayers: allPlayers.length
+        totalPlayers: allPlayers.length,
+        reason: humanPlayers.length < 3 ? 'Computer players critical for < 3 humans' : 'Full human game'
       });
     }
     
@@ -1222,19 +1233,30 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Allow computer actions if there are any computer players
-      if (computerPlayers.length === 0) {
-        console.log('❌ No computer players found in multiplayer configuration');
+      // Allow computer actions if there are 2 or fewer humans (computer players are critical)
+      // Block computer actions if there are 3 humans (full human game)
+      if (humanPlayers.length >= 3) {
+        console.log('❌ Computer actions not allowed - full human game (3 humans)');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         return;
       }
       
-      console.log('🤖 Computer actions allowed in multiplayer mode with computer players:', {
+      // Ensure we have computer players when humans < 3
+      if (computerPlayers.length === 0) {
+        console.log('❌ No computer players found but humans < 3 - computer players are critical');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
+      
+      console.log('🤖 Computer actions allowed in multiplayer mode:', {
         humanCount: humanPlayers.length,
         computerCount: computerPlayers.length,
-        totalPlayers: allPlayers.length
+        totalPlayers: allPlayers.length,
+        reason: humanPlayers.length < 3 ? 'Computer players critical for < 3 humans' : 'Full human game'
       });
     }
     
@@ -1472,19 +1494,30 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Allow computer actions if there are any computer players
-      if (computerPlayers.length === 0) {
-        console.log('❌ No computer players found in multiplayer configuration');
+      // Allow computer actions if there are 2 or fewer humans (computer players are critical)
+      // Block computer actions if there are 3 humans (full human game)
+      if (humanPlayers.length >= 3) {
+        console.log('❌ Computer solve not allowed - full human game (3 humans)');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         return;
       }
       
-      console.log('🤖 Computer solve allowed in multiplayer mode with computer players:', {
+      // Ensure we have computer players when humans < 3
+      if (computerPlayers.length === 0) {
+        console.log('❌ No computer players found but humans < 3 - computer players are critical');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
+      
+      console.log('🤖 Computer solve allowed in multiplayer mode:', {
         humanCount: humanPlayers.length,
         computerCount: computerPlayers.length,
-        totalPlayers: allPlayers.length
+        totalPlayers: allPlayers.length,
+        reason: humanPlayers.length < 3 ? 'Computer players critical for < 3 humans' : 'Full human game'
       });
     }
     
