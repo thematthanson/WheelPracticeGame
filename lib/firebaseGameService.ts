@@ -926,8 +926,16 @@ export class FirebaseGameService {
       const newComputerPlayers: { [key: string]: Player } = {};
 
       for (let i = 0; i < newComputersNeeded; i++) {
-        const computerId = `computer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        // Use a consistent computer ID to prevent duplicates
+        const computerId = `computer_${i + 1}`;
         const computerName = `Computer ${i + 1}`;
+
+        // Check if this computer player already exists
+        const existingComputer = Object.values(game.players).find(p => p.name === computerName);
+        if (existingComputer) {
+          vLog(`Firebase: Computer player ${computerName} already exists, skipping`);
+          continue;
+        }
 
         newComputerPlayers[computerId] = {
           id: computerId,
@@ -945,7 +953,7 @@ export class FirebaseGameService {
 
       if (Object.keys(newComputerPlayers).length > 0) {
         await update(ref(database, `games/${this.gameCode}/players`), newComputerPlayers);
-        vLog(`Firebase: Added ${newComputersNeeded} computer players:`, Object.keys(newComputerPlayers));
+        vLog(`Firebase: Added ${Object.keys(newComputerPlayers).length} computer players:`, Object.keys(newComputerPlayers));
       }
     } else if (newComputersNeeded > 0) {
       vLog(`Firebase: Game is ${game.status}; not adding computers mid-game.`);

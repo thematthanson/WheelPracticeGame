@@ -2018,9 +2018,12 @@ function WheelOfFortune({
           timestamp: new Date().toISOString()
         });
 
+        // Force reset spinning state to prevent stuck state
         setGameState(prev => {
           console.log('🎯 Game state update - before:', {
             prevWheelValue: prev.wheelValue,
+            prevIsSpinning: prev.isSpinning,
+            prevTurnInProgress: prev.turnInProgress,
             newWheelValue: segment,
             timestamp: new Date().toISOString()
           });
@@ -2039,11 +2042,29 @@ function WheelOfFortune({
           
           console.log('🎯 Game state update - after:', {
             newWheelValue: newState.wheelValue,
+            newIsSpinning: newState.isSpinning,
+            newTurnInProgress: newState.turnInProgress,
             timestamp: new Date().toISOString()
           });
           
           return newState;
         });
+        
+        // Additional safety: Force reset spinning state after a delay
+        setTimeout(() => {
+          setGameState(prev => {
+            if (prev.isSpinning || prev.turnInProgress) {
+              console.log('🔄 Force resetting stuck spinning state');
+              return {
+                ...prev,
+                isSpinning: false,
+                turnInProgress: false
+              };
+            }
+            return prev;
+          });
+        }, 1000);
+        
         if (nextPlayer !== gameState.currentPlayer && onEndTurn) {
           onEndTurn(nextPlayer as number);
         }
@@ -3337,8 +3358,14 @@ function WheelOfFortune({
               if (gameState.isSpinning) {
                 return '🔄 Spinning...';
               }
+              
+              // Get current player info
+              const currentPlayer = getCurrentPlayer();
+              const currentPlayerName = currentPlayer?.name || 'Unknown Player';
+              
               // Use isActivePlayer flag to detect whose browser this is
               if (isActivePlayer) {
+                // This is the active player's browser
                 if (gameState.currentPlayer === 0) {
                   if (gameState.message && gameState.message.includes('spun')) {
                     const [pre, spinMsg] = gameState.message.split(/(You spun.*Call a consonant\.?)/);
@@ -3351,13 +3378,23 @@ function WheelOfFortune({
                 } else {
                   if (gameState.message && gameState.message.includes('spun')) {
                     const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
-                    return <span>{getCurrentPlayer()?.name}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
+                    return <span>{currentPlayerName}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
                   }
                   if (gameState.message) {
-                    return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
+                    return `${currentPlayerName}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
                   }
-                  return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound})`;
+                  return `${currentPlayerName}'s Turn (Round ${gameState.currentRound})`;
                 }
+              } else {
+                // This is the non-active player's browser (p2)
+                if (gameState.message && gameState.message.includes('spun')) {
+                  const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
+                  return <span>{currentPlayerName}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
+                }
+                if (gameState.message) {
+                  return `${currentPlayerName}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
+                }
+                return `${currentPlayerName}'s Turn (Round ${gameState.currentRound})`;
               }
             })()}
           </div>
