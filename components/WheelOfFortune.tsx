@@ -2672,16 +2672,9 @@ function WheelOfFortune({
       return false;
     }
     
-    // Force initialize revealed if it doesn't exist
+    // Force initialize revealed if it doesn't exist - but don't trigger state update during render
     if (!gameState.puzzle.revealed) {
-      console.log('🔍 isCharacterRevealed: Initializing missing revealed property for char:', char);
-      setGameState(prev => ({
-        ...prev,
-        puzzle: {
-          ...prev.puzzle,
-          revealed: new Set<string>()
-        }
-      }));
+      console.log('🔍 isCharacterRevealed: No revealed property found for char:', char);
       return false;
     }
     
@@ -2894,7 +2887,11 @@ function WheelOfFortune({
         
         console.log('🔄 Firebase sync puzzle revealed:', {
           firebaseRevealed: firebasePuzzle.revealed,
+          firebaseRevealedType: typeof firebasePuzzle.revealed,
+          firebaseRevealedIsArray: Array.isArray(firebasePuzzle.revealed),
+          firebaseRevealedIsSet: firebasePuzzle.revealed instanceof Set,
           convertedRevealed: Array.from(revealedLetters),
+          convertedRevealedSize: revealedLetters.size,
           timestamp: new Date().toISOString()
         });
         
@@ -3162,7 +3159,7 @@ function WheelOfFortune({
       
       // Validate current player is human in multiplayer
       if (currentPlayer && !currentPlayer.isHuman && humanPlayers.length > 0) {
-        console.warn('⚠️ Computer player is current player but humans are available');
+        console.log('🤖 Computer player is current player - this is expected when humans < 3');
       }
       
       // Validate current player exists in human players list
