@@ -584,10 +584,10 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Allow computer turns if there are 2 or fewer humans (computer players are critical)
-      // Block computer turns if there are 3 humans (full human game)
-      if (humanPlayers.length >= 3) {
-        console.log('❌ Computer turns not allowed - full human game (3 humans)');
+      // Block computer turns if there are 2 or more humans (humans should play)
+      // Allow computer turns only when there are fewer than 2 humans (computer fills the gap)
+      if (humanPlayers.length >= 2) {
+        console.log('❌ Computer turns not allowed - humans should play (2+ humans)');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
@@ -607,7 +607,7 @@ function WheelOfFortune({
         humanCount: humanPlayers.length,
         computerCount: computerPlayers.length,
         totalPlayers: allPlayers.length,
-        reason: humanPlayers.length < 3 ? 'Computer players critical for < 3 humans' : 'Full human game'
+        reason: humanPlayers.length < 2 ? 'Computer players critical for < 2 humans' : 'Humans should play'
       });
     }
     
@@ -864,10 +864,10 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Only allow computer turns if there are fewer than 3 humans
-      if (humanPlayers.length >= 3) {
+      // Only allow computer turns if there are fewer than 2 humans
+      if (humanPlayers.length >= 2) {
         computerTurnsAllowed = false;
-        console.log('❌ Computer turns not allowed - full human game (3+ humans)');
+        console.log('❌ Computer turns not allowed - humans should play (2+ humans)');
       } else if (computerPlayers.length === 0) {
         computerTurnsAllowed = false;
         console.log('❌ Computer turns not allowed - no computer players available');
