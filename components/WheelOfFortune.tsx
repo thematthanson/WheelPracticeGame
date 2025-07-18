@@ -78,7 +78,7 @@ interface GameState {
   currentRound: number;
   puzzle: Puzzle;
   usedLetters: Set<string>;
-  wheelValue: number | string | WheelSegment;
+  wheelValue: number | string | WheelSegment | null;
   isSpinning: boolean;
   wheelRotation: number;
   players: Player[];
@@ -391,7 +391,7 @@ function WheelOfFortune({
     currentRound: 1,
     puzzle: { text: '', category: '', revealed: new Set<string>(), specialFormat: null },
     usedLetters: new Set(),
-    wheelValue: 0,
+    wheelValue: null as any, // Initialize to null instead of 0
     isSpinning: false,
     wheelRotation: 0,
     players: (initialPlayers && initialPlayers.length === 3)
@@ -1295,8 +1295,12 @@ function WheelOfFortune({
         letterInPuzzle,
         letterCount,
         puzzleText: gsGuess.puzzle.text,
-        usedLetters: Array.from(gsGuess.usedLetters),
-        revealedLetters: Array.from(gsGuess.puzzle.revealed),
+        usedLetters: gsGuess.usedLetters instanceof Set 
+          ? Array.from(gsGuess.usedLetters) 
+          : (Array.isArray(gsGuess.usedLetters) ? gsGuess.usedLetters : []),
+        revealedLetters: gsGuess.puzzle.revealed instanceof Set 
+          ? Array.from(gsGuess.puzzle.revealed) 
+          : (Array.isArray(gsGuess.puzzle.revealed) ? gsGuess.puzzle.revealed : []),
         timestamp: new Date().toISOString()
       });
       
@@ -1487,7 +1491,9 @@ function WheelOfFortune({
     
     // Computer always fails to solve (successRate is 0.0)
     const puzzleText = gameState.puzzle.text;
-    const revealedText = Array.from(gameState.puzzle.revealed).join('');
+    const revealedText = gameState.puzzle.revealed instanceof Set 
+      ? Array.from(gameState.puzzle.revealed).join('')
+      : (Array.isArray(gameState.puzzle.revealed) ? (gameState.puzzle.revealed as string[]).join('') : '');
     
     // Computer never solves correctly
     const willSolve = false;
@@ -1495,7 +1501,9 @@ function WheelOfFortune({
     console.log('🤖 Computer solve attempt:', {
       player: getCurrentPlayer()?.name,
       willSolve: willSolve,
-      revealedLetters: Array.from(gameState.puzzle.revealed),
+      revealedLetters: gameState.puzzle.revealed instanceof Set 
+        ? Array.from(gameState.puzzle.revealed) 
+        : (Array.isArray(gameState.puzzle.revealed) ? gameState.puzzle.revealed : []),
       puzzleText: puzzleText,
       timestamp: new Date().toISOString()
     });
@@ -1562,7 +1570,7 @@ function WheelOfFortune({
                 { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
               ],
               currentPlayer: 0,
-              wheelValue: 0,
+              wheelValue: null,
               lastSpinResult: null,
               landedSegmentIndex: -1,
               turnInProgress: false,
@@ -1920,13 +1928,22 @@ function WheelOfFortune({
     const letterInPuzzle = gameState.puzzle.text.includes(letter);
     const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
     
+    // Safe conversion of usedLetters and revealed to arrays
+    const safeUsedLetters = gameState.usedLetters instanceof Set 
+      ? Array.from(gameState.usedLetters) 
+      : (Array.isArray(gameState.usedLetters) ? gameState.usedLetters : []);
+    
+    const safeRevealedLetters = gameState.puzzle.revealed instanceof Set 
+      ? Array.from(gameState.puzzle.revealed) 
+      : (Array.isArray(gameState.puzzle.revealed) ? gameState.puzzle.revealed : []);
+    
     console.log('🔤 LETTER GUESS HANDLER:', {
       letter,
       letterInPuzzle,
       letterCount,
       puzzleText: gameState.puzzle.text,
-      usedLetters: Array.from(gameState.usedLetters),
-      revealedLetters: Array.from(gameState.puzzle.revealed),
+      usedLetters: safeUsedLetters,
+      revealedLetters: safeRevealedLetters,
       timestamp: new Date().toISOString()
     });
     
@@ -2077,7 +2094,7 @@ function WheelOfFortune({
             players: newPlayers,
             currentPlayer: nextPlayer,
             message,
-            wheelValue: 0, // Force spin again for next consonant
+            wheelValue: null, // Force spin again for next consonant
             landedSegmentIndex: prev.landedSegmentIndex,
             finalRoundLettersRemaining: newFinalRoundLettersRemaining,
             finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
@@ -2125,32 +2142,32 @@ function WheelOfFortune({
           message += `${prev.players[nextIdx].name}'s turn!`;
         }
         
-        nextPlayerOut = nextPlayer;
+        // After incorrect guess, reset wheelValue and advance turn
+        return {
+          ...prev,
+          usedLetters: newUsedLetters,
+          puzzle: { ...prev.puzzle, revealed: newRevealed },
+          players: newPlayers,
+          currentPlayer: nextPlayer,
+          message,
+          wheelValue: null, // Reset wheelValue after incorrect guess
+          landedSegmentIndex: prev.landedSegmentIndex,
+          finalRoundLettersRemaining: newFinalRoundLettersRemaining,
+          finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
+        };
       }
-      
-      return {
-        ...prev,
-        usedLetters: newUsedLetters,
-        puzzle: { ...prev.puzzle, revealed: newRevealed },
-        players: newPlayers,
-        currentPlayer: nextPlayerOut,
-        message,
-        wheelValue: 0,
-        landedSegmentIndex: -1,
-        finalRoundLettersRemaining: newFinalRoundLettersRemaining,
-        finalRoundVowelsRemaining: newFinalRoundVowelsRemaining
-      };
     });
     
+    // Clear input after letter call
     setInputLetter('');
-
-    // Broadcast letter guess immediately
+    
+    // Notify multiplayer layer
     if (onLetterGuess) {
       onLetterGuess(letter);
     }
-
-    // ---- Multiplayer: emit endTurn if ownership changed ----
-    if (onEndTurn && nextPlayerOut !== gameState.currentPlayer) {
+    
+    // Notify turn change if player changed
+    if (nextPlayerOut !== gameState.currentPlayer && onEndTurn) {
       onEndTurn(nextPlayerOut as number);
     }
   };
@@ -2269,7 +2286,7 @@ function WheelOfFortune({
               { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
             ],
             currentPlayer: 0,
-            wheelValue: 0,
+            wheelValue: null,
             lastSpinResult: null,
             landedSegmentIndex: -1,
             turnInProgress: false,
@@ -2315,7 +2332,7 @@ function WheelOfFortune({
             ])
           ) as any,
       currentPlayer: 0,
-      wheelValue: 0,
+      wheelValue: null,
       lastSpinResult: null,
       landedSegmentIndex: -1,
       turnInProgress: false,
@@ -2405,7 +2422,7 @@ function WheelOfFortune({
         specialFormat
       },
       usedLetters: new Set<string>(),
-      wheelValue: 0,
+      wheelValue: null,
       message: 'Progress reset! Fresh puzzles available!',
       currentPlayer: 0,
       turnInProgress: false,
@@ -2452,7 +2469,7 @@ function WheelOfFortune({
       hasValue: gameState.wheelValue && typeof gameState.wheelValue === 'object' && 'value' in gameState.wheelValue
     });
     
-    if (!gameState.wheelValue) return false;
+    if (!gameState.wheelValue || gameState.wheelValue === null) return false;
     
     // Check if wheelValue is a number greater than 0
     if (typeof gameState.wheelValue === 'number') {
@@ -3008,7 +3025,9 @@ function WheelOfFortune({
                 </button>
               </div>
               <div className="text-xs">
-                <div className="mb-1">Used: {Array.from(gameState.usedLetters).join(', ')}</div>
+                <div className="mb-1">Used: {gameState.usedLetters instanceof Set 
+                  ? Array.from(gameState.usedLetters).join(', ')
+                  : (Array.isArray(gameState.usedLetters) ? (gameState.usedLetters as string[]).join(', ') : '')}</div>
                 <div className="text-gray-400">Vowels cost $250</div>
               </div>
             </div>
