@@ -267,7 +267,14 @@ export default function FirebaseMultiplayerGame({ gameCode, playerName }: Fireba
     );
   }
 
-  const players = Object.values(gameState.players);
+  const players = (() => {
+    try {
+      return Object.values(gameState.players);
+    } catch (error) {
+      console.error('Error getting players:', error);
+      return [];
+    }
+  })();
   const playerCount = players.length;
   const humanPlayerCount = players.filter(p => p.isHuman).length;
   

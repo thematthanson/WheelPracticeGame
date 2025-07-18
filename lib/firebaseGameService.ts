@@ -748,7 +748,21 @@ export class FirebaseGameService {
     const humanPlayerCount = humanPlayers.length;
     const computerPlayerCount = computerPlayers.length;
     
-    // We want exactly 3 total players: humans + computers
+    // For multiplayer, we only want human players - no computers
+    if (humanPlayerCount > 1) {
+      // Remove all computer players in multiplayer mode
+      if (computerPlayerCount > 0) {
+        const deleteUpdates: { [key: string]: any } = {};
+        for (const computer of computerPlayers) {
+          deleteUpdates[computer.id] = null;
+        }
+        await update(ref(database, `games/${this.gameCode}/players`), deleteUpdates);
+        vLog(`Firebase: Removed ${computerPlayerCount} computer players for multiplayer mode`);
+      }
+      return;
+    }
+    
+    // Single player mode: We want exactly 3 total players: humans + computers
     const totalPlayersNeeded = 3;
     const computersNeeded = Math.max(0, totalPlayersNeeded - humanPlayerCount);
     const computersToRemove = Math.max(0, computerPlayerCount - computersNeeded);

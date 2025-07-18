@@ -405,8 +405,8 @@ function WheelOfFortune({
         }))
       : [
           { name: 'You', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] },
-          { name: 'Sarah', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] },
-          { name: 'Mike', roundMoney: 0, totalMoney: 0, isHuman: false, prizes: [], specialCards: [] }
+          { name: 'Player 2', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] },
+          { name: 'Player 3', roundMoney: 0, totalMoney: 0, isHuman: true, prizes: [], specialCards: [] }
         ],
     currentPlayer: 0,
     turnInProgress: false,
@@ -529,12 +529,17 @@ function WheelOfFortune({
 
   // Get all players as array (works for both formats)
   const getAllPlayers = (): Player[] => {
-    if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
-      // Firebase multiplayer: convert object to array
-      return Object.values(gameState.players) as Player[];
-    } else {
-      // Single player or local multiplayer: already an array
-      return gameState.players as Player[];
+    try {
+      if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
+        // Firebase multiplayer: convert object to array
+        return Object.values(gameState.players) as Player[];
+      } else {
+        // Single player or local multiplayer: already an array
+        return gameState.players as Player[];
+      }
+    } catch (error) {
+      console.error('Error getting all players:', error, 'players:', gameState.players);
+      return [];
     }
   };
 
@@ -966,6 +971,13 @@ function WheelOfFortune({
       };
     }
   };
+
+  // Initialize available puzzles
+  useEffect(() => {
+    const allPuzzles = getAllPuzzles();
+    const unusedPuzzles = allPuzzles.filter(puzzle => !usedPuzzles.has(puzzle));
+    setAvailablePuzzles(unusedPuzzles);
+  }, [usedPuzzles]);
 
   // Once on mount, generate the first puzzle now that helper exists
   useEffect(() => {
@@ -2607,7 +2619,7 @@ function WheelOfFortune({
 
         {/* Game Status */}
         <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-2 sm:mb-4 text-xs sm:text-base">
-          {Object.values(gameState.players).map((player, index) => (
+          {getAllPlayers().map((player, index) => (
             <div key={player.id} className={`rounded-lg p-2 sm:p-4 ${
               gameState.currentPlayer === player.id 
                 ? 'bg-yellow-600 bg-opacity-70 border-2 border-yellow-400' 

@@ -31,7 +31,13 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
       <div>Your playerId: <span className="font-mono">{currentPlayer?.id}</span></div>
       <div>gameState.currentPlayer: <span className="font-mono">{gameState.currentPlayer}</span></div>
       <div>Resolved current turn: <span className="font-mono">{gameState?.players?.[gameState?.currentPlayer]?.name || '—'}</span></div>
-      <div>All player IDs: {Object.values(gameState.players).map((p: any) => p.id).join(', ')}</div>
+                  <div>All player IDs: {(() => {
+              try {
+                return Object.values(gameState.players).map((p: any) => p.id).join(', ');
+              } catch (error) {
+                return 'Error getting player IDs';
+              }
+            })()}</div>
     </div>
   );
 
@@ -92,7 +98,14 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
       )}
 
       <WheelOfFortune
-        initialPlayers={Object.values(gameState.players)}
+        initialPlayers={(() => {
+          try {
+            return Object.values(gameState.players);
+          } catch (error) {
+            console.error('Error getting initial players:', error);
+            return [];
+          }
+        })()}
         isActivePlayer={isActiveHuman}
         firebaseGameState={gameState}
         firebaseService={service}
@@ -114,9 +127,16 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
         onEndTurn={(nextPlayerIndex) => {
           if (isActiveHuman) {
             // Rotate among human players only – skip computers
-            const humanIds = Object.values(gameState.players)
-              .filter((p): p is Player => (p as Player).isHuman)
-              .map(p => p.id);
+            const humanIds = (() => {
+              try {
+                return Object.values(gameState.players)
+                  .filter((p): p is Player => (p as Player).isHuman)
+                  .map(p => p.id);
+              } catch (error) {
+                console.error('Error getting human IDs:', error);
+                return [];
+              }
+            })();
             
             // Validate we have human players
             if (humanIds.length === 0) {
@@ -157,9 +177,16 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
         <div className="text-center">
           <button
             onClick={() => {
-              const humanIds = Object.values(gameState.players)
-                .filter((p): p is Player => (p as Player).isHuman)
-                .map(p => p.id);
+                          const humanIds = (() => {
+              try {
+                return Object.values(gameState.players)
+                  .filter((p): p is Player => (p as Player).isHuman)
+                  .map(p => p.id);
+              } catch (error) {
+                console.error('Error getting human IDs:', error);
+                return [];
+              }
+            })();
               
               // Validate we have human players
               if (humanIds.length === 0) {

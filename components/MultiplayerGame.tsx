@@ -226,7 +226,14 @@ export default function MultiplayerGame({ gameCode, playerName }: MultiplayerGam
         <div className="max-w-4xl mx-auto">
           <h3 className="text-lg font-semibold text-yellow-200 mb-2">Players:</h3>
           <div className="flex flex-wrap gap-2">
-            {Object.values(gameState.players).map((player, index) => (
+            {(() => {
+              try {
+                return Object.values(gameState.players);
+              } catch (error) {
+                console.error('Error getting players:', error);
+                return [];
+              }
+            })().map((player, index) => (
               <div
                 key={player.id}
                 className={`px-3 py-1 rounded-full text-sm ${
