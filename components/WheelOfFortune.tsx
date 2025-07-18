@@ -582,16 +582,20 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Only allow computer turns if we have exactly 2 humans and 1 computer
-      if (humanPlayers.length !== 2 || computerPlayers.length !== 1) {
-        console.log('❌ Computer turns not allowed in this multiplayer configuration');
+      // Allow computer turns if there are any computer players
+      if (computerPlayers.length === 0) {
+        console.log('❌ No computer players found in multiplayer configuration');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         return;
       }
       
-      console.log('🤖 Computer turns allowed in 2-human + 1-computer multiplayer mode');
+      console.log('🤖 Computer turns allowed in multiplayer mode with computer players:', {
+        humanCount: humanPlayers.length,
+        computerCount: computerPlayers.length,
+        totalPlayers: allPlayers.length
+      });
     }
     
     // Computers cannot play in the final round - only human can reach final round
@@ -834,8 +838,7 @@ function WheelOfFortune({
     // 3. No turn is currently in progress
     // 4. Wheel is not spinning
     // 5. Computer turn is not already scheduled
-    // 6. NOT in multiplayer mode (computers don't play in multiplayer)
-    // 7. We have valid players
+    // 6. We have valid players
     const allPlayers = getAllPlayers();
     const isComputerTurn = currentPlayer && 
                           !currentPlayer.isHuman && 
@@ -843,7 +846,6 @@ function WheelOfFortune({
                           !gameState.turnInProgress && 
                           !gameState.isSpinning && 
                           !computerTurnScheduledRef.current &&
-                          !firebaseGameState && // Don't allow computer turns in multiplayer
                           allPlayers.length > 0; // Ensure we have valid players
     
     console.log('🔄 Turn check:', {
@@ -1220,16 +1222,20 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Only allow computer actions if we have exactly 2 humans and 1 computer
-      if (humanPlayers.length !== 2 || computerPlayers.length !== 1) {
-        console.log('❌ Computer actions not allowed in this multiplayer configuration');
+      // Allow computer actions if there are any computer players
+      if (computerPlayers.length === 0) {
+        console.log('❌ No computer players found in multiplayer configuration');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         return;
       }
       
-      console.log('🤖 Computer actions allowed in 2-human + 1-computer multiplayer mode');
+      console.log('🤖 Computer actions allowed in multiplayer mode with computer players:', {
+        humanCount: humanPlayers.length,
+        computerCount: computerPlayers.length,
+        totalPlayers: allPlayers.length
+      });
     }
     
     // Computers cannot play in the final round - only human can reach final round
@@ -1466,16 +1472,20 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Only allow computer actions if we have exactly 2 humans and 1 computer
-      if (humanPlayers.length !== 2 || computerPlayers.length !== 1) {
-        console.log('❌ Computer actions not allowed in this multiplayer configuration');
+      // Allow computer actions if there are any computer players
+      if (computerPlayers.length === 0) {
+        console.log('❌ No computer players found in multiplayer configuration');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
         return;
       }
       
-      console.log('🤖 Computer solve allowed in 2-human + 1-computer multiplayer mode');
+      console.log('🤖 Computer solve allowed in multiplayer mode with computer players:', {
+        humanCount: humanPlayers.length,
+        computerCount: computerPlayers.length,
+        totalPlayers: allPlayers.length
+      });
     }
     
     // Computers cannot play in the final round - only human can reach final round
