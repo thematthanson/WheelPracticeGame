@@ -2673,24 +2673,27 @@ function WheelOfFortune({
               if (gameState.isSpinning) {
                 return '🔄 Spinning...';
               }
-              if (gameState.currentPlayer === 0) {
-                if (gameState.message && gameState.message.includes('spun')) {
-                  const [pre, spinMsg] = gameState.message.split(/(You spun.*Call a consonant\.?)/);
-                  return <span>🎯 Your Turn! Spin the Wheel (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg || gameState.message}</span></span>;
+              // Use isActivePlayer flag to detect whose browser this is
+              if (isActivePlayer) {
+                if (gameState.currentPlayer === 0) {
+                  if (gameState.message && gameState.message.includes('spun')) {
+                    const [pre, spinMsg] = gameState.message.split(/(You spun.*Call a consonant\.?)/);
+                    return <span>🎯 Your Turn! Spin the Wheel (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg || gameState.message}</span></span>;
+                  }
+                  if (gameState.isFinalRound) {
+                    return `🏆 FINAL ROUND! (Round ${gameState.currentRound}) — ${gameState.finalRoundLettersRemaining} consonants, ${gameState.finalRoundVowelsRemaining} vowel remaining`;
+                  }
+                  return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound})`;
+                } else {
+                  if (gameState.message && gameState.message.includes('spun')) {
+                    const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
+                    return <span>{getCurrentPlayer()?.name}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
+                  }
+                  if (gameState.message) {
+                    return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
+                  }
+                  return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound})`;
                 }
-                if (gameState.isFinalRound) {
-                  return `🏆 FINAL ROUND! (Round ${gameState.currentRound}) — ${gameState.finalRoundLettersRemaining} consonants, ${gameState.finalRoundVowelsRemaining} vowel remaining`;
-                }
-                return `🎯 Your Turn! Spin the Wheel (Round ${gameState.currentRound})`;
-              } else {
-                if (gameState.message && gameState.message.includes('spun')) {
-                  const [pre, spinMsg] = gameState.message.split(/(spun.*!)/);
-                  return <span>{getCurrentPlayer()?.name}'s Turn (Round {gameState.currentRound}) — <span className="text-white font-bold">{spinMsg ? 'spun' + spinMsg : gameState.message}</span></span>;
-                }
-                if (gameState.message) {
-                  return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound}) — ${gameState.message}`;
-                }
-                return `${getCurrentPlayer()?.name}'s Turn (Round ${gameState.currentRound})`;
               }
             })()}
           </div>
