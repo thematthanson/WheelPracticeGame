@@ -838,13 +838,16 @@ function WheelOfFortune({
     // 4. Wheel is not spinning
     // 5. Computer turn is not already scheduled
     // 6. NOT in multiplayer mode (computers don't play in multiplayer)
+    // 7. We have valid players
+    const allPlayers = getAllPlayers();
     const isComputerTurn = currentPlayer && 
                           !currentPlayer.isHuman && 
                           !gameState.isFinalRound &&
                           !gameState.turnInProgress && 
                           !gameState.isSpinning && 
                           !computerTurnScheduledRef.current &&
-                          !firebaseGameState; // Don't allow computer turns in multiplayer
+                          !firebaseGameState && // Don't allow computer turns in multiplayer
+                          allPlayers.length > 0; // Ensure we have valid players
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -1276,9 +1279,42 @@ function WheelOfFortune({
       const letterInPuzzle = Math.random() < 0.3; // 30% chance of being correct
       const letterCount = letterInPuzzle ? (gsGuess.puzzle.text.match(new RegExp(letter, 'g')) || []).length : 0;
       
-      let newPlayers = [...gsGuess.players];
+      console.log('🤖 COMPUTER GUESS HANDLER:', {
+        letter,
+        letterInPuzzle,
+        letterCount,
+        puzzleText: gsGuess.puzzle.text,
+        usedLetters: Array.from(gsGuess.usedLetters),
+        revealedLetters: Array.from(gsGuess.puzzle.revealed),
+        timestamp: new Date().toISOString()
+      });
+      
+      let newPlayers = [...getAllPlayers()];
       let nextPlayer = gsGuess.currentPlayer; // Default to same player
       let message = '';
+      
+      // Find the current player in the players array
+      let currentPlayerIndex = -1;
+      let currentPlayer = null;
+      
+      if (typeof gsGuess.currentPlayer === 'string') {
+        // Multiplayer mode - find by ID
+        currentPlayerIndex = newPlayers.findIndex((p: any) => p.id === gsGuess.currentPlayer);
+        currentPlayer = currentPlayerIndex !== -1 ? newPlayers[currentPlayerIndex] : null;
+      } else {
+        // Single player mode - use numeric index
+        currentPlayerIndex = gsGuess.currentPlayer as number;
+        currentPlayer = newPlayers[currentPlayerIndex];
+      }
+      
+      if (!currentPlayer) {
+        console.error('❌ Current player not found in computer guess:', {
+          currentPlayerId: gsGuess.currentPlayer,
+          players: newPlayers,
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
       
       if (letterInPuzzle) {
         // Update statistics for computer's correct guess
@@ -1286,10 +1322,10 @@ function WheelOfFortune({
         
         if (typeof wheelValue === 'number') {
           const earned = wheelValue * letterCount;
-          newPlayers[getCurrentPlayerIndex()].roundMoney += earned;
-          message = `Yes! ${letterCount} ${letter}'s. ${gsGuess.players[getCurrentPlayerIndex()].name} earned $${earned}.`;
+          currentPlayer.roundMoney += earned;
+          message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} earned $${earned}.`;
         } else {
-          message = `Yes! ${letterCount} ${letter}'s. ${gsGuess.players[getCurrentPlayerIndex()].name} continues!`;
+          message = `Yes! ${letterCount} ${letter}'s. ${currentPlayer.name} continues!`;
         }
         // Computer continues their turn - keep same player
         nextPlayer = gsGuess.currentPlayer;
@@ -1330,10 +1366,29 @@ function WheelOfFortune({
         }
       }
       
+      // Handle usedLetters - could be Set or Array
+      const currentUsedLetters = gsGuess.usedLetters instanceof Set 
+        ? Array.from(gsGuess.usedLetters) 
+        : (Array.isArray(gsGuess.usedLetters) ? gsGuess.usedLetters : []);
+      const newUsedLetters = new Set([...currentUsedLetters, letter]);
+      
+      // Handle revealed - could be Set or Array
+      const currentRevealed = gsGuess.puzzle.revealed instanceof Set 
+        ? Array.from(gsGuess.puzzle.revealed) 
+        : (Array.isArray(gsGuess.puzzle.revealed) ? gsGuess.puzzle.revealed : []);
+      const newRevealed = new Set([...currentRevealed, letter]);
+      
+      console.log('🤖 COMPUTER LETTER REVEAL UPDATE:', {
+        letter,
+        currentRevealed,
+        newRevealed: Array.from(newRevealed),
+        timestamp: new Date().toISOString()
+      });
+      
       setGameState(prev => ({
         ...prev,
-        usedLetters: new Set([...prev.usedLetters, letter]),
-        puzzle: { ...prev.puzzle, revealed: new Set([...prev.puzzle.revealed, letter]) },
+        usedLetters: newUsedLetters,
+        puzzle: { ...prev.puzzle, revealed: newRevealed },
         players: newPlayers,
         currentPlayer: nextPlayer,
         message,
@@ -1843,6 +1898,16 @@ function WheelOfFortune({
     const letterInPuzzle = gameState.puzzle.text.includes(letter);
     const letterCount = (gameState.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
     
+    console.log('🔤 LETTER GUESS HANDLER:', {
+      letter,
+      letterInPuzzle,
+      letterCount,
+      puzzleText: gameState.puzzle.text,
+      usedLetters: Array.from(gameState.usedLetters),
+      revealedLetters: Array.from(gameState.puzzle.revealed),
+      timestamp: new Date().toISOString()
+    });
+    
     // We'll determine if the turn changes so we can notify multiplayer layer
     let nextPlayerOut: number | string = gameState.currentPlayer;
 
@@ -1859,6 +1924,13 @@ function WheelOfFortune({
         : (Array.isArray(prev.puzzle.revealed) ? prev.puzzle.revealed : []);
       const newRevealed = new Set([...currentRevealed, letter]);
       
+      console.log('🔍 LETTER REVEAL UPDATE:', {
+        letter,
+        currentRevealed,
+        newRevealed: Array.from(newRevealed),
+        timestamp: new Date().toISOString()
+      });
+      
       // Support both array and object formats for players
       const prevPlayersArr = Array.isArray(prev.players)
         ? prev.players
@@ -1866,6 +1938,29 @@ function WheelOfFortune({
       let newPlayers = [...prevPlayersArr]; // Replaces spread of prev.players
       let message = '';
       let nextPlayer = prev.currentPlayer;
+      
+      // Find the current player in the players array
+      let currentPlayerIndex = -1;
+      let currentPlayer = null;
+      
+      if (typeof prev.currentPlayer === 'string') {
+        // Multiplayer mode - find by ID
+        currentPlayerIndex = newPlayers.findIndex((p: any) => p.id === prev.currentPlayer);
+        currentPlayer = currentPlayerIndex !== -1 ? newPlayers[currentPlayerIndex] : null;
+      } else {
+        // Single player mode - use numeric index
+        currentPlayerIndex = prev.currentPlayer as number;
+        currentPlayer = newPlayers[currentPlayerIndex];
+      }
+      
+      if (!currentPlayer) {
+        console.error('❌ Current player not found in letter guess:', {
+          currentPlayerId: prev.currentPlayer,
+          players: newPlayers,
+          timestamp: new Date().toISOString()
+        });
+        return prev; // Return unchanged state if player not found
+      }
       
       // Update final round letter counts
       let newFinalRoundLettersRemaining = prev.finalRoundLettersRemaining;
@@ -1885,7 +1980,7 @@ function WheelOfFortune({
         
         if (isVowel) {
           if (!prev.isFinalRound) {
-            newPlayers[0].roundMoney -= 250;
+            currentPlayer.roundMoney -= 250;
           }
           message = `Yes! ${letterCount} ${letter}'s. ${prev.isFinalRound ? 'Vowel revealed!' : 'You bought a vowel.'}`;
           // Player can continue turn (buy another vowel or spin again)
@@ -1908,13 +2003,13 @@ function WheelOfFortune({
             
             if (typeof wheelValue === 'number') {
               const earned = wheelValue * letterCount;
-              newPlayers[0].roundMoney += earned;
+              currentPlayer.roundMoney += earned;
               message = `Yes! ${letterCount} ${letter}'s. You earned $${earned}. Spin again or buy a vowel.`;
             } else if (typeof wheelValue === 'object' && wheelValue && 'type' in wheelValue) {
               const wheelSegment = wheelValue as WheelSegment;
               if (wheelSegment.type === 'PRIZE') {
-                newPlayers[0].roundMoney += 500 * letterCount; // Base value for consonants
-                newPlayers[0].prizes.push({
+                currentPlayer.roundMoney += 500 * letterCount; // Base value for consonants
+                currentPlayer.prizes.push({
                   name: wheelSegment.name || 'Unknown Prize',
                   value: wheelSegment.value,
                   round: prev.currentRound,
@@ -1922,12 +2017,12 @@ function WheelOfFortune({
                 });
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and won ${wheelSegment.name}! Spin again or buy a vowel.`;
               } else if (wheelSegment.type === 'WILD_CARD') {
-                newPlayers[0].roundMoney += 500 * letterCount;
-                newPlayers[0].specialCards.push('WILD_CARD');
+                currentPlayer.roundMoney += 500 * letterCount;
+                currentPlayer.specialCards.push('WILD_CARD');
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and got the WILD CARD! Spin again or buy a vowel.`;
               } else if (wheelSegment.type === 'GIFT_TAG') {
-                newPlayers[0].roundMoney += 500 * letterCount;
-                newPlayers[0].prizes.push({
+                currentPlayer.roundMoney += 500 * letterCount;
+                currentPlayer.prizes.push({
                   name: '$1000 GIFT TAG',
                   value: 1000,
                   round: prev.currentRound,
@@ -1935,14 +2030,14 @@ function WheelOfFortune({
                 });
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${500 * letterCount} and the $1000 GIFT TAG! Spin again or buy a vowel.`;
               } else if (wheelSegment.type === 'MILLION') {
-                newPlayers[0].roundMoney += 900 * letterCount;
-                newPlayers[0].specialCards.push('MILLION_DOLLAR_WEDGE');
+                currentPlayer.roundMoney += 900 * letterCount;
+                currentPlayer.specialCards.push('MILLION_DOLLAR_WEDGE');
                 message = `Yes! ${letterCount} ${letter}'s. You earned $${900 * letterCount} and kept the MILLION DOLLAR WEDGE! Spin again or buy a vowel.`;
               }
             } else if (wildCardActive) {
               // Wild Card usage - give base value for consonant
               const earned = 500 * letterCount;
-              newPlayers[0].roundMoney += earned;
+              currentPlayer.roundMoney += earned;
               message = `Yes! ${letterCount} ${letter}'s. Wild Card used! You earned $${earned}. Spin again or buy a vowel.`;
               // Deactivate Wild Card after use
               setWildCardActive(false);
@@ -1971,7 +2066,7 @@ function WheelOfFortune({
         updateStats(letter, false);
         
         if (isVowel && !prev.isFinalRound) {
-          newPlayers[0].roundMoney -= 250;
+          currentPlayer.roundMoney -= 250;
         }
         message = `Sorry, no ${letter}'s. `;
         
@@ -2056,15 +2151,26 @@ function WheelOfFortune({
       // Update statistics for solved puzzle
       updateStats('', false, true);
       
-      const newPlayers = [...gameState.players];
-      newPlayers[0].totalMoney += newPlayers[0].roundMoney;
+      const newPlayers = [...getAllPlayers()];
+      const currentPlayer = getCurrentPlayer();
       
-      setGameState(prev => ({
-        ...prev,
-        players: newPlayers,
-        puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
-        message: `Correct! You solved "${prev.puzzle.text}" and earned $${newPlayers[0].roundMoney}!`
-      }));
+      if (currentPlayer) {
+        currentPlayer.totalMoney += currentPlayer.roundMoney;
+        
+        setGameState(prev => ({
+          ...prev,
+          players: newPlayers,
+          puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+          message: `Correct! You solved "${prev.puzzle.text}" and earned $${currentPlayer.roundMoney}!`
+        }));
+      } else {
+        console.error('❌ Current player not found for solve attempt');
+        setGameState(prev => ({
+          ...prev,
+          puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+          message: `Correct! You solved "${prev.puzzle.text}"!`
+        }));
+      }
       
       setTimeout(() => {
         setGameState(prev => ({
