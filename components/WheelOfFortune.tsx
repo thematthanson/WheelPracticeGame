@@ -1307,11 +1307,13 @@ function WheelOfFortune({
         // Check if next player is a computer (for multiplayer mode)
         let nextPlayerObj;
         if (firebaseGameState && typeof nextPlayer === 'string') {
-          // Multiplayer mode - find player by ID
-          nextPlayerObj = gameStateRef.current.players.find(p => p.id === nextPlayer);
+          // Multiplayer mode - use helper to safely retrieve player by ID (works for object or array)
+          nextPlayerObj = getPlayerById(nextPlayer);
         } else {
-          // Single player mode - use numeric index
-          nextPlayerObj = gameStateRef.current.players[nextPlayer as number];
+          // Single-player or local multiplayer – numeric index
+          nextPlayerObj = Array.isArray(gameStateRef.current.players)
+            ? gameStateRef.current.players[nextPlayer as number]
+            : getPlayerById(nextPlayer);
         }
         
         if (nextPlayerObj && !nextPlayerObj.isHuman) {
@@ -1795,7 +1797,11 @@ function WheelOfFortune({
         : (Array.isArray(prev.puzzle.revealed) ? prev.puzzle.revealed : []);
       const newRevealed = new Set([...currentRevealed, letter]);
       
-      let newPlayers = [...prev.players];
+      // Support both array and object formats for players
+      const prevPlayersArr = Array.isArray(prev.players)
+        ? prev.players
+        : Object.values(prev.players as Record<string, any>);
+      let newPlayers = [...prevPlayersArr]; // Replaces spread of prev.players
       let message = '';
       let nextPlayer = prev.currentPlayer;
       
@@ -1910,7 +1916,10 @@ function WheelOfFortune({
         // Determine next player based on game mode
         if (firebaseGameState) {
           // Multiplayer mode - advance to next human player
-          const humanPlayers = prev.players.filter(p => p.isHuman && p.id);
+          const prevPlayersArray = Array.isArray(prev.players)
+            ? prev.players
+            : Object.values(prev.players as Record<string, any>);
+          const humanPlayers = (prevPlayersArray as any[]).filter((p: any) => p.isHuman && p.id);
           const currentHumanIndex = humanPlayers.findIndex(p => p.id === prev.currentPlayer);
           if (currentHumanIndex !== -1) {
             const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
@@ -2498,13 +2507,8 @@ function WheelOfFortune({
       return false;
     }
     
-    // Validate next player exists
-    let nextPlayerObj;
-    if (typeof nextPlayer === 'string') {
-      nextPlayerObj = gameState.players.find(p => p.id === nextPlayer);
-    } else {
-      nextPlayerObj = gameState.players[nextPlayer];
-    }
+    // Validate next player exists (works with array or object format)
+    const nextPlayerObj = getPlayerById(nextPlayer);
     
     if (!nextPlayerObj) {
       console.error('❌ Next player not found for turn validation');
