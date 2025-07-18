@@ -712,7 +712,8 @@ function WheelOfFortune({
           setComputerTurnInProgress(false);
           computerTurnRef.current = false;
           computerTurnScheduledRef.current = false;
-          
+          // Check if next player is a computer
+          const nextPlayerObj = getPlayerById(nextPlayer);
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             computerTurn();
           }
@@ -762,8 +763,6 @@ function WheelOfFortune({
           }
         }
         
-        newMessage += `${nextPlayerObj?.name}'s turn!`;
-        
         setGameState(prev => ({
           ...prev,
           isSpinning: false,
@@ -781,7 +780,8 @@ function WheelOfFortune({
           setComputerTurnInProgress(false);
           computerTurnRef.current = false;
           computerTurnScheduledRef.current = false;
-          
+          // Check if next player is a computer
+          const nextPlayerObj = getPlayerById(nextPlayer);
           if (nextPlayerObj && !nextPlayerObj.isHuman) {
             computerTurn();
           }
