@@ -853,9 +853,27 @@ function WheelOfFortune({
     // 5. Computer turn is not already scheduled
     // 6. We have valid players
     // 7. Computer turn was not recently completed (prevent immediate re-triggering)
+    // 8. Computer turns are allowed in this game configuration
     const allPlayers = getAllPlayers();
     const currentTime = Date.now();
     const timeSinceLastComputerTurn = currentTime - lastComputerTurnTimeRef.current;
+    
+    // Check if computer turns are allowed in this configuration
+    let computerTurnsAllowed = true;
+    if (firebaseGameState) {
+      const humanPlayers = allPlayers.filter(p => p.isHuman);
+      const computerPlayers = allPlayers.filter(p => !p.isHuman);
+      
+      // Only allow computer turns if there are fewer than 3 humans
+      if (humanPlayers.length >= 3) {
+        computerTurnsAllowed = false;
+        console.log('❌ Computer turns not allowed - full human game (3+ humans)');
+      } else if (computerPlayers.length === 0) {
+        computerTurnsAllowed = false;
+        console.log('❌ Computer turns not allowed - no computer players available');
+      }
+    }
+    
     const isComputerTurn = currentPlayer && 
                           !currentPlayer.isHuman && 
                           !gameState.isFinalRound &&
@@ -863,7 +881,8 @@ function WheelOfFortune({
                           !gameState.isSpinning && 
                           !computerTurnScheduledRef.current &&
                           allPlayers.length > 0 && // Ensure we have valid players
-                          timeSinceLastComputerTurn > 3000; // At least 3 seconds since last computer turn
+                          timeSinceLastComputerTurn > 3000 && // At least 3 seconds since last computer turn
+                          computerTurnsAllowed; // Computer turns are allowed in this configuration
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -874,11 +893,23 @@ function WheelOfFortune({
       turnInProgress: gameState.turnInProgress,
       computerTurnScheduled: computerTurnScheduledRef.current,
       timeSinceLastComputerTurn,
+      computerTurnsAllowed,
       isMultiplayer: !!firebaseGameState,
       shouldTrigger: isComputerTurn
     });
     
     if (isComputerTurn) {
+      // Additional safety check: ensure no human players are waiting for their turn
+      if (firebaseGameState) {
+        const humanPlayers = allPlayers.filter(p => p.isHuman);
+        const waitingHumanPlayers = humanPlayers.filter(p => p.id !== gameState.currentPlayer);
+        
+        if (waitingHumanPlayers.length > 0) {
+          console.log('⚠️ Computer turn blocked - human players waiting:', waitingHumanPlayers.map(p => p.name));
+          return;
+        }
+      }
+      
       console.log('🤖 Triggering computer turn for:', currentPlayer.name);
       computerTurnScheduledRef.current = true;
       setComputerTurnInProgress(true);
