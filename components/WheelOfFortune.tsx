@@ -2491,18 +2491,30 @@ function WheelOfFortune({
         
         // Determine next player based on game mode
         if (firebaseGameState) {
-          // Multiplayer mode - advance to next human player
+          // Multiplayer mode - advance to next player (including computer players)
           const prevPlayersArray = Array.isArray(prev.players)
             ? prev.players
             : Object.values(prev.players as Record<string, any>);
-          const humanPlayers = (prevPlayersArray as any[]).filter((p: any) => p.isHuman && p.id);
-          const currentHumanIndex = humanPlayers.findIndex(p => p.id === prev.currentPlayer);
-          if (currentHumanIndex !== -1) {
-            const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
-            const nextHumanPlayer = humanPlayers[nextHumanIndex];
-            if (nextHumanPlayer && nextHumanPlayer.id) {
-              nextPlayer = nextHumanPlayer.id;
-              message += `${nextHumanPlayer.name}'s turn!`;
+          
+          // Find current player in all players list (not just humans)
+          const currentPlayerIndex = prevPlayersArray.findIndex((p: any) => p.id === prev.currentPlayer);
+          console.log('❌ Incorrect letter guess - advancing to next player');
+          console.log('👥 All players for advancement:', prevPlayersArray.map((p: any) => ({ id: p.id, name: p.name, isHuman: p.isHuman })));
+          console.log('🔍 Current player index in all players:', currentPlayerIndex);
+          
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % prevPlayersArray.length;
+            const nextPlayerObj = prevPlayersArray[nextIndex];
+            if (nextPlayerObj && nextPlayerObj.id) {
+              nextPlayer = nextPlayerObj.id;
+              message += `${nextPlayerObj.name}'s turn!`;
+              console.log('➡️ Advancing to next player:', {
+                currentIndex: currentPlayerIndex,
+                nextIndex,
+                nextPlayerId: nextPlayer,
+                nextPlayerName: nextPlayerObj.name,
+                nextPlayerIsHuman: nextPlayerObj.isHuman
+              });
             } else {
               // Fallback
               const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
@@ -2510,7 +2522,7 @@ function WheelOfFortune({
               message += `${prev.players[nextIdx].name}'s turn!`;
             }
           } else {
-            // Fallback
+            // Current player not found in all players, use fallback
             const nextIdx = (getCurrentPlayerIndex() + 1) % prev.players.length;
             nextPlayer = nextIdx;
             message += `${prev.players[nextIdx].name}'s turn!`;
@@ -3306,9 +3318,40 @@ function WheelOfFortune({
           });
         }
         
+        // Only update currentPlayer if it's a legitimate change (not just Firebase sync overriding local advancement)
+        const shouldUpdateCurrentPlayer = () => {
+          // If local state has a different current player than Firebase, check if it's a legitimate change
+          if (prev.currentPlayer !== firebaseGameState.currentPlayer) {
+            // Check if this is a legitimate turn advancement (not just Firebase being out of sync)
+            const allPlayers = getAllPlayers();
+            const currentPlayerIndex = allPlayers.findIndex(p => p.id === prev.currentPlayer);
+            const firebasePlayerIndex = allPlayers.findIndex(p => p.id === firebaseGameState.currentPlayer);
+            
+            // If the difference is more than 1 position, it's likely a legitimate turn advancement
+            const indexDiff = Math.abs(currentPlayerIndex - firebasePlayerIndex);
+            const isLegitimateAdvancement = indexDiff > 1 || indexDiff === 0;
+            
+            console.log('🔄 Current player sync decision:', {
+              localPlayer: prev.currentPlayer,
+              firebasePlayer: firebaseGameState.currentPlayer,
+              localIndex: currentPlayerIndex,
+              firebaseIndex: firebasePlayerIndex,
+              indexDiff,
+              isLegitimateAdvancement,
+              shouldUpdate: !isLegitimateAdvancement
+            });
+            
+            // Only update if it's NOT a legitimate advancement (i.e., Firebase is correct)
+            return !isLegitimateAdvancement;
+          }
+          
+          // If they're the same, no need to update
+          return false;
+        };
+        
         return {
           ...prev,
-          currentPlayer: firebaseGameState.currentPlayer,
+          currentPlayer: shouldUpdateCurrentPlayer() ? firebaseGameState.currentPlayer : prev.currentPlayer,
           players: firebaseGameState.players,
           puzzle: localPuzzle,
           usedLetters: new Set(firebaseGameState.usedLetters || []),
