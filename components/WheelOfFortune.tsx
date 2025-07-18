@@ -2125,13 +2125,19 @@ function WheelOfFortune({
       const newUsedLetters = new Set([...currentUsedLetters, letter]);
       
       // Handle revealed - could be Set or Array
-      const currentRevealed = prev.puzzle.revealed instanceof Set 
-        ? Array.from(prev.puzzle.revealed) 
-        : (Array.isArray(prev.puzzle.revealed) ? prev.puzzle.revealed : []);
+      let currentRevealed: string[] = [];
       
-      // Ensure we have a valid array before creating the new Set
-      const safeCurrentRevealed = Array.isArray(currentRevealed) ? currentRevealed : [];
-      const newRevealed = new Set([...safeCurrentRevealed, letter]);
+      if (prev.puzzle.revealed instanceof Set) {
+        currentRevealed = Array.from(prev.puzzle.revealed);
+      } else if (Array.isArray(prev.puzzle.revealed)) {
+        currentRevealed = prev.puzzle.revealed;
+      } else {
+        // Force initialize if missing
+        console.log('🔧 Letter guess: Initializing missing revealed property');
+        currentRevealed = [];
+      }
+      
+      const newRevealed = new Set([...currentRevealed, letter]);
       
       console.log('🔍 LETTER REVEAL UPDATE:', {
         letter,
@@ -2660,9 +2666,22 @@ function WheelOfFortune({
     // Handle spaces and special characters
     if (char === ' ' || char === '/') return true;
     
-    // Check if puzzle and revealed exist
-    if (!gameState.puzzle?.revealed) {
-      console.log('🔍 isCharacterRevealed: No puzzle.revealed found for char:', char);
+    // Ensure puzzle.revealed is always initialized
+    if (!gameState.puzzle) {
+      console.log('🔍 isCharacterRevealed: No puzzle found for char:', char);
+      return false;
+    }
+    
+    // Force initialize revealed if it doesn't exist
+    if (!gameState.puzzle.revealed) {
+      console.log('🔍 isCharacterRevealed: Initializing missing revealed property for char:', char);
+      setGameState(prev => ({
+        ...prev,
+        puzzle: {
+          ...prev.puzzle,
+          revealed: new Set<string>()
+        }
+      }));
       return false;
     }
     
@@ -2868,6 +2887,11 @@ function WheelOfFortune({
           }
         }
         
+        // ALWAYS ensure we have a valid Set, even if Firebase doesn't provide revealed
+        if (!revealedLetters || revealedLetters.size === 0) {
+          revealedLetters = new Set<string>();
+        }
+        
         console.log('🔄 Firebase sync puzzle revealed:', {
           firebaseRevealed: firebasePuzzle.revealed,
           convertedRevealed: Array.from(revealedLetters),
@@ -2967,6 +2991,20 @@ function WheelOfFortune({
             specialFormat
           }
         }));
+        
+        // Double-check that revealed is initialized
+        setTimeout(() => {
+          if (!gameState.puzzle?.revealed) {
+            console.log('🔧 Force initializing revealed property for local puzzle');
+            setGameState(prev => ({
+              ...prev,
+              puzzle: {
+                ...prev.puzzle,
+                revealed: new Set<string>()
+              }
+            }));
+          }
+        }, 100);
       }
     }
   }, [firebaseGameState]);
