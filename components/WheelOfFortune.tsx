@@ -500,6 +500,15 @@ function WheelOfFortune({
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
+    // Don't allow computer turns in multiplayer mode
+    if (firebaseGameState) {
+      console.log('❌ Computer turns not allowed in multiplayer mode');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
+    
     // Computers cannot play in the final round - only human can reach final round
     if (gameState.isFinalRound) {
       console.log('❌ Computer cannot play in final round');
@@ -692,12 +701,14 @@ function WheelOfFortune({
     // 3. No turn is currently in progress
     // 4. Wheel is not spinning
     // 5. Computer turn is not already scheduled
+    // 6. NOT in multiplayer mode (computers don't play in multiplayer)
     const isComputerTurn = currentPlayer && 
                           !currentPlayer.isHuman && 
                           !gameState.isFinalRound &&
                           !gameState.turnInProgress && 
                           !gameState.isSpinning && 
-                          !computerTurnScheduledRef.current;
+                          !computerTurnScheduledRef.current &&
+                          !firebaseGameState; // Don't allow computer turns in multiplayer
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
@@ -707,6 +718,7 @@ function WheelOfFortune({
       isSpinning: gameState.isSpinning,
       turnInProgress: gameState.turnInProgress,
       computerTurnScheduled: computerTurnScheduledRef.current,
+      isMultiplayer: !!firebaseGameState,
       shouldTrigger: isComputerTurn
     });
     
@@ -718,7 +730,7 @@ function WheelOfFortune({
         computerTurn();
       }, 1000); // 1 second delay before computer starts
     }
-  }, [gameState.currentPlayer, gameState.isFinalRound, gameState.isSpinning, gameState.turnInProgress, computerTurn]);
+  }, [gameState.currentPlayer, gameState.isFinalRound, gameState.isSpinning, gameState.turnInProgress, computerTurn, firebaseGameState]);
 
   // Function to update statistics
   const updateStats = (letter: string, wasCorrect: boolean, puzzleSolved: boolean = false) => {
@@ -1047,6 +1059,15 @@ function WheelOfFortune({
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
+    // Don't allow computer actions in multiplayer mode
+    if (firebaseGameState) {
+      console.log('❌ Computer actions not allowed in multiplayer mode');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
+    
     // Computers cannot play in the final round - only human can reach final round
     if (gameState.isFinalRound) {
       console.log('❌ Computer cannot play in final round');
@@ -1225,6 +1246,15 @@ function WheelOfFortune({
   const computerSolve = (successRate = 0.3) => {
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
+    
+    // Don't allow computer actions in multiplayer mode
+    if (firebaseGameState) {
+      console.log('❌ Computer actions not allowed in multiplayer mode');
+      setComputerTurnInProgress(false);
+      computerTurnRef.current = false;
+      computerTurnScheduledRef.current = false;
+      return;
+    }
     
     // Computers cannot play in the final round - only human can reach final round
     if (gameState.isFinalRound) {
