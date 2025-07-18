@@ -23,6 +23,18 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
   service
 }) => {
   const isActiveHuman = currentPlayer && currentPlayer.isHuman && currentPlayer.id === gameState.currentPlayer;
+  
+  // Debug turn logic
+  console.log('🔍 TURN LOGIC DEBUG:', {
+    currentPlayerId: currentPlayer?.id,
+    currentPlayerName: currentPlayer?.name,
+    currentPlayerIsHuman: currentPlayer?.isHuman,
+    gameStateCurrentPlayer: gameState.currentPlayer,
+    isActiveHuman,
+    allPlayerIds: Object.values(gameState.players).map((p: any) => p.id),
+    allPlayerNames: Object.values(gameState.players).map((p: any) => p.name),
+    timestamp: new Date().toISOString()
+  });
 
   // Debug info
   const debugInfo = (
@@ -30,12 +42,20 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
       <div><b>Debug Info:</b></div>
       <div>Your playerId: <span className="font-mono">{currentPlayer?.id}</span></div>
       <div>gameState.currentPlayer: <span className="font-mono">{gameState.currentPlayer}</span></div>
-      <div>Resolved current turn: <span className="font-mono">{gameState?.players?.[gameState?.currentPlayer]?.name || '—'}</span></div>
-                  <div>All player IDs: {(() => {
+      <div>Current turn player: <span className="font-mono">{gameState?.players?.[gameState?.currentPlayer]?.name || '—'}</span></div>
+      <div>Is your turn: <span className="font-mono">{isActiveHuman ? 'YES' : 'NO'}</span></div>
+      <div>All player IDs: {(() => {
               try {
                 return Object.values(gameState.players).map((p: any) => p.id).join(', ');
               } catch (error) {
                 return 'Error getting player IDs';
+              }
+            })()}</div>
+      <div>All player names: {(() => {
+              try {
+                return Object.values(gameState.players).map((p: any) => p.name).join(', ');
+              } catch (error) {
+                return 'Error getting player names';
               }
             })()}</div>
     </div>
