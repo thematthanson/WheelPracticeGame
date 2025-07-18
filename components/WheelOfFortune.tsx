@@ -530,15 +530,27 @@ function WheelOfFortune({
   // Get all players as array (works for both formats)
   const getAllPlayers = (): Player[] => {
     try {
+      // Handle case where players might be undefined or null
+      if (!gameState.players) {
+        console.warn('No players found in gameState');
+        return [];
+      }
+      
       if (firebaseGameState && typeof gameState.players === 'object' && !Array.isArray(gameState.players)) {
         // Firebase multiplayer: convert object to array
-        return Object.values(gameState.players) as Player[];
-      } else {
+        const playerValues = Object.values(gameState.players);
+        console.log('Firebase players converted:', playerValues);
+        return playerValues as Player[];
+      } else if (Array.isArray(gameState.players)) {
         // Single player or local multiplayer: already an array
+        console.log('Local players array:', gameState.players);
         return gameState.players as Player[];
+      } else {
+        console.warn('Unexpected players format:', typeof gameState.players, gameState.players);
+        return [];
       }
     } catch (error) {
-      console.error('Error getting all players:', error, 'players:', gameState.players);
+      console.error('Error getting all players:', error, gameState.players);
       return [];
     }
   };
@@ -1575,7 +1587,7 @@ function WheelOfFortune({
       const landedIndex = getLandedSegmentIndex(newRotation);
       const segment = currentWheelSegments[landedIndex];
       let newMessage = '';
-      let newPlayers = [...gameState.players];
+      let newPlayers = [...getAllPlayers()];
       let nextPlayer = gameState.currentPlayer;
       
       if (typeof segment === 'number') {
@@ -1599,18 +1611,21 @@ function WheelOfFortune({
               newMessage += `${nextHumanPlayer.name}'s turn!`;
             } else {
               // Fallback
-              nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-              newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+              const allPlayersFallback = getAllPlayers();
+              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+              newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
             }
           } else {
             // Fallback
-            nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-            newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+            const allPlayersFallback = getAllPlayers();
+            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+            newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
           }
         } else {
           // Single player mode - advance to next player
-          nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-          newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+          const allPlayersSingle = getAllPlayers();
+          nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
+          newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
         }
       } else if (segment === 'LOSE A TURN') {
         newMessage = 'LOSE A TURN! ';
@@ -1629,18 +1644,21 @@ function WheelOfFortune({
               newMessage += `${nextHumanPlayer.name}'s turn!`;
             } else {
               // Fallback
-              nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-              newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+              const allPlayersFallback = getAllPlayers();
+              nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+              newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
             }
           } else {
             // Fallback
-            nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-            newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+            const allPlayersFallback = getAllPlayers();
+            nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
+            newMessage += `${allPlayersFallback[nextPlayer as number].name}'s turn!`;
           }
         } else {
           // Single player mode - advance to next player
-          nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
-          newMessage += `${gameState.players[nextPlayer].name}'s turn!`;
+          const allPlayersSingle = getAllPlayers();
+          nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersSingle.length;
+          newMessage += `${allPlayersSingle[nextPlayer as number].name}'s turn!`;
         }
       } else if (typeof segment === 'object' && segment && 'type' in segment) {
         if (segment.type === 'PRIZE') {
@@ -1659,7 +1677,8 @@ function WheelOfFortune({
       if (!validateTurnState(currentPlayer, nextPlayer)) {
         console.error('❌ Invalid turn state detected, using fallback');
         // Use fallback turn advancement
-        nextPlayer = (getCurrentPlayerIndex() + 1) % gameState.players.length;
+        const allPlayersFallback = getAllPlayers();
+        nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
       }
       
       console.log('🎯 Wheel landed:', {

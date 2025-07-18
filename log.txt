@@ -1,159 +1,68 @@
-P1
 /favicon.svg:1  Failed to load resource: the server responded with a status of 404 ()
-519-062e4087ff2cbc7a.js:1 Firebase: Updating game 97RT0T with: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🤖 Triggering computer turn for: Computer 1
-85-b88b7640523f3282.js:16 No available puzzles, resetting...
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-519-062e4087ff2cbc7a.js:1 Firebase: Updating game 97RT0T with: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🤖 Starting computer turn for: Computer 1
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🤖 Computer Computer 1 making guess...
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
-85-b88b7640523f3282.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 Turn state changed: Object
+85-c68562732ef10f4b.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+hook.js:608 ⚠️ Computer player is current player but humans are available
+overrideMethod @ hook.js:608
+85-c68562732ef10f4b.js:16 No available puzzles, resetting...
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 Turn state changed: Object
+85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+519-f3e1b9e14ace6d75.js:1 Firebase: Updating game 9DYQ0L with: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
+85-c68562732ef10f4b.js:16 🔄 Turn state changed: Object
+85-c68562732ef10f4b.js:16 🎯 WHEEL LANDING CALCULATION: Object
+85-c68562732ef10f4b.js:16 Uncaught TypeError: S.players is not iterable
+    at 85-c68562732ef10f4b.js:16:26864
+85-c68562732ef10f4b.js:16 🔍 hasWheelValue check: Object
+85-c68562732ef10f4b.js:16 🔍 hasWheelValue check: Object
+85-c68562732ef10f4b.js:16 ❌ Cannot call consonant - no wheel value: Object
+85-c68562732ef10f4b.js:16 🔄 Turn check: Object
 
 
-P2
 [Info] Successfully preconnected to https://fonts.gstatic.com/ (x2)
 [Info] Successfully preconnected to https://fonts.googleapis.com/
-[Error] XMLHttpRequest cannot load https://s-usc1a-nss-2039.firebaseio.com/.lp?disconn=t&id=4769660&pw=sUyRRiV41O.
-	EnvSendPing
-	EnvDisconnect
-	removeChild
-	shutdown_ (a198fdd9-0ec7c9362529be72.js:151:2463)
-	onClosed_ (a198fdd9-0ec7c9362529be72.js:151:2695)
-	(anonymous function) (a198fdd9-0ec7c9362529be72.js:151:1025)
-	closeAfter (a198fdd9-0ec7c9362529be72.js:136:262)
-	(anonymous function) (a198fdd9-0ec7c9362529be72.js:151:1003)
-	pLPCommand
-	Global Code
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Error] Failed to load resource: the server responded with a status of 404 () (favicon.svg, line 0)
+[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🤖 Triggering computer turn for: – "Computer 1" (85-b88b7640523f3282.js, line 16)
-[Log] No available puzzles, resetting... (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 Turn state changed: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Warning] ⚠️ Computer player is current player but humans are available (85-c68562732ef10f4b.js, line 16)
+[Log] No available puzzles, resetting... (85-c68562732ef10f4b.js, line 16)
+[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 Turn state changed: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🤖 Starting computer turn for: Computer 1 (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🤖 Computer Computer 1 making guess... (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🤖 Triggering computer turn for: – "Computer 1" (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🤖 Starting computer turn for: Computer 1 (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🤖 Computer Computer 1 making guess... (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🤖 Starting computer turn for: Computer 1 (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🤖 Computer Computer 1 making guess... (85-b88b7640523f3282.js, line 16)
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
-Object
-[Log] 🔄 Turn check: – Object (85-b88b7640523f3282.js, line 16)
+[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
 Object
 > Selected Element
 < <div class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white">…</div>
