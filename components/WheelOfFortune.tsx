@@ -1172,54 +1172,33 @@ function WheelOfFortune({
     
     console.log(`🤖 Computer ${currentPlayer.name} making guess...`);
     
-    // Common letters in English (E, T, A, O, I, N, S, H, R, D, L, C, U, M, W, F, G, Y, P, B, V, K, J, X, Q, Z)
-    const commonLetters = ['E', 'T', 'A', 'O', 'I', 'N', 'S', 'H', 'R', 'D', 'L', 'C', 'U', 'M', 'W', 'F', 'G', 'Y', 'P', 'B', 'V', 'K', 'J', 'X', 'Q', 'Z'];
-    
-    // Find unused letters
-    const unusedLetters = commonLetters.filter(letter => !gameState.usedLetters.has(letter));
-    
-    // --- New: Randomly try to solve puzzle if enough letters are revealed ---
-    const puzzleText = gameState.puzzle.text;
-    const revealedLetters = Array.from(gameState.puzzle.revealed);
-    const revealedCount = revealedLetters.length;
-    const totalLetters = puzzleText.replace(/[^A-Z]/g, '').length;
-    const revealedPercentage = (revealedCount / totalLetters) * 100;
-    // If at least 30% of the letters are revealed, 30% chance to try to solve
-    if (revealedPercentage > 30 && Math.random() < 0.3) {
-      console.log(`🤖 Computer ${currentPlayer.name} attempting to solve (${revealedPercentage.toFixed(1)}% revealed)`);
-      setTimeout(() => {
-        computerSolve(0.7); // 70% success rate
-      }, 1000);
-      return;
-    }
-    // --- End new logic ---
+    // Computer makes completely random letter guesses
+    const allLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+    const unusedLetters = allLetters.filter(letter => !gameState.usedLetters.has(letter));
     
     if (unusedLetters.length === 0) {
-      // No letters left, computer tries to solve
+      // No letters left, computer tries to solve (but will always fail)
       console.log(`🤖 Computer ${currentPlayer.name} attempting to solve (no letters left)`);
       setTimeout(() => {
-        computerSolve(0.7); // 70% success rate
+        computerSolve(0.0); // 0% success rate - computer never solves correctly
       }, 1000);
       return;
     }
     
-    // Computer should only call consonants when it's their turn (after spinning)
-    // Only vowels in final round, but computers can't reach final round
-    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
-    const unusedConsonants = consonants.filter(letter => !gameState.usedLetters.has(letter));
+    // Computer picks a completely random letter (not weighted by frequency)
+    const randomIndex = Math.floor(Math.random() * unusedLetters.length);
+    let letter = unusedLetters[randomIndex];
     
-    // If no consonants left, computer tries to solve
-    if (unusedConsonants.length === 0) {
-      console.log(`🤖 Computer ${currentPlayer.name} attempting to solve (no consonants left)`);
-      setTimeout(() => {
-        computerSolve(0.7); // 70% success rate
-      }, 1000);
-      return;
+    // Computer rarely buys vowels (only 10% chance)
+    const isVowel = 'AEIOU'.includes(letter);
+    if (isVowel && Math.random() > 0.1) {
+      // Skip this vowel and pick a consonant instead
+      const consonants = unusedLetters.filter(l => !'AEIOU'.includes(l));
+      if (consonants.length > 0) {
+        const consonantIndex = Math.floor(Math.random() * consonants.length);
+        letter = consonants[consonantIndex];
+      }
     }
-    
-    // Computer picks a consonant (with some randomness)
-    const randomIndex = Math.floor(Math.random() * Math.min(unusedConsonants.length, 5)); // Pick from top 5 unused consonants
-    const letter = unusedConsonants[randomIndex];
     
     // Show computer's action in the input box
     setComputerAction(letter);
@@ -1227,8 +1206,9 @@ function WheelOfFortune({
     
     setTimeout(() => {
       const gsGuess = gameStateRef.current;
-      const letterInPuzzle = gsGuess.puzzle.text.includes(letter);
-      const letterCount = (gsGuess.puzzle.text.match(new RegExp(letter, 'g')) || []).length;
+      // Computer's letter guesses are randomly correct or incorrect
+      const letterInPuzzle = Math.random() < 0.3; // 30% chance of being correct
+      const letterCount = letterInPuzzle ? (gsGuess.puzzle.text.match(new RegExp(letter, 'g')) || []).length : 0;
       
       let newPlayers = [...gsGuess.players];
       let nextPlayer = gsGuess.currentPlayer; // Default to same player
@@ -1332,17 +1312,26 @@ function WheelOfFortune({
   };
 
   // Update computerSolve to accept a successRate argument
-  const computerSolve = (successRate = 0.3) => {
+  const computerSolve = (successRate = 0.0) => {
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer || currentPlayer.isHuman) return;
     
-    // Don't allow computer actions in multiplayer mode
+    // Check if computer actions are allowed in this multiplayer scenario
     if (firebaseGameState) {
-      console.log('❌ Computer actions not allowed in multiplayer mode');
-      setComputerTurnInProgress(false);
-      computerTurnRef.current = false;
-      computerTurnScheduledRef.current = false;
-      return;
+      const allPlayers = getAllPlayers();
+      const humanPlayers = allPlayers.filter(p => p.isHuman);
+      const computerPlayers = allPlayers.filter(p => !p.isHuman);
+      
+      // Only allow computer actions if we have exactly 2 humans and 1 computer
+      if (humanPlayers.length !== 2 || computerPlayers.length !== 1) {
+        console.log('❌ Computer actions not allowed in this multiplayer configuration');
+        setComputerTurnInProgress(false);
+        computerTurnRef.current = false;
+        computerTurnScheduledRef.current = false;
+        return;
+      }
+      
+      console.log('🤖 Computer solve allowed in 2-human + 1-computer multiplayer mode');
     }
     
     // Computers cannot play in the final round - only human can reach final round
@@ -1362,12 +1351,12 @@ function WheelOfFortune({
     
     console.log(`🤖 Computer ${currentPlayer.name} attempting to solve...`);
     
-    // Computer tries to solve the puzzle (with some randomness)
+    // Computer always fails to solve (successRate is 0.0)
     const puzzleText = gameState.puzzle.text;
     const revealedText = Array.from(gameState.puzzle.revealed).join('');
     
-    // 70% chance to solve if called with 0.7
-    const willSolve = Math.random() < successRate;
+    // Computer never solves correctly
+    const willSolve = false;
     
     console.log('🤖 Computer solve attempt:', {
       player: getCurrentPlayer()?.name,
@@ -1377,8 +1366,23 @@ function WheelOfFortune({
       timestamp: new Date().toISOString()
     });
     
+    // Generate random wrong answer for computer
+    const randomWrongAnswers = [
+      'WRONG ANSWER',
+      'NOT CORRECT',
+      'TRY AGAIN',
+      'INCORRECT GUESS',
+      'BAD GUESS',
+      'MISSED IT',
+      'WRONG GUESS',
+      'NOT RIGHT',
+      'FAILED GUESS',
+      'INCORRECT'
+    ];
+    const randomWrongAnswer = randomWrongAnswers[Math.floor(Math.random() * randomWrongAnswers.length)];
+    
     // Show computer's solve attempt
-    setComputerSolveAttempt(willSolve ? puzzleText : 'Incorrect guess');
+    setComputerSolveAttempt(willSolve ? puzzleText : randomWrongAnswer);
     setGameState(prev => ({ ...prev, message: `${prev.players[getCurrentPlayerIndex()].name} is thinking...` }));
     
     setTimeout(() => {
