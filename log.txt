@@ -1,68 +1,161 @@
-/favicon.svg:1  Failed to load resource: the server responded with a status of 404 ()
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-85-c68562732ef10f4b.js:16 🔄 Turn state changed: Object
-85-c68562732ef10f4b.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-hook.js:608 ⚠️ Computer player is current player but humans are available
-overrideMethod @ hook.js:608
-85-c68562732ef10f4b.js:16 No available puzzles, resetting...
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-85-c68562732ef10f4b.js:16 🔄 Turn state changed: Object
-85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-85-c68562732ef10f4b.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-519-f3e1b9e14ace6d75.js:1 Firebase: Updating game 9DYQ0L with: Object
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-85-c68562732ef10f4b.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-c68562732ef10f4b.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-85-c68562732ef10f4b.js:16 🔄 Turn state changed: Object
-85-c68562732ef10f4b.js:16 🎯 WHEEL LANDING CALCULATION: Object
-85-c68562732ef10f4b.js:16 Uncaught TypeError: S.players is not iterable
-    at 85-c68562732ef10f4b.js:16:26864
-85-c68562732ef10f4b.js:16 🔍 hasWheelValue check: Object
-85-c68562732ef10f4b.js:16 🔍 hasWheelValue check: Object
-85-c68562732ef10f4b.js:16 ❌ Cannot call consonant - no wheel value: Object
-85-c68562732ef10f4b.js:16 🔄 Turn check: Object
-
-
 [Info] Successfully preconnected to https://fonts.gstatic.com/ (x2)
 [Info] Successfully preconnected to https://fonts.googleapis.com/
-[Error] Failed to load resource: the server responded with a status of 404 () (favicon.svg, line 0)
-[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Local players array: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 Turn state changed: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] 🔄 Turn state changed: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Local players array: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Local players array: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Warning] ⚠️ Computer player is current player but humans are available (85-c68562732ef10f4b.js, line 16)
-[Log] No available puzzles, resetting... (85-c68562732ef10f4b.js, line 16)
-[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
+[Warning] ⚠️ Computer player is current player but humans are available (85-5b6ac4d493a414e9.js, line 16)
+[Log] No available puzzles, resetting... (85-5b6ac4d493a414e9.js, line 16)
+[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-5b6ac4d493a414e9.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 Turn state changed: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] 🔄 Turn state changed: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-5b6ac4d493a414e9.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-5b6ac4d493a414e9.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
-[Log] 🔄 Turn check: – Object (85-c68562732ef10f4b.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
+Object
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
+Object
+[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-5b6ac4d493a414e9.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-5b6ac4d493a414e9.js, line 16)
+Object
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-5b6ac4d493a414e9.js, line 16)
+Object
+[Log] Firebase players converted: – Array (3) (85-5b6ac4d493a414e9.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-5b6ac4d493a414e9.js, line 16)
 Object
 > Selected Element
 < <div class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white">…</div>
+
+
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Turn state changed: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+hook.js:608 ⚠️ Computer player is current player but humans are available
+overrideMethod @ hook.js:608
+85-5b6ac4d493a414e9.js:16 No available puzzles, resetting...
+85-5b6ac4d493a414e9.js:16 🔄 Firebase sync isSpinning: false local: false
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Turn state changed: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Firebase sync isSpinning: false local: false
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+519-f3e1b9e14ace6d75.js:1 Firebase: Updating game 76RUYH with: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Firebase sync isSpinning: false local: false
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Turn state changed: Object
+85-5b6ac4d493a414e9.js:16 🎯 WHEEL LANDING CALCULATION: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+hook.js:608 ⚠️ Same player continues turn (allowed)
+overrideMethod @ hook.js:608
+85-5b6ac4d493a414e9.js:16 🎯 Wheel landed: Object
+519-f3e1b9e14ace6d75.js:1 🎯 WHEEL SPIN HANDLER: Object
+519-f3e1b9e14ace6d75.js:1 ✅ Final turn advancement result: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Turn state changed: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-5b6ac4d493a414e9.js:16 🔄 Firebase sync isSpinning: false local: false
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 Firebase players converted: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 hasWheelValue check: Object
+85-5b6ac4d493a414e9.js:16 🔍 hasWheelValue check: Object
+85-5b6ac4d493a414e9.js:16 🔤 LETTER GUESS: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔄 Turn check: Object
+85-5b6ac4d493a414e9.js:16 🔄 Turn state changed: Object
+85-5b6ac4d493a414e9.js:16 Local players array: Array(3)
+85-5b6ac4d493a414e9.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+519-f3e1b9e14ace6d75.js:1 🔤 LETTER GUESS HANDLER: Object
+519-f3e1b9e14ace6d75.js:1 🔍 Letter check result: Object
+519-f3e1b9e14ace6d75.js:1 Uncaught (in promise) TypeError: l.usedLetters is not iterable
+    at o.handleLetterGuess (519-f3e1b9e14ace6d75.js:1:7296)
+    at async o.pushLetterGuess (519-f3e1b9e14ace6d75.js:1:11660)
