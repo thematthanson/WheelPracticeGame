@@ -450,6 +450,20 @@ export class FirebaseGameService {
           : [];
       const usedLetters = [...currentUsedLetters, letter];
       
+      // Update revealed letters if correct guess
+      let revealedLetters = game.puzzle.revealed || [];
+      if (letterInPuzzle) {
+        // Handle both Set and Array formats
+        if (Array.isArray(revealedLetters)) {
+          revealedLetters = [...revealedLetters, letter];
+        } else if (revealedLetters instanceof Set) {
+          revealedLetters = Array.from(revealedLetters);
+          revealedLetters.push(letter);
+        } else {
+          revealedLetters = [letter];
+        }
+      }
+      
       // Update game history
       const gameHistory = [...(game.gameHistory || []), {
         type: 'letter',
@@ -527,6 +541,10 @@ export class FirebaseGameService {
         gameHistory,
         currentPlayer: nextPlayerId,
         wheelValue: letterInPuzzle ? game.wheelValue : null, // Reset wheel value for incorrect guesses
+        puzzle: {
+          ...game.puzzle,
+          revealed: revealedLetters
+        },
         lastUpdated: Date.now()
       });
     }
@@ -594,10 +612,17 @@ export class FirebaseGameService {
           });
         }
         
+        // Reveal all letters when puzzle is solved
+        const allLetters = puzzle.text.split('').filter((char: string) => char !== ' ' && char !== '/');
+        
         await update(this.gameRef, {
           status: 'finished',
           message: `${player?.name || 'Player'} solved the puzzle!`,
           gameHistory,
+          puzzle: {
+            ...game.puzzle,
+            revealed: allLetters
+          },
           lastUpdated: Date.now()
         });
       } else {
