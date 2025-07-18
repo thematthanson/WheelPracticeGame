@@ -2120,6 +2120,20 @@ function WheelOfFortune({
     }));
   };
 
+  // Helper function to safely check if a character is revealed (works with both Set and Array)
+  const isCharacterRevealed = (char: string): boolean => {
+    if (!gameState.puzzle?.revealed) return false;
+    
+    // Handle both Set and Array formats
+    if (gameState.puzzle.revealed instanceof Set) {
+      return gameState.puzzle.revealed.has(char);
+    } else if (Array.isArray(gameState.puzzle.revealed)) {
+      return (gameState.puzzle.revealed as string[]).includes(char);
+    }
+    
+    return false;
+  };
+
   const renderPuzzle = () => {
     try {
       const { specialFormat } = gameState.puzzle;
@@ -2133,7 +2147,7 @@ function WheelOfFortune({
               <div className="flex flex-wrap justify-center">
                 {specialFormat.then?.split('').map((char, index) => {
                   if (char === ' ') return <span key={`then-${index}`} className="w-2"></span>;
-                  const isRevealed = gameState.puzzle.revealed.has(char) || !/[A-Z]/.test(char);
+                  const isRevealed = isCharacterRevealed(char) || !/[A-Z]/.test(char);
                   return (
                     <span
                       key={`then-char-${index}`}
@@ -2153,7 +2167,7 @@ function WheelOfFortune({
               <div className="flex flex-wrap justify-center">
                 {specialFormat.now?.split('').map((char, index) => {
                   if (char === ' ') return <span key={`now-${index}`} className="w-2"></span>;
-                  const isRevealed = gameState.puzzle.revealed.has(char) || !/[A-Z]/.test(char);
+                  const isRevealed = isCharacterRevealed(char) || !/[A-Z]/.test(char);
                   return (
                     <span
                       key={`now-char-${index}`}
@@ -2176,7 +2190,7 @@ function WheelOfFortune({
             if (char === ' ') return <span key={index} className="w-2 sm:w-4"></span>;
             if (char === '/') return <span key={index} className="mx-2 text-2xl text-yellow-400">/</span>;
             
-            const isRevealed = gameState.puzzle.revealed.has(char) || !/[A-Z]/.test(char);
+            const isRevealed = isCharacterRevealed(char) || !/[A-Z]/.test(char);
             let borderColor = 'border-blue-400';
             let bgColor = 'bg-white';
             let textColor = isRevealed ? 'text-blue-800' : 'text-transparent';
