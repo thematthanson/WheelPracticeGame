@@ -442,8 +442,13 @@ export class FirebaseGameService {
         usedLetters: game.usedLetters
       });
       
-      // Update used letters
-      const usedLetters = [...game.usedLetters, letter];
+      // Update used letters – tolerate Set, object, or undefined
+      const currentUsedLetters = Array.isArray(game.usedLetters)
+        ? game.usedLetters
+        : game.usedLetters && typeof game.usedLetters === 'object'
+          ? Object.values(game.usedLetters as any)
+          : [];
+      const usedLetters = [...currentUsedLetters, letter];
       
       // Update game history
       const gameHistory = [...(game.gameHistory || []), {
