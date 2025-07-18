@@ -481,50 +481,70 @@ export class FirebaseGameService {
         // Player continues their turn
         nextPlayerId = game.currentPlayer;
       } else {
-        console.log('❌ Incorrect letter guess - advancing to next human player');
+        console.log('❌ Incorrect letter guess - advancing to next player');
         
-        // Find next human player for turn advancement
-        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        // Get all players for turn advancement (including computer players)
+        const allPlayers = Object.values(game.players);
+        const humanPlayers = allPlayers.filter(p => p.isHuman);
         
-        console.log('👥 Human players for letter guess turn advancement:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
+        console.log('👥 All players for turn advancement:', allPlayers.map(p => ({ id: p.id, name: p.name, isHuman: p.isHuman })));
+        console.log('👥 Human players:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
         
-        // Validate we have human players
-        if (humanPlayers.length === 0) {
-          console.error('❌ No human players found for turn advancement');
+        // Validate we have players
+        if (allPlayers.length === 0) {
+          console.error('❌ No players found for turn advancement');
           return;
         }
         
-        // If only one human player, they keep their turn
+        // If only one human player, cycle through all players (including computer)
         if (humanPlayers.length === 1) {
-          nextPlayerId = humanPlayers[0].id;
-          console.log('👤 Single human player - keeping turn:', nextPlayerId);
-        } else {
-          // Find current player in human players list
-          const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-          console.log('🔍 Current player index in human players:', currentPlayerIndex);
+          // Find current player in all players list
+          const currentPlayerIndex = allPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in all players:', currentPlayerIndex);
           
           if (currentPlayerIndex !== -1) {
-            const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
-            nextPlayerId = humanPlayers[nextIndex].id;
-            console.log('➡️ Advancing to next human player:', {
+            const nextIndex = (currentPlayerIndex + 1) % allPlayers.length;
+            nextPlayerId = allPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next player (including computer):', {
               currentIndex: currentPlayerIndex,
               nextIndex,
               nextPlayerId,
-              nextPlayerName: humanPlayers[nextIndex].name
+              nextPlayerName: allPlayers[nextIndex].name,
+              nextPlayerIsHuman: allPlayers[nextIndex].isHuman
             });
           } else {
-            // Current player not found in human players, default to first human
-            nextPlayerId = humanPlayers[0].id;
-            console.log('⚠️ Current player not found in human players, defaulting to first:', nextPlayerId);
+            // Current player not found, default to first player
+            nextPlayerId = allPlayers[0].id;
+            console.log('⚠️ Current player not found in all players, defaulting to first:', nextPlayerId);
+          }
+        } else {
+          // Multiple human players - cycle through all players
+          const currentPlayerIndex = allPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in all players:', currentPlayerIndex);
+          
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % allPlayers.length;
+            nextPlayerId = allPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next player:', {
+              currentIndex: currentPlayerIndex,
+              nextIndex,
+              nextPlayerId,
+              nextPlayerName: allPlayers[nextIndex].name,
+              nextPlayerIsHuman: allPlayers[nextIndex].isHuman
+            });
+          } else {
+            // Current player not found, default to first player
+            nextPlayerId = allPlayers[0].id;
+            console.log('⚠️ Current player not found in all players, defaulting to first:', nextPlayerId);
           }
         }
         
         // Validate the next player is different from current
-        if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
+        if (nextPlayerId === game.currentPlayer && allPlayers.length > 1) {
           console.warn('⚠️ Turn advancement would result in same player, forcing advancement');
-          const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-          const nextIndex = (currentIndex + 1) % humanPlayers.length;
-          nextPlayerId = humanPlayers[nextIndex].id;
+          const currentIndex = allPlayers.findIndex(p => p.id === game.currentPlayer);
+          const nextIndex = (currentIndex + 1) % allPlayers.length;
+          nextPlayerId = allPlayers[nextIndex].id;
           console.log('🔄 Forced advancement to:', nextPlayerId);
         }
       }
@@ -626,52 +646,72 @@ export class FirebaseGameService {
           lastUpdated: Date.now()
         });
       } else {
-        console.log('❌ Incorrect solve attempt - advancing to next human player');
+        console.log('❌ Incorrect solve attempt - advancing to next player');
         
-        // Handle incorrect solve attempt - advance to next human player
-        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        // Handle incorrect solve attempt - advance to next player (including computer)
+        const allPlayers = Object.values(game.players);
+        const humanPlayers = allPlayers.filter(p => p.isHuman);
         
-        console.log('👥 Human players for solve attempt turn advancement:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
+        console.log('👥 All players for solve attempt turn advancement:', allPlayers.map(p => ({ id: p.id, name: p.name, isHuman: p.isHuman })));
+        console.log('👥 Human players:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
         
-        // Validate we have human players
-        if (humanPlayers.length === 0) {
-          console.error('❌ No human players found for solve attempt turn advancement');
+        // Validate we have players
+        if (allPlayers.length === 0) {
+          console.error('❌ No players found for solve attempt turn advancement');
           return;
         }
         
         let nextPlayerId = game.currentPlayer;
         
-        // If only one human player, they keep their turn
+        // If only one human player, cycle through all players (including computer)
         if (humanPlayers.length === 1) {
-          nextPlayerId = humanPlayers[0].id;
-          console.log('👤 Single human player - keeping turn:', nextPlayerId);
-        } else {
-          // Find current player in human players list
-          const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-          console.log('🔍 Current player index in human players:', currentPlayerIndex);
+          // Find current player in all players list
+          const currentPlayerIndex = allPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in all players:', currentPlayerIndex);
           
           if (currentPlayerIndex !== -1) {
-            const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
-            nextPlayerId = humanPlayers[nextIndex].id;
-            console.log('➡️ Advancing to next human player:', {
+            const nextIndex = (currentPlayerIndex + 1) % allPlayers.length;
+            nextPlayerId = allPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next player (including computer):', {
               currentIndex: currentPlayerIndex,
               nextIndex,
               nextPlayerId,
-              nextPlayerName: humanPlayers[nextIndex].name
+              nextPlayerName: allPlayers[nextIndex].name,
+              nextPlayerIsHuman: allPlayers[nextIndex].isHuman
             });
           } else {
-            // Current player not found in human players, default to first human
-            nextPlayerId = humanPlayers[0].id;
-            console.log('⚠️ Current player not found in human players, defaulting to first:', nextPlayerId);
+            // Current player not found, default to first player
+            nextPlayerId = allPlayers[0].id;
+            console.log('⚠️ Current player not found in all players, defaulting to first:', nextPlayerId);
+          }
+        } else {
+          // Multiple human players - cycle through all players
+          const currentPlayerIndex = allPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in all players:', currentPlayerIndex);
+          
+          if (currentPlayerIndex !== -1) {
+            const nextIndex = (currentPlayerIndex + 1) % allPlayers.length;
+            nextPlayerId = allPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next player:', {
+              currentIndex: currentPlayerIndex,
+              nextIndex,
+              nextPlayerId,
+              nextPlayerName: allPlayers[nextIndex].name,
+              nextPlayerIsHuman: allPlayers[nextIndex].isHuman
+            });
+          } else {
+            // Current player not found, default to first player
+            nextPlayerId = allPlayers[0].id;
+            console.log('⚠️ Current player not found in all players, defaulting to first:', nextPlayerId);
           }
         }
         
         // Validate the next player is different from current
-        if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
+        if (nextPlayerId === game.currentPlayer && allPlayers.length > 1) {
           console.warn('⚠️ Solve attempt turn advancement would result in same player, forcing advancement');
-          const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
-          const nextIndex = (currentIndex + 1) % humanPlayers.length;
-          nextPlayerId = humanPlayers[nextIndex].id;
+          const currentIndex = allPlayers.findIndex(p => p.id === game.currentPlayer);
+          const nextIndex = (currentIndex + 1) % allPlayers.length;
+          nextPlayerId = allPlayers[nextIndex].id;
           console.log('🔄 Forced advancement to:', nextPlayerId);
         }
         
