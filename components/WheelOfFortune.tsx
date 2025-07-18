@@ -390,7 +390,7 @@ function WheelOfFortune({
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
     puzzle: { text: '', category: '', revealed: new Set<string>(), specialFormat: null },
-    usedLetters: new Set(),
+    usedLetters: new Set<string>(),
     wheelValue: null as any, // Initialize to null instead of 0
     isSpinning: false,
     wheelRotation: 0,
@@ -1388,7 +1388,10 @@ function WheelOfFortune({
       const currentRevealed = gsGuess.puzzle.revealed instanceof Set 
         ? Array.from(gsGuess.puzzle.revealed) 
         : (Array.isArray(gsGuess.puzzle.revealed) ? gsGuess.puzzle.revealed : []);
-      const newRevealed = new Set([...currentRevealed, letter]);
+      
+      // Ensure we have a valid array before creating the new Set
+      const safeCurrentRevealed = Array.isArray(currentRevealed) ? currentRevealed : [];
+      const newRevealed = new Set([...safeCurrentRevealed, letter]);
       
       console.log('🤖 COMPUTER LETTER REVEAL UPDATE:', {
         letter,
@@ -1400,7 +1403,13 @@ function WheelOfFortune({
       setGameState(prev => ({
         ...prev,
         usedLetters: newUsedLetters,
-        puzzle: { ...prev.puzzle, revealed: newRevealed },
+        puzzle: { 
+          ...prev.puzzle, 
+          revealed: newRevealed,
+          text: prev.puzzle.text || '',
+          category: prev.puzzle.category || '',
+          specialFormat: prev.puzzle.specialFormat || null
+        },
         players: newPlayers,
         currentPlayer: nextPlayer,
         message,
@@ -1542,7 +1551,13 @@ function WheelOfFortune({
           setGameState(prev => ({
             ...prev,
             players: newPlayers,
-            puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+            puzzle: { 
+              ...prev.puzzle, 
+              revealed: new Set(prev.puzzle.text),
+              text: prev.puzzle.text || '',
+              category: prev.puzzle.category || '',
+              specialFormat: prev.puzzle.specialFormat || null
+            },
             message: `${prev.players[getCurrentPlayerIndex()].name} solved "${prev.puzzle.text}" and earned $${newPlayers[getCurrentPlayerIndex()].roundMoney}!`
           }));
           
@@ -1583,7 +1598,13 @@ function WheelOfFortune({
           setGameState(prev => ({
             ...prev,
             players: newPlayers,
-            puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+            puzzle: { 
+              ...prev.puzzle, 
+              revealed: new Set(prev.puzzle.text),
+              text: prev.puzzle.text || '',
+              category: prev.puzzle.category || '',
+              specialFormat: prev.puzzle.specialFormat || null
+            },
             message: `${prev.players[getCurrentPlayerIndex()].name} solved "${prev.puzzle.text}" and earned $${newPlayers[getCurrentPlayerIndex()].roundMoney}!`
           }));
           
@@ -2016,7 +2037,10 @@ function WheelOfFortune({
       const currentRevealed = prev.puzzle.revealed instanceof Set 
         ? Array.from(prev.puzzle.revealed) 
         : (Array.isArray(prev.puzzle.revealed) ? prev.puzzle.revealed : []);
-      const newRevealed = new Set([...currentRevealed, letter]);
+      
+      // Ensure we have a valid array before creating the new Set
+      const safeCurrentRevealed = Array.isArray(currentRevealed) ? currentRevealed : [];
+      const newRevealed = new Set([...safeCurrentRevealed, letter]);
       
       console.log('🔍 LETTER REVEAL UPDATE:', {
         letter,
@@ -2083,7 +2107,7 @@ function WheelOfFortune({
         console.log('✅ Correct letter guess - revealing letter:', {
           letter,
           puzzleText: prev.puzzle.text,
-          currentRevealed: Array.from(prev.puzzle.revealed),
+          currentRevealed: prev.puzzle.revealed instanceof Set ? Array.from(prev.puzzle.revealed) : (Array.isArray(prev.puzzle.revealed) ? prev.puzzle.revealed : []),
           newRevealed: Array.from(newRevealed),
           timestamp: new Date().toISOString()
         });
@@ -2097,7 +2121,13 @@ function WheelOfFortune({
           return {
             ...prev,
             usedLetters: newUsedLetters,
-            puzzle: { ...prev.puzzle, revealed: newRevealed },
+            puzzle: { 
+              ...prev.puzzle, 
+              revealed: newRevealed,
+              text: prev.puzzle.text || '',
+              category: prev.puzzle.category || '',
+              specialFormat: prev.puzzle.specialFormat || null
+            },
             players: newPlayers,
             currentPlayer: nextPlayer,
             message,
@@ -2169,7 +2199,13 @@ function WheelOfFortune({
           return {
             ...prev,
             usedLetters: newUsedLetters,
-            puzzle: { ...prev.puzzle, revealed: newRevealed },
+            puzzle: { 
+              ...prev.puzzle, 
+              revealed: newRevealed,
+              text: prev.puzzle.text || '',
+              category: prev.puzzle.category || '',
+              specialFormat: prev.puzzle.specialFormat || null
+            },
             players: newPlayers,
             currentPlayer: nextPlayer,
             message,
@@ -2284,14 +2320,26 @@ function WheelOfFortune({
         setGameState(prev => ({
           ...prev,
           players: newPlayers,
-          puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+          puzzle: { 
+            ...prev.puzzle, 
+            revealed: new Set(prev.puzzle.text),
+            text: prev.puzzle.text || '',
+            category: prev.puzzle.category || '',
+            specialFormat: prev.puzzle.specialFormat || null
+          },
           message: `Correct! You solved "${prev.puzzle.text}" and earned $${currentPlayer.roundMoney}!`
         }));
       } else {
         console.error('❌ Current player not found for solve attempt');
         setGameState(prev => ({
           ...prev,
-          puzzle: { ...prev.puzzle, revealed: new Set(prev.puzzle.text) },
+          puzzle: { 
+            ...prev.puzzle, 
+            revealed: new Set(prev.puzzle.text),
+            text: prev.puzzle.text || '',
+            category: prev.puzzle.category || '',
+            specialFormat: prev.puzzle.specialFormat || null
+          },
           message: `Correct! You solved "${prev.puzzle.text}"!`
         }));
       }
@@ -2518,30 +2566,52 @@ function WheelOfFortune({
 
   // Helper function to safely check if a character is revealed (works with both Set and Array)
   const isCharacterRevealed = (char: string): boolean => {
+    // Handle spaces and special characters
+    if (char === ' ' || char === '/') return true;
+    
+    // Check if puzzle and revealed exist
     if (!gameState.puzzle?.revealed) {
       console.log('🔍 isCharacterRevealed: No puzzle.revealed found for char:', char);
       return false;
     }
     
-    // Handle both Set and Array formats
+    // Handle both Set and Array formats with safe conversion
     if (gameState.puzzle.revealed instanceof Set) {
-      const isRevealed = gameState.puzzle.revealed.has(char);
-      console.log('🔍 isCharacterRevealed Set check:', {
-        char,
-        revealed: Array.from(gameState.puzzle.revealed),
-        isRevealed,
-        timestamp: new Date().toISOString()
-      });
-      return isRevealed;
+      try {
+        const isRevealed = gameState.puzzle.revealed.has(char);
+        console.log('🔍 isCharacterRevealed Set check:', {
+          char,
+          revealed: Array.from(gameState.puzzle.revealed),
+          isRevealed,
+          timestamp: new Date().toISOString()
+        });
+        return isRevealed;
+      } catch (error) {
+        console.error('🔍 isCharacterRevealed Set error:', error, {
+          char,
+          revealed: gameState.puzzle.revealed,
+          timestamp: new Date().toISOString()
+        });
+        return false;
+      }
     } else if (Array.isArray(gameState.puzzle.revealed)) {
-      const isRevealed = (gameState.puzzle.revealed as string[]).includes(char);
-      console.log('🔍 isCharacterRevealed Array check:', {
-        char,
-        revealed: gameState.puzzle.revealed,
-        isRevealed,
-        timestamp: new Date().toISOString()
-      });
-      return isRevealed;
+      try {
+        const isRevealed = (gameState.puzzle.revealed as string[]).includes(char);
+        console.log('🔍 isCharacterRevealed Array check:', {
+          char,
+          revealed: gameState.puzzle.revealed,
+          isRevealed,
+          timestamp: new Date().toISOString()
+        });
+        return isRevealed;
+      } catch (error) {
+        console.error('🔍 isCharacterRevealed Array error:', error, {
+          char,
+          revealed: gameState.puzzle.revealed,
+          timestamp: new Date().toISOString()
+        });
+        return false;
+      }
     }
     
     console.log('🔍 isCharacterRevealed: Unknown revealed format for char:', char);
