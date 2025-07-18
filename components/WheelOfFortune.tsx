@@ -1690,6 +1690,12 @@ function WheelOfFortune({
         turnInProgress: false
       });
       
+      // ---- Multiplayer callbacks BEFORE state update ----
+      const spinVal = typeof segment === 'object' ? segment : segment;
+      if (onSpin) {
+        onSpin({ value: spinVal, rotation: newRotation });
+      }
+
       setGameState(prev => ({
         ...prev,
         isSpinning: false,
@@ -1701,12 +1707,6 @@ function WheelOfFortune({
         currentPlayer: nextPlayer,
         turnInProgress: false
       }));
-
-      // ---- Multiplayer callbacks ----
-      const spinVal = typeof segment === 'object' ? segment : segment;
-      if (onSpin) {
-        onSpin({ value: spinVal, rotation: newRotation });
-      }
       if (nextPlayer !== gameState.currentPlayer && onEndTurn) {
         onEndTurn(nextPlayer as number);
       }
@@ -2399,7 +2399,17 @@ function WheelOfFortune({
           })),
           currentRound: firebaseGameState.currentRound || 1,
           message: firebaseGameState.message || '',
-          isSpinning: firebaseGameState.isSpinning || false,
+          isSpinning: (() => {
+            const fbSpinning = firebaseGameState.isSpinning || false;
+            const localSpinning = prev.isSpinning;
+            // Don't override local isSpinning: false with Firebase true (race condition protection)
+            if (!localSpinning && fbSpinning) {
+              console.log('🔄 Firebase sync: Protecting local isSpinning: false from Firebase override');
+              return false;
+            }
+            console.log('🔄 Firebase sync isSpinning:', fbSpinning, 'local:', localSpinning);
+            return fbSpinning;
+          })(),
           wheelValue: firebaseGameState.wheelValue || 0,
           isFinalRound: firebaseGameState.isFinalRound || false,
           finalRoundLettersRemaining: firebaseGameState.finalRoundLettersRemaining || 0,
