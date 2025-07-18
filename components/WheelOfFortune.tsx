@@ -3291,51 +3291,61 @@ function WheelOfFortune({
 
         {/* Game Status */}
         <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-2 sm:mb-4 text-xs sm:text-base">
-          {getAllPlayers().map((player, index) => (
-            <div key={player.id} className={`rounded-lg p-2 sm:p-4 ${
-              gameState.currentPlayer === player.id 
-                ? 'bg-yellow-600 bg-opacity-70 border-2 border-yellow-400' 
-                : 'bg-blue-800 bg-opacity-50'
-            }`}>
-              <div className="flex items-center mb-1 sm:mb-2">
-                <span className={`font-semibold ${gameState.currentPlayer === player.id ? 'text-yellow-100' : 'text-white'}`}>
-                  {player.name}
-                </span>
-                {gameState.currentPlayer === player.id && (
-                  <span className="ml-1 text-yellow-200">★</span>
+          {getAllPlayers().map((player, index) => {
+            const isCurrentPlayer = gameState.currentPlayer === player.id;
+            console.log('🔍 Player comparison:', {
+              playerId: player.id,
+              playerName: player.name,
+              currentPlayer: gameState.currentPlayer,
+              isCurrentPlayer,
+              comparison: `${gameState.currentPlayer} === ${player.id}`
+            });
+            return (
+              <div key={player.id} className={`rounded-lg p-2 sm:p-4 ${
+                isCurrentPlayer
+                  ? 'bg-yellow-600 bg-opacity-70 border-2 border-yellow-400' 
+                  : 'bg-blue-800 bg-opacity-50'
+              }`}>
+                <div className="flex items-center mb-1 sm:mb-2">
+                  <span className={`font-semibold ${isCurrentPlayer ? 'text-yellow-100' : 'text-white'}`}>
+                    {player.name}
+                  </span>
+                  {isCurrentPlayer && (
+                    <span className="ml-1 text-yellow-200">★</span>
+                  )}
+                </div>
+                <div className="text-xs sm:text-sm">Round: ${player.roundMoney || 0}</div>
+                <div className="text-xs sm:text-sm font-bold">Total: ${player.totalMoney || 0}</div>
+                
+                {/* Show prizes and special cards */}
+                {player.prizes?.length > 0 && (
+                  <div className="text-xs mt-1">
+                    <div className="text-green-300 font-semibold">
+                      🏆 Prizes ({player.prizes.length}):
+                    </div>
+                    {player.prizes.map((prize, prizeIndex) => (
+                      <div key={prizeIndex} className="text-green-200 ml-2 text-xs">
+                        • {prize.name} (${prize.value.toLocaleString()})
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {player.specialCards?.length > 0 && (
+                  <div className="text-xs mt-1">
+                    <div className="text-purple-300 font-semibold">
+                      ⭐ Special Cards:
+                    </div>
+                    {player.specialCards.map((card, cardIndex) => (
+                      <div key={cardIndex} className="text-purple-200 ml-2 text-xs">
+                        • {card === 'WILD_CARD' ? 'Wild Card' : 
+                           card === 'MILLION_DOLLAR_WEDGE' ? 'Million Dollar Wedge' : card}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-              <div className="text-xs sm:text-sm">Round: ${player.roundMoney || 0}</div>
-              <div className="text-xs sm:text-sm font-bold">Total: ${player.totalMoney || 0}</div>
-              
-              {/* Show prizes and special cards */}
-              {player.prizes?.length > 0 && (
-                <div className="text-xs mt-1">
-                  <div className="text-green-300 font-semibold">
-                    🏆 Prizes ({player.prizes.length}):
-                  </div>
-                  {player.prizes.map((prize, prizeIndex) => (
-                    <div key={prizeIndex} className="text-green-200 ml-2 text-xs">
-                      • {prize.name} (${prize.value.toLocaleString()})
-                    </div>
-                  ))}
-                </div>
-              )}
-              {player.specialCards?.length > 0 && (
-                <div className="text-xs mt-1">
-                  <div className="text-purple-300 font-semibold">
-                    ⭐ Special Cards:
-                  </div>
-                  {player.specialCards.map((card, cardIndex) => (
-                    <div key={cardIndex} className="text-purple-200 ml-2 text-xs">
-                      • {card === 'WILD_CARD' ? 'Wild Card' : 
-                         card === 'MILLION_DOLLAR_WEDGE' ? 'Million Dollar Wedge' : card}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Puzzle Board */}
