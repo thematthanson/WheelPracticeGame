@@ -2519,8 +2519,8 @@ function WheelOfFortune({
     if (nextPlayer === gameState.currentPlayer) {
       const humanPlayers = getAllPlayers().filter(p => p.isHuman);
       if (humanPlayers.length > 1) {
-        console.warn('⚠️ Turn advancement would result in same player');
-        return false;
+        console.warn('⚠️ Same player continues turn (allowed)');
+        // return false;  // allow same-player turn
       }
     }
     
