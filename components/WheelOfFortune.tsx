@@ -2257,6 +2257,38 @@ function WheelOfFortune({
     checkForStuckTurn();
   }, [gameState.turnInProgress, gameState.isSpinning]);
 
+  // Enhanced turn validation for multiplayer
+  useEffect(() => {
+    if (firebaseGameState) {
+      const currentPlayer = getCurrentPlayer();
+      const humanPlayers = gameState.players.filter(p => p.isHuman);
+      
+      console.log('🔍 MULTIPLAYER TURN VALIDATION:', {
+        currentPlayerId: gameState.currentPlayer,
+        currentPlayerName: currentPlayer?.name,
+        currentPlayerIsHuman: currentPlayer?.isHuman,
+        humanPlayerCount: humanPlayers.length,
+        humanPlayerIds: humanPlayers.map(p => p.id),
+        gameStatus: firebaseGameState.status,
+        isActivePlayer: isActivePlayer,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Validate current player is human in multiplayer
+      if (currentPlayer && !currentPlayer.isHuman && humanPlayers.length > 0) {
+        console.warn('⚠️ Computer player is current player but humans are available');
+      }
+      
+      // Validate current player exists in human players list
+      if (currentPlayer && currentPlayer.isHuman) {
+        const playerInHumanList = humanPlayers.find(p => p.id === currentPlayer.id);
+        if (!playerInHumanList) {
+          console.warn('⚠️ Current human player not found in human players list');
+        }
+      }
+    }
+  }, [gameState.currentPlayer, firebaseGameState, isActivePlayer]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white p-2 sm:p-4">
       <div className="max-w-6xl mx-auto">

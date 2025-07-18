@@ -210,6 +210,21 @@ const MultiplayerWheelOfFortune: React.FC<MultiplayerWheelProps> = ({
           </button>
         </div>
       )}
+
+      {/* Debug Test Turn Mechanics button - only visible to host */}
+      {isHost && (
+        <div className="text-center mt-4">
+          <button
+            onClick={() => {
+              console.log('🧪 Running turn mechanics test...');
+              service.testTurnMechanics();
+            }}
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+          >
+            Test Turn Mechanics
+          </button>
+        </div>
+      )}
     </div>
   );
 };

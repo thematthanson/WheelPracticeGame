@@ -266,11 +266,20 @@ export class FirebaseGameService {
     if (snapshot.exists()) {
       const game = snapshot.val() as GameState;
       
+      console.log('🎯 WHEEL SPIN HANDLER:', {
+        currentPlayer: game.currentPlayer,
+        spinValue: spinData.value,
+        spinRotation: spinData.rotation,
+        timestamp: new Date().toISOString()
+      });
+      
       // Handle special wheel segments
       let nextPlayerId = game.currentPlayer;
       let message = '';
       
       if (spinData.value === 'BANKRUPT' || (typeof spinData.value === 'object' && spinData.value && spinData.value.type === 'BANKRUPT')) {
+        console.log('💸 BANKRUPT detected - resetting player money and advancing turn');
+        
         // Reset current player's round money
         if (game.players[game.currentPlayer]) {
           await update(ref(database, `games/${this.gameCode}/players/${game.currentPlayer}`), {
@@ -282,71 +291,105 @@ export class FirebaseGameService {
         // Find next human player
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
         
+        console.log('👥 Human players for BANKRUPT turn advancement:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
+        
         // Validate we have human players
         if (humanPlayers.length === 0) {
-          console.error('No human players found for BANKRUPT turn advancement');
+          console.error('❌ No human players found for BANKRUPT turn advancement');
           return;
         }
         
         // If only one human player, they keep their turn
         if (humanPlayers.length === 1) {
           nextPlayerId = humanPlayers[0].id;
+          console.log('👤 Single human player - keeping turn:', nextPlayerId);
         } else {
           // Find current player in human players list
           const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in human players:', currentPlayerIndex);
+          
           if (currentPlayerIndex !== -1) {
             const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
             nextPlayerId = humanPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next human player:', {
+              currentIndex: currentPlayerIndex,
+              nextIndex,
+              nextPlayerId,
+              nextPlayerName: humanPlayers[nextIndex].name
+            });
           } else {
             // Current player not found in human players, default to first human
             nextPlayerId = humanPlayers[0].id;
+            console.log('⚠️ Current player not found in human players, defaulting to first:', nextPlayerId);
           }
         }
         
         // Validate the next player is different from current
         if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
-          console.warn('BANKRUPT turn advancement would result in same player, forcing advancement');
+          console.warn('⚠️ BANKRUPT turn advancement would result in same player, forcing advancement');
           const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
           const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
+          console.log('🔄 Forced advancement to:', nextPlayerId);
         }
         
         message = 'BANKRUPT! You lose your round money and any prizes from this round.';
       } else if (spinData.value === 'LOSE A TURN' || (typeof spinData.value === 'object' && spinData.value && spinData.value.type === 'LOSE A TURN')) {
+        console.log('⏭️ LOSE A TURN detected - advancing to next human player');
+        
         // Find next human player
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
         
+        console.log('👥 Human players for LOSE A TURN advancement:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
+        
         // Validate we have human players
         if (humanPlayers.length === 0) {
-          console.error('No human players found for LOSE A TURN advancement');
+          console.error('❌ No human players found for LOSE A TURN advancement');
           return;
         }
         
         // If only one human player, they keep their turn
         if (humanPlayers.length === 1) {
           nextPlayerId = humanPlayers[0].id;
+          console.log('👤 Single human player - keeping turn:', nextPlayerId);
         } else {
           // Find current player in human players list
           const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in human players:', currentPlayerIndex);
+          
           if (currentPlayerIndex !== -1) {
             const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
             nextPlayerId = humanPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next human player:', {
+              currentIndex: currentPlayerIndex,
+              nextIndex,
+              nextPlayerId,
+              nextPlayerName: humanPlayers[nextIndex].name
+            });
           } else {
             // Current player not found in human players, default to first human
             nextPlayerId = humanPlayers[0].id;
+            console.log('⚠️ Current player not found in human players, defaulting to first:', nextPlayerId);
           }
         }
         
         // Validate the next player is different from current
         if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
-          console.warn('LOSE A TURN advancement would result in same player, forcing advancement');
+          console.warn('⚠️ LOSE A TURN advancement would result in same player, forcing advancement');
           const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
           const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
+          console.log('🔄 Forced advancement to:', nextPlayerId);
         }
         
         message = 'LOSE A TURN!';
       }
+      
+      console.log('✅ Final turn advancement result:', {
+        from: game.currentPlayer,
+        to: nextPlayerId,
+        message
+      });
       
       // Persist spin result and immediately mark the wheel as stopped so all clients stay in sync
       await update(this.gameRef, {
@@ -366,97 +409,113 @@ export class FirebaseGameService {
     const snapshot = await get(this.gameRef);
     if (snapshot.exists()) {
       const game = snapshot.val() as GameState;
-      const usedLetters = [...(game.usedLetters || []), letter];
-      const player = game.players[playerId];
       
-      // Check if letter is in the puzzle
-      const letterInPuzzle = game.puzzle?.text?.includes(letter.toUpperCase());
-      const letterCount = letterInPuzzle ? (game.puzzle.text.match(new RegExp(letter.toUpperCase(), 'g')) || []).length : 0;
-      
-      // Add to game history
-      const historyEntry: GameHistoryEntry = {
-        type: 'letter',
+      console.log('🔤 LETTER GUESS HANDLER:', {
+        letter,
         playerId,
-        playerName: player?.name || 'Unknown',
-        value: letter.toUpperCase(),
-        timestamp: Date.now(),
-        result: letterInPuzzle ? 'correct' : 'incorrect'
-      };
+        currentPlayer: game.currentPlayer,
+        isCurrentPlayer: playerId === game.currentPlayer,
+        timestamp: new Date().toISOString()
+      });
       
-      const gameHistory = [...(game.gameHistory || []), historyEntry];
-      
-      // Update player score if letter is correct
-      if (letterInPuzzle && player && game.wheelValue) {
-        let earned = 0;
-        if (typeof game.wheelValue === 'number') {
-          earned = game.wheelValue * letterCount;
-        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'PRIZE') {
-          earned = 500 * letterCount; // Base value for consonants with prizes
-        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'WILD_CARD') {
-          earned = 500 * letterCount;
-        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'GIFT_TAG') {
-          earned = 500 * letterCount;
-        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.type === 'MILLION') {
-          earned = 500 * letterCount;
-        } else if (typeof game.wheelValue === 'string') {
-          // Handle string wheel values (like "BANKRUPT", "LOSE A TURN")
-          if (game.wheelValue === 'BANKRUPT' || game.wheelValue === 'LOSE A TURN') {
-            earned = 0; // No money for these segments
-          } else {
-            // Try to parse as number
-            const numValue = parseInt(game.wheelValue);
-            if (!isNaN(numValue)) {
-              earned = numValue * letterCount;
-            }
-          }
-        } else if (typeof game.wheelValue === 'object' && game.wheelValue && game.wheelValue.value) {
-          // Handle object wheel values with a numeric value property
-          earned = game.wheelValue.value * letterCount;
-        }
-        
-        if (earned > 0) {
-          await update(ref(database, `games/${this.gameCode}/players/${playerId}`), {
-            roundMoney: player.roundMoney + earned,
-            lastSeen: Date.now()
-          });
-        }
+      // Validate it's the current player's turn
+      if (playerId !== game.currentPlayer) {
+        console.warn('⚠️ Letter guess from wrong player:', {
+          guessPlayerId: playerId,
+          currentPlayerId: game.currentPlayer
+        });
+        return;
       }
       
-      // Handle turn advancement for incorrect guesses
+      const puzzle = game.puzzle;
+      if (!puzzle) {
+        console.error('❌ No puzzle available for letter guess');
+        return;
+      }
+      
+      // Check if letter is in puzzle
+      const letterInPuzzle = puzzle.text.includes(letter);
+      console.log('🔍 Letter check result:', {
+        letter,
+        puzzleText: puzzle.text,
+        letterInPuzzle,
+        usedLetters: game.usedLetters
+      });
+      
+      // Update used letters
+      const usedLetters = [...game.usedLetters, letter];
+      
+      // Update game history
+      const gameHistory = [...(game.gameHistory || []), {
+        type: 'letter',
+        playerId,
+        playerName: game.players[playerId]?.name || 'Unknown',
+        value: letter,
+        timestamp: Date.now(),
+        result: letterInPuzzle ? 'correct' : 'incorrect'
+      }];
+      
       let nextPlayerId = game.currentPlayer;
-      if (!letterInPuzzle) {
+      
+      if (letterInPuzzle) {
+        console.log('✅ Correct letter guess - player continues turn');
+        // Player continues their turn
+        nextPlayerId = game.currentPlayer;
+      } else {
+        console.log('❌ Incorrect letter guess - advancing to next human player');
+        
         // Find next human player for turn advancement
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
         
+        console.log('👥 Human players for letter guess turn advancement:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
+        
         // Validate we have human players
         if (humanPlayers.length === 0) {
-          console.error('No human players found for turn advancement');
+          console.error('❌ No human players found for turn advancement');
           return;
         }
         
         // If only one human player, they keep their turn
         if (humanPlayers.length === 1) {
           nextPlayerId = humanPlayers[0].id;
+          console.log('👤 Single human player - keeping turn:', nextPlayerId);
         } else {
           // Find current player in human players list
           const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in human players:', currentPlayerIndex);
+          
           if (currentPlayerIndex !== -1) {
             const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
             nextPlayerId = humanPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next human player:', {
+              currentIndex: currentPlayerIndex,
+              nextIndex,
+              nextPlayerId,
+              nextPlayerName: humanPlayers[nextIndex].name
+            });
           } else {
             // Current player not found in human players, default to first human
             nextPlayerId = humanPlayers[0].id;
+            console.log('⚠️ Current player not found in human players, defaulting to first:', nextPlayerId);
           }
         }
         
         // Validate the next player is different from current
         if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
-          console.warn('Turn advancement would result in same player, forcing advancement');
+          console.warn('⚠️ Turn advancement would result in same player, forcing advancement');
           const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
           const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
+          console.log('🔄 Forced advancement to:', nextPlayerId);
         }
       }
+      
+      console.log('✅ Final letter guess turn result:', {
+        letter,
+        correct: letterInPuzzle,
+        from: game.currentPlayer,
+        to: nextPlayerId
+      });
       
       await update(this.gameRef, {
         usedLetters,
@@ -473,30 +532,54 @@ export class FirebaseGameService {
     const snapshot = await get(this.gameRef);
     if (snapshot.exists()) {
       const game = snapshot.val() as GameState;
-      const player = game.players[playerId];
       
-      // Validate player exists
-      if (!player) {
-        console.error(`Player ${playerId} not found in game`);
+      console.log('🧩 SOLVE ATTEMPT HANDLER:', {
+        solution,
+        playerId,
+        currentPlayer: game.currentPlayer,
+        isCurrentPlayer: playerId === game.currentPlayer,
+        puzzleText: game.puzzle?.text,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Validate it's the current player's turn
+      if (playerId !== game.currentPlayer) {
+        console.warn('⚠️ Solve attempt from wrong player:', {
+          attemptPlayerId: playerId,
+          currentPlayerId: game.currentPlayer
+        });
         return;
       }
       
-      // Check if solution is correct
-      const isCorrect = game.puzzle?.solution?.toLowerCase() === solution.toLowerCase();
+      const puzzle = game.puzzle;
+      if (!puzzle) {
+        console.error('❌ No puzzle available for solve attempt');
+        return;
+      }
       
-      // Add to game history
-      const historyEntry: GameHistoryEntry = {
+      const player = game.players[playerId];
+      const isCorrect = solution.toUpperCase() === puzzle.text.toUpperCase();
+      
+      console.log('🔍 Solve attempt result:', {
+        attempt: solution,
+        correctAnswer: puzzle.text,
+        isCorrect,
+        playerName: player?.name
+      });
+      
+      // Update game history
+      const gameHistory = [...(game.gameHistory || []), {
         type: 'solve',
         playerId,
         playerName: player?.name || 'Unknown',
-        value: solution.toUpperCase(),
+        value: solution,
         timestamp: Date.now(),
         result: isCorrect ? 'correct' : 'incorrect'
-      };
-      
-      const gameHistory = [...(game.gameHistory || []), historyEntry];
+      }];
       
       if (isCorrect) {
+        console.log('🎉 Correct solve attempt - game finished!');
+        
         // Update player money and game state
         if (player) {
           const newRoundMoney = player.roundMoney + (game.wheelValue?.value || 0);
@@ -513,12 +596,16 @@ export class FirebaseGameService {
           lastUpdated: Date.now()
         });
       } else {
+        console.log('❌ Incorrect solve attempt - advancing to next human player');
+        
         // Handle incorrect solve attempt - advance to next human player
         const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
         
+        console.log('👥 Human players for solve attempt turn advancement:', humanPlayers.map(p => ({ id: p.id, name: p.name })));
+        
         // Validate we have human players
         if (humanPlayers.length === 0) {
-          console.error('No human players found for solve attempt turn advancement');
+          console.error('❌ No human players found for solve attempt turn advancement');
           return;
         }
         
@@ -527,25 +614,42 @@ export class FirebaseGameService {
         // If only one human player, they keep their turn
         if (humanPlayers.length === 1) {
           nextPlayerId = humanPlayers[0].id;
+          console.log('👤 Single human player - keeping turn:', nextPlayerId);
         } else {
           // Find current player in human players list
           const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+          console.log('🔍 Current player index in human players:', currentPlayerIndex);
+          
           if (currentPlayerIndex !== -1) {
             const nextIndex = (currentPlayerIndex + 1) % humanPlayers.length;
             nextPlayerId = humanPlayers[nextIndex].id;
+            console.log('➡️ Advancing to next human player:', {
+              currentIndex: currentPlayerIndex,
+              nextIndex,
+              nextPlayerId,
+              nextPlayerName: humanPlayers[nextIndex].name
+            });
           } else {
             // Current player not found in human players, default to first human
             nextPlayerId = humanPlayers[0].id;
+            console.log('⚠️ Current player not found in human players, defaulting to first:', nextPlayerId);
           }
         }
         
         // Validate the next player is different from current
         if (nextPlayerId === game.currentPlayer && humanPlayers.length > 1) {
-          console.warn('Solve attempt turn advancement would result in same player, forcing advancement');
+          console.warn('⚠️ Solve attempt turn advancement would result in same player, forcing advancement');
           const currentIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
           const nextIndex = (currentIndex + 1) % humanPlayers.length;
           nextPlayerId = humanPlayers[nextIndex].id;
+          console.log('🔄 Forced advancement to:', nextPlayerId);
         }
+        
+        console.log('✅ Final solve attempt turn result:', {
+          correct: isCorrect,
+          from: game.currentPlayer,
+          to: nextPlayerId
+        });
         
         // Update game history and turn for incorrect solve attempt
         await update(this.gameRef, {
@@ -585,10 +689,46 @@ export class FirebaseGameService {
   }
 
   /**
-   * End the current player’s turn and move play to the next player.
+   * End the current player's turn and move play to the next player.
    * This uses a simple round-robin advance based on the players object.
    */
   async endTurn(nextPlayerId: string): Promise<void> {
+    const snapshot = await get(this.gameRef);
+    if (snapshot.exists()) {
+      const game = snapshot.val() as GameState;
+      
+      console.log('🔄 END TURN HANDLER:', {
+        currentPlayer: game.currentPlayer,
+        nextPlayerId,
+        currentPlayerName: game.players[game.currentPlayer]?.name,
+        nextPlayerName: game.players[nextPlayerId]?.name,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Validate the next player exists
+      if (!game.players[nextPlayerId]) {
+        console.error('❌ Next player not found in game:', nextPlayerId);
+        return;
+      }
+      
+      // Validate turn advancement is different (unless single player scenario)
+      if (nextPlayerId === game.currentPlayer) {
+        const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+        if (humanPlayers.length > 1) {
+          console.warn('⚠️ Manual turn advancement would result in same player');
+        } else {
+          console.log('👤 Single human player - keeping turn is expected');
+        }
+      }
+      
+      console.log('✅ Executing turn advancement:', {
+        from: game.currentPlayer,
+        to: nextPlayerId,
+        fromName: game.players[game.currentPlayer]?.name,
+        toName: game.players[nextPlayerId]?.name
+      });
+    }
+    
     await update(this.gameRef, {
       currentPlayer: nextPlayerId,
       turnInProgress: false,
@@ -695,6 +835,69 @@ export class FirebaseGameService {
       console.log('Game data cleared');
     } catch (error) {
       console.error('Error clearing game:', error);
+    }
+  }
+
+  // Test function to validate turn mechanics
+  async testTurnMechanics(): Promise<void> {
+    const snapshot = await get(this.gameRef);
+    if (!snapshot.exists()) {
+      console.log('❌ No game found for turn mechanics test');
+      return;
+    }
+    
+    const game = snapshot.val() as GameState;
+    
+    console.log('🧪 TURN MECHANICS TEST:', {
+      gameCode: this.gameCode,
+      currentPlayer: game.currentPlayer,
+      currentPlayerName: game.players[game.currentPlayer]?.name,
+      totalPlayers: Object.keys(game.players).length,
+      humanPlayers: Object.values(game.players).filter(p => p.isHuman).map(p => ({ id: p.id, name: p.name })),
+      computerPlayers: Object.values(game.players).filter(p => !p.isHuman).map(p => ({ id: p.id, name: p.name })),
+      gameStatus: game.status,
+      hasPuzzle: !!game.puzzle,
+      isSpinning: game.isSpinning,
+      turnInProgress: game.turnInProgress,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Test turn advancement logic
+    const humanPlayers = Object.values(game.players).filter(p => p.isHuman);
+    const currentPlayerIndex = humanPlayers.findIndex(p => p.id === game.currentPlayer);
+    
+    console.log('🔍 TURN ADVANCEMENT ANALYSIS:', {
+      humanPlayerCount: humanPlayers.length,
+      currentPlayerIndex,
+      currentPlayerInHumanList: currentPlayerIndex !== -1,
+      nextPlayerIndex: currentPlayerIndex !== -1 ? (currentPlayerIndex + 1) % humanPlayers.length : -1,
+      nextPlayerId: currentPlayerIndex !== -1 ? humanPlayers[(currentPlayerIndex + 1) % humanPlayers.length]?.id : 'N/A',
+      nextPlayerName: currentPlayerIndex !== -1 ? humanPlayers[(currentPlayerIndex + 1) % humanPlayers.length]?.name : 'N/A'
+    });
+    
+    // Test potential issues
+    const issues = [];
+    
+    if (humanPlayers.length === 0) {
+      issues.push('❌ No human players found');
+    }
+    
+    if (currentPlayerIndex === -1 && humanPlayers.length > 0) {
+      issues.push('⚠️ Current player not found in human players list');
+    }
+    
+    if (game.isSpinning && game.turnInProgress) {
+      issues.push('⚠️ Game is spinning and turn is in progress simultaneously');
+    }
+    
+    if (!game.puzzle && game.status === 'active') {
+      issues.push('⚠️ Game is active but no puzzle is set');
+    }
+    
+    if (issues.length > 0) {
+      console.log('🚨 POTENTIAL ISSUES DETECTED:', issues);
+    } else {
+      console.log('✅ Turn mechanics appear healthy');
     }
   }
 
