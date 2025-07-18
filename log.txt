@@ -3,6 +3,7 @@
  🎯 WHEEL RENDER DEBUG: Object
  Local players array: Array(3)
  🔄 Turn check: Object
+ 🤖 Triggering computer turn for: Computer 1
  🔄 Turn state changed: Object
  Local players array: Array(3)
  🔄 SYNCHRONIZING WITH FIREBASE: Object
@@ -13,8 +14,20 @@ overrideMethod @ installHook.js:1
  No available puzzles, resetting...
  🔄 Firebase sync isSpinning: false local: false
  Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
  🎯 WHEEL RENDER DEBUG: Object
  Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
  🎯 WHEEL RENDER DEBUG: Object
  Firebase players converted: Array(3)
  🔄 Turn check: Object
@@ -22,8 +35,20 @@ overrideMethod @ installHook.js:1
  Firebase players converted: Array(3)
  🔍 MULTIPLAYER TURN VALIDATION: Object
  Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
  🎯 WHEEL RENDER DEBUG: Object
  Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
  🎯 WHEEL RENDER DEBUG: Object
  Firebase players converted: Array(3)
  🔄 Turn check: Object
@@ -33,66 +58,456 @@ overrideMethod @ installHook.js:1
  Firebase players converted: Array(3)
  🔍 MULTIPLAYER TURN VALIDATION: Object
  Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
  🎯 WHEEL RENDER DEBUG: Object
  Firebase players converted: Array(3)
  🔄 Turn check: Object
- Firebase: Updating game XQFLE7 with: Object
+ Firebase: Updating game LMQ395 with: Object
  Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Firebase sync isSpinning: false local: false
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Turn state changed: Object
-85-bd0699845baca744.js:16 🎯 WHEEL LANDING CALCULATION: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-hook.js:608 ⚠️ Same player continues turn (allowed)
-overrideMethod @ hook.js:608
-85-bd0699845baca744.js:16 🎯 Wheel landed: Object
-519-9c02a9cd774a2c92.js:1 🎯 WHEEL SPIN HANDLER: Object
-519-9c02a9cd774a2c92.js:1 ✅ Final turn advancement result: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Turn state changed: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-bd0699845baca744.js:16 🔄 Firebase sync isSpinning: false local: false
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 🔍 hasWheelValue check: Object
-85-bd0699845baca744.js:16 🔍 hasWheelValue check: Object
-85-bd0699845baca744.js:16 🔤 LETTER GUESS: Object
-85-bd0699845baca744.js:16 🔤 LETTER GUESS HANDLER: Object
-85-bd0699845baca744.js:16 🔍 LETTER REVEAL UPDATE: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Turn state changed: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Local players array: Array(3)
+ 🤖 Computer turns allowed in multiplayer mode: Object
+ Local players array: Array(3)
+ 🤖 Starting computer turn for: Computer 1
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ 🎯 WHEEL LANDING CALCULATION: Object
+ Local players array: Array(3)
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ ⚠️ No current player found, attempting recovery...
+overrideMethod @ installHook.js:1
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Local players array: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ ⚠️ Computer player is current player but humans are available
+overrideMethod @ installHook.js:1
+ Local players array: Array(3)
+ 🤖 Computer actions allowed in multiplayer mode: Object
+ 🤖 Computer Computer 1 making guess...
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🤖 COMPUTER GUESS HANDLER: Object
+ Local players array: Array(3)
+ Local players array: Array(3)
+ 🤖 COMPUTER LETTER REVEAL UPDATE: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Local players array: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ 🎯 WHEEL LANDING CALCULATION: Object
+ Local players array: Array(3)
+ Local players array: Array(3)
+ ⚠️ Same player continues turn (allowed)
+overrideMethod @ installHook.js:1
+ 🎯 Wheel landed: Object
+ 🎯 Setting game state with wheel value: Object
+ 🎯 WHEEL SPIN HANDLER: Object
+ ✅ Final turn advancement result: Object
+ 🎯 Game state update - before: Object
+ 🎯 Game state update - after: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Local players array: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Local players array: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ 🔍 hasWheelValue check: Object
+ 🔍 hasWheelValue check: Object
+ 🔤 LETTER GUESS: Object
+ 🔤 LETTER GUESS HANDLER: Object
+ 🔍 LETTER REVEAL UPDATE: Object
+ ❌ Incorrect letter guess: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Local players array: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ 🔤 LETTER GUESS HANDLER: Object
+ 🔍 Letter check result: Object
+ ❌ Incorrect letter guess - advancing to next human player
+ 👥 Human players for letter guess turn advancement: Array(2)
+ 🔍 Current player index in human players: 0
+ ➡️ Advancing to next human player: Object
+ ✅ Final letter guess turn result: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🔍 isCharacterRevealed Set check: Object
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Local players array: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Local players array: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Firebase players converted: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ 🎯 WHEEL LANDING CALCULATION: Object
+ Firebase players converted: Array(3)
+ Firebase players converted: Array(3)
+ ⚠️ Same player continues turn (allowed)
+overrideMethod @ installHook.js:1
+ 🎯 Wheel landed: Object
+ 🎯 Setting game state with wheel value: Object
+ 🎯 WHEEL SPIN HANDLER: Object
+ ✅ Final turn advancement result: Object
+ 🎯 Game state update - before: Object
+ 🎯 Game state update - after: Object
+ Local players array: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Local players array: Array(3)
+ 🔄 Turn check: Object
+ 🔄 Turn state changed: Object
+ Local players array: Array(3)
+ 🔄 SYNCHRONIZING WITH FIREBASE: Object
+ Local players array: Array(3)
+ 🔍 MULTIPLAYER TURN VALIDATION: Object
+ 🔄 Firebase sync isSpinning: false local: false
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+ 🎯 WHEEL RENDER DEBUG: Object
+ Firebase players converted: Array(3)
+ 🔄 Turn check: Object
+ Firebase players converted: Array(3)
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+ 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 🔍 hasWheelValue check: Object
+85-9795298ce6dd8616.js:16 🔍 hasWheelValue check: Object
+85-9795298ce6dd8616.js:16 🔤 LETTER GUESS: Object
+85-9795298ce6dd8616.js:16 🔤 LETTER GUESS HANDLER: Object
+85-9795298ce6dd8616.js:16 🔍 LETTER REVEAL UPDATE: Object
+85-9795298ce6dd8616.js:16 ❌ Incorrect letter guess: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 🔄 Turn state changed: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
 519-9c02a9cd774a2c92.js:1 🔤 LETTER GUESS HANDLER: Object
 519-9c02a9cd774a2c92.js:1 🔍 Letter check result: Object
 519-9c02a9cd774a2c92.js:1 ❌ Incorrect letter guess - advancing to next human player
@@ -100,270 +515,243 @@ overrideMethod @ hook.js:608
 519-9c02a9cd774a2c92.js:1 🔍 Current player index in human players: 0
 519-9c02a9cd774a2c92.js:1 ➡️ Advancing to next human player: Object
 519-9c02a9cd774a2c92.js:1 ✅ Final letter guess turn result: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Firebase sync isSpinning: false local: false
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-bd0699845baca744.js:16 Local players array: Array(3)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Firebase sync isSpinning: false local: false
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Firebase sync isSpinning: false local: false
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(3)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-hook.js:608 ⚠️ Player count mismatch between Firebase and local state
-overrideMethod @ hook.js:608
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
-85-bd0699845baca744.js:16 🔄 Firebase sync isSpinning: false local: false
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🎯 WHEEL RENDER DEBUG: Object
-85-bd0699845baca744.js:16 Firebase players converted: Array(2)
-85-bd0699845baca744.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed Set check: Object
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 🔄 Firebase sync isSpinning: false local: false
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-9795298ce6dd8616.js:16 Local players array: Array(3)
+85-9795298ce6dd8616.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 🔄 Firebase sync isSpinning: false local: false
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 🔄 Firebase sync isSpinning: false local: false
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 SYNCHRONIZING WITH FIREBASE: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: W
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: E
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: N
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: D
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: Y
+85-9795298ce6dd8616.js:16 🔍 isCharacterRevealed: No puzzle.revealed found for char: S
+85-9795298ce6dd8616.js:16 🎯 WHEEL RENDER DEBUG: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔄 Turn check: Object
+85-9795298ce6dd8616.js:16 🔄 Turn state changed: Object
+85-9795298ce6dd8616.js:16 Firebase players converted: Array(3)
+85-9795298ce6dd8616.js:16 🔍 MULTIPLAYER TURN VALIDATION: Object
 
 
-[Warning] 30 console messages are not shown.
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+
+[Warning] 540 console messages are not shown.
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "W" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "E" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "N" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "D" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "Y" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "S" (85-9795298ce6dd8616.js, line 16)
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔄 Turn check: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] 🔄 Turn state changed: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-9795298ce6dd8616.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "W" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "E" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "N" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "D" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "Y" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "S" (85-9795298ce6dd8616.js, line 16)
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔄 Turn check: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] Firebase players converted: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "W" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "E" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "N" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "D" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "Y" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "S" (85-9795298ce6dd8616.js, line 16)
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-bd0699845baca744.js, line 16)
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] 🔍 hasWheelValue check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 hasWheelValue check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔤 LETTER GUESS: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔤 LETTER GUESS HANDLER: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 LETTER REVEAL UPDATE: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] ❌ Incorrect letter guess: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔄 Turn check: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
+[Log] 🔄 Turn state changed: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
 Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-9795298ce6dd8616.js, line 16)
 Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-bd0699845baca744.js, line 16)
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-bd0699845baca744.js, line 16)
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔄 Turn state changed: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔄 Turn state changed: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🎯 WHEEL LANDING CALCULATION: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Warning] ⚠️ Same player continues turn (allowed) (85-bd0699845baca744.js, line 16)
-[Log] 🎯 Wheel landed: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🎯 WHEEL SPIN HANDLER: – Object (519-9c02a9cd774a2c92.js, line 1)
-Object
-[Log] ✅ Final turn advancement result: – Object (519-9c02a9cd774a2c92.js, line 1)
-Object
-[Log] Local players array: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Local players array: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔄 Turn state changed: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Local players array: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Local players array: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-bd0699845baca744.js, line 16)
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🔄 Turn check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] Firebase players converted: – Array (3) (85-bd0699845baca744.js, line 16)
-Array (3)
-[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔍 hasWheelValue check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔍 hasWheelValue check: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔤 LETTER GUESS: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔤 LETTER GUESS HANDLER: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔍 LETTER REVEAL UPDATE: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Log] 🔍 LETTER REVEAL UPDATE: – Object (85-bd0699845baca744.js, line 16)
-Object
-[Error] TypeError: undefined is not an object (evaluating 'N.prizes.push')
-	a9 (framework-5429a50ba5373c56.js:9:69806)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:70318)
-	lW (framework-5429a50ba5373c56.js:9:51389)
-	uX (framework-5429a50ba5373c56.js:9:90767)
-	e (framework-5429a50ba5373c56.js:9:111084)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:111093)
-	oU (framework-5429a50ba5373c56.js:9:111605)
-	oP (framework-5429a50ba5373c56.js:9:96236)
-	r8 (framework-5429a50ba5373c56.js:9:44813)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:93600)
-[Error] TypeError: undefined is not an object (evaluating 'N.prizes.push')
-	Q (main-2b29fbe893d33ebf.js:1:10367)
-	fn (main-2b29fbe893d33ebf.js:1:9377)
-	componentDidCatch (main-2b29fbe893d33ebf.js:1:7818)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:70426)
-	lW (framework-5429a50ba5373c56.js:9:51389)
-	uX (framework-5429a50ba5373c56.js:9:90767)
-	e (framework-5429a50ba5373c56.js:9:111084)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:111093)
-	oU (framework-5429a50ba5373c56.js:9:111605)
-	oP (framework-5429a50ba5373c56.js:9:96236)
-	r8 (framework-5429a50ba5373c56.js:9:44813)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:93600)
-[Error] A client-side exception has occurred, see here for more info: https://nextjs.org/docs/messages/client-side-exception-occurred
-	Q (main-2b29fbe893d33ebf.js:1:10384)
-	fn (main-2b29fbe893d33ebf.js:1:9377)
-	componentDidCatch (main-2b29fbe893d33ebf.js:1:7818)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:70426)
-	lW (framework-5429a50ba5373c56.js:9:51389)
-	uX (framework-5429a50ba5373c56.js:9:90767)
-	e (framework-5429a50ba5373c56.js:9:111084)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:111093)
-	oU (framework-5429a50ba5373c56.js:9:111605)
-	oP (framework-5429a50ba5373c56.js:9:96236)
-	r8 (framework-5429a50ba5373c56.js:9:44813)
-	(anonymous function) (framework-5429a50ba5373c56.js:9:93600)
 [Log] 🔤 LETTER GUESS HANDLER: – Object (519-9c02a9cd774a2c92.js, line 1)
 Object
 [Log] 🔍 Letter check result: – Object (519-9c02a9cd774a2c92.js, line 1)
 Object
-[Log] ✅ Correct letter guess - player continues turn (519-9c02a9cd774a2c92.js, line 1)
+[Log] ❌ Incorrect letter guess - advancing to next human player (519-9c02a9cd774a2c92.js, line 1)
+[Log] 👥 Human players for letter guess turn advancement: – Array (2) (519-9c02a9cd774a2c92.js, line 1)
+Array (2)
+[Log] 🔍 Current player index in human players: – 1 (519-9c02a9cd774a2c92.js, line 1)
+[Log] ➡️ Advancing to next human player: – Object (519-9c02a9cd774a2c92.js, line 1)
+Object
 [Log] ✅ Final letter guess turn result: – Object (519-9c02a9cd774a2c92.js, line 1)
 Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
+Array (3)
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔍 isCharacterRevealed Set check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] 🔄 Firebase sync isSpinning: – false – "local:" – false (85-9795298ce6dd8616.js, line 16)
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
+Array (3)
+[Log] 🔄 SYNCHRONIZING WITH FIREBASE: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Local players array: – Array (3) (85-9795298ce6dd8616.js, line 16)
+Array (3)
+[Log] 🔍 MULTIPLAYER TURN VALIDATION: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Firebase players converted: – Array (3) (85-9795298ce6dd8616.js, line 16)
+Array (3)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "W" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "E" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "N" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "D" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "Y" (85-9795298ce6dd8616.js, line 16)
+[Log] 🔍 isCharacterRevealed: No puzzle.revealed found for char: – "S" (85-9795298ce6dd8616.js, line 16)
+[Log] 🎯 WHEEL RENDER DEBUG: – Object (85-9795298ce6dd8616.js, line 16)
+Object
+[Log] Firebase players converted: – Array (3) (85-9795298ce6dd8616.js, line 16)
+Array (3)
+[Log] 🔄 Turn check: – Object (85-9795298ce6dd8616.js, line 16)
+Object
 > Selected Element
-< <div style="font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; height: 100vh; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">…</div>
-< <div style="font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; height: 100vh; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">…</div>
+< <div class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white">…</div>

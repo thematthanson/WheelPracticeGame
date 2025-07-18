@@ -2858,12 +2858,28 @@ function WheelOfFortune({
       // Convert Firebase game state to local game state format
       const firebasePuzzle = firebaseGameState.puzzle;
       if (firebasePuzzle) {
+        // Handle revealed letters properly - convert from array to Set
+        let revealedLetters = new Set<string>();
+        if (firebasePuzzle.revealed) {
+          if (Array.isArray(firebasePuzzle.revealed)) {
+            revealedLetters = new Set(firebasePuzzle.revealed);
+          } else if (firebasePuzzle.revealed instanceof Set) {
+            revealedLetters = firebasePuzzle.revealed;
+          }
+        }
+        
+        console.log('🔄 Firebase sync puzzle revealed:', {
+          firebaseRevealed: firebasePuzzle.revealed,
+          convertedRevealed: Array.from(revealedLetters),
+          timestamp: new Date().toISOString()
+        });
+        
         setGameState(prev => ({
           ...prev,
           puzzle: {
             text: firebasePuzzle.text || firebasePuzzle.solution || '',
             category: firebasePuzzle.category || '',
-            revealed: new Set(firebaseGameState.usedLetters || []),
+            revealed: revealedLetters,
             specialFormat: firebasePuzzle.specialFormat || null
           },
           usedLetters: new Set(firebaseGameState.usedLetters || []),
