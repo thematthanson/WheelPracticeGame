@@ -899,17 +899,6 @@ function WheelOfFortune({
     });
     
     if (isComputerTurn) {
-      // Additional safety check: ensure no human players are waiting for their turn
-      if (firebaseGameState) {
-        const humanPlayers = allPlayers.filter(p => p.isHuman);
-        const waitingHumanPlayers = humanPlayers.filter(p => p.id !== gameState.currentPlayer);
-        
-        if (waitingHumanPlayers.length > 0) {
-          console.log('⚠️ Computer turn blocked - human players waiting:', waitingHumanPlayers.map(p => p.name));
-          return;
-        }
-      }
-      
       console.log('🤖 Triggering computer turn for:', currentPlayer.name);
       computerTurnScheduledRef.current = true;
       setComputerTurnInProgress(true);
@@ -1923,17 +1912,28 @@ function WheelOfFortune({
           
           // Determine next player based on game mode
           if (firebaseGameState) {
-            // Multiplayer mode - advance to next human player
+            // Multiplayer mode - advance to next player (including computer players)
             const allPlayers = getAllPlayers();
             if (allPlayers && allPlayers.length > 0) {
-              const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
-              const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
-              if (currentHumanIndex !== -1) {
-                const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
-                const nextHumanPlayer = humanPlayers[nextHumanIndex];
-                if (nextHumanPlayer && nextHumanPlayer.id) {
-                  nextPlayer = nextHumanPlayer.id;
-                  newMessage += `${nextHumanPlayer.name}'s turn!`;
+              // Find current player in all players list (not just humans)
+              const currentPlayerIndex = allPlayers.findIndex(p => p.id === gameState.currentPlayer);
+              console.log('💸 BANKRUPT detected - advancing to next player');
+              console.log('👥 All players for BANKRUPT advancement:', allPlayers.map(p => ({ id: p.id, name: p.name, isHuman: p.isHuman })));
+              console.log('🔍 Current player index in all players:', currentPlayerIndex);
+              
+              if (currentPlayerIndex !== -1) {
+                const nextIndex = (currentPlayerIndex + 1) % allPlayers.length;
+                const nextPlayerObj = allPlayers[nextIndex];
+                if (nextPlayerObj && nextPlayerObj.id) {
+                  nextPlayer = nextPlayerObj.id;
+                  newMessage += `${nextPlayerObj.name}'s turn!`;
+                  console.log('➡️ Advancing to next player:', {
+                    currentIndex: currentPlayerIndex,
+                    nextIndex,
+                    nextPlayerId: nextPlayer,
+                    nextPlayerName: nextPlayerObj.name,
+                    nextPlayerIsHuman: nextPlayerObj.isHuman
+                  });
                 } else {
                   // Fallback
                   const allPlayersFallback = getAllPlayers();
@@ -1943,7 +1943,7 @@ function WheelOfFortune({
                   }
                 }
               } else {
-                // Fallback
+                // Current player not found in all players, use fallback
                 const allPlayersFallback = getAllPlayers();
                 if (allPlayersFallback && allPlayersFallback.length > 0) {
                   nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
@@ -1964,17 +1964,28 @@ function WheelOfFortune({
           
           // Determine next player based on game mode
           if (firebaseGameState) {
-            // Multiplayer mode - advance to next human player
+            // Multiplayer mode - advance to next player (including computer players)
             const allPlayers = getAllPlayers();
             if (allPlayers && allPlayers.length > 0) {
-              const humanPlayers = allPlayers.filter(p => p.isHuman && p.id);
-              const currentHumanIndex = humanPlayers.findIndex(p => p.id === gameState.currentPlayer);
-              if (currentHumanIndex !== -1) {
-                const nextHumanIndex = (currentHumanIndex + 1) % humanPlayers.length;
-                const nextHumanPlayer = humanPlayers[nextHumanIndex];
-                if (nextHumanPlayer && nextHumanPlayer.id) {
-                  nextPlayer = nextHumanPlayer.id;
-                  newMessage += `${nextHumanPlayer.name}'s turn!`;
+              // Find current player in all players list (not just humans)
+              const currentPlayerIndex = allPlayers.findIndex(p => p.id === gameState.currentPlayer);
+              console.log('⏭️ LOSE A TURN detected - advancing to next player');
+              console.log('👥 All players for LOSE A TURN advancement:', allPlayers.map(p => ({ id: p.id, name: p.name, isHuman: p.isHuman })));
+              console.log('🔍 Current player index in all players:', currentPlayerIndex);
+              
+              if (currentPlayerIndex !== -1) {
+                const nextIndex = (currentPlayerIndex + 1) % allPlayers.length;
+                const nextPlayerObj = allPlayers[nextIndex];
+                if (nextPlayerObj && nextPlayerObj.id) {
+                  nextPlayer = nextPlayerObj.id;
+                  newMessage += `${nextPlayerObj.name}'s turn!`;
+                  console.log('➡️ Advancing to next player:', {
+                    currentIndex: currentPlayerIndex,
+                    nextIndex,
+                    nextPlayerId: nextPlayer,
+                    nextPlayerName: nextPlayerObj.name,
+                    nextPlayerIsHuman: nextPlayerObj.isHuman
+                  });
                 } else {
                   // Fallback
                   const allPlayersFallback = getAllPlayers();
@@ -1984,7 +1995,7 @@ function WheelOfFortune({
                   }
                 }
               } else {
-                // Fallback
+                // Current player not found in all players, use fallback
                 const allPlayersFallback = getAllPlayers();
                 if (allPlayersFallback && allPlayersFallback.length > 0) {
                   nextPlayer = (getCurrentPlayerIndex() + 1) % allPlayersFallback.length;
