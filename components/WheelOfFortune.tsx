@@ -584,10 +584,10 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Block computer turns if there are 2 or more humans (humans should play)
-      // Allow computer turns only when there are fewer than 2 humans (computer fills the gap)
-      if (humanPlayers.length >= 2) {
-        console.log('❌ Computer turns not allowed - humans should play (2+ humans)');
+      // Allow computer turns when there are fewer than 3 humans (computer players are critical)
+      // Block computer turns if there are 3 humans (full human game)
+      if (humanPlayers.length >= 3) {
+        console.log('❌ Computer turns not allowed - full human game (3 humans)');
         setComputerTurnInProgress(false);
         computerTurnRef.current = false;
         computerTurnScheduledRef.current = false;
@@ -607,7 +607,7 @@ function WheelOfFortune({
         humanCount: humanPlayers.length,
         computerCount: computerPlayers.length,
         totalPlayers: allPlayers.length,
-        reason: humanPlayers.length < 2 ? 'Computer players critical for < 2 humans' : 'Humans should play'
+        reason: humanPlayers.length < 3 ? 'Computer players critical for < 3 humans' : 'Full human game'
       });
     }
     
@@ -864,10 +864,10 @@ function WheelOfFortune({
       const humanPlayers = allPlayers.filter(p => p.isHuman);
       const computerPlayers = allPlayers.filter(p => !p.isHuman);
       
-      // Only allow computer turns if there are fewer than 2 humans
-      if (humanPlayers.length >= 2) {
+      // Only allow computer turns if there are fewer than 3 humans
+      if (humanPlayers.length >= 3) {
         computerTurnsAllowed = false;
-        console.log('❌ Computer turns not allowed - humans should play (2+ humans)');
+        console.log('❌ Computer turns not allowed - full human game (3+ humans)');
       } else if (computerPlayers.length === 0) {
         computerTurnsAllowed = false;
         console.log('❌ Computer turns not allowed - no computer players available');
@@ -883,6 +883,23 @@ function WheelOfFortune({
                           allPlayers.length > 0 && // Ensure we have valid players
                           timeSinceLastComputerTurn > 3000 && // At least 3 seconds since last computer turn
                           computerTurnsAllowed; // Computer turns are allowed in this configuration
+    
+    // Debug computer turn scheduling
+    if (currentPlayer && !currentPlayer.isHuman) {
+      console.log('🤖 COMPUTER TURN SCHEDULING DEBUG:', {
+        currentPlayerId: currentPlayer.id,
+        currentPlayerName: currentPlayer.name,
+        isHuman: currentPlayer.isHuman,
+        isFinalRound: gameState.isFinalRound,
+        turnInProgress: gameState.turnInProgress,
+        isSpinning: gameState.isSpinning,
+        computerTurnScheduled: computerTurnScheduledRef.current,
+        timeSinceLastComputerTurn,
+        computerTurnsAllowed,
+        shouldTrigger: isComputerTurn,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     console.log('🔄 Turn check:', {
       currentPlayer: gameState.currentPlayer,
